@@ -278,5 +278,5 @@ def get_fid(value):
     keys = [key for key, value in FID_CODES.items() if value == value]
     return keys[0]
 
-
-print(type(get_fid("현재가")))
+if __name__ == "__main__":
+    print(get_fid("현재가"))

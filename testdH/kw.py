@@ -3,12 +3,13 @@ import time
 from PyQt5.QAxContainer import *
 import pythoncom
 import sys
-
+from queue import Queue
 from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox
 import const
 
 class Kiwoom:
     def __init__(self):
+        self.received_data = Queue()
         self.rd = False
         self.ocx = QAxWidget("KHOPENAPI.KHOpenAPICtrl.1")
         self.ocx.OnEventConnect.connect(self.OnEventConnect)
@@ -108,26 +109,34 @@ class Kiwoom:
     #==realtime price
 
     def SetRealReg(self, screen, code_list, FID_list, type):
+        code_list = ";".join(code_list)
         self.rd = False
         self.ocx.dynamicCall("SetRealReg(QString, QString, QString, QString)",
                              screen, code_list, FID_list, type)
 
         while self.rd is False:
-            print(0)
+            #print(0)
             pythoncom.PumpWaitingMessages()
-            print(1)
+            #print(1)
 
-    def GetCommRealData(self, code, nFID):
-        print("asd")
-        data = self.ocx.GetCommRealData("GetCommRealData(QString, QString)", code, nFID)
-        return data.strip()
+    def GetCommRealData(self, code, fid):
+        data = self.ocx.dynamicCall("GetCommRealData(QString, int)", code, fid)
+        return data
 
     def OnReceiveRealData(self, code, realtype, realdata):
-        print("asdads")
-        print("{} , {}".format(code, realtype))
-        #print(code, realtype, realdata)
         self.rd = True
-        print(self.GetCommRealData(code,realtype))
+        #print(code, "리시브 이벤트 발생")
+        #print(self.GetCommRealData(code, 302))
+        #print(self.GetCommRealData(code, 10))
+        price = self.GetCommRealData(code, 10)
+
+        self.received_data.put(code)
+        self.received_data.put(price)
+
+    def DisconnectRealData(self, screen):
+        self.ocx.dynamicCall("DisconnectRealData(QString)", screen)
+        print("구독해지됨")
+
 
 
 
@@ -146,7 +155,8 @@ if __name__ == "__main__":
         kiwoom.GetPrice(i)
         time.sleep(0.5)
     """
-    kiwoom.SetRealReg("0101", ["005930"],  str("9001;302;10;11;25;12;13"), '0')
+    kiwoom.SetRealReg("0101", ["005930", "000660"], "9001;10;16;17;302;", '0')
+
 
 
 

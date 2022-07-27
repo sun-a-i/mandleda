@@ -1,5 +1,5 @@
-a= ['123','asds']
-b= [1]
+a= [(1,2),'asds']
+b= ("asd",1)
 
 
 a.append(b)

@@ -29,8 +29,8 @@
   <widget class="QPushButton" name="btn2">
    <property name="geometry">
     <rect>
-     <x>570</x>
-     <y>330</y>
+     <x>350</x>
+     <y>270</y>
      <width>75</width>
      <height>23</height>
     </rect>
@@ -80,7 +80,7 @@
     <rect>
      <x>20</x>
      <y>330</y>
-     <width>411</width>
+     <width>521</width>
      <height>192</height>
     </rect>
    </property>
@@ -104,15 +104,33 @@
      <string>전일종가</string>
     </property>
    </column>
+   <column>
+    <property name="text">
+     <string>전일고가</string>
+    </property>
+   </column>
   </widget>
   <widget class="QComboBox" name="cbox_con">
    <property name="geometry">
     <rect>
-     <x>440</x>
+     <x>550</x>
      <y>330</y>
      <width>121</width>
      <height>22</height>
     </rect>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="ckbox_real">
+   <property name="geometry">
+    <rect>
+     <x>560</x>
+     <y>370</y>
+     <width>101</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>실시간 활성화</string>
    </property>
   </widget>
  </widget>
