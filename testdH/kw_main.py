@@ -17,6 +17,8 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
         self.setupUi(self)
         self.btn1.clicked.connect(self.btn1_clicked_func)
         self.btn2.clicked.connect(self.real_activate)
+        self.pushButton.clicked.connect(self.order)
+        self.pushButton_3.clicked.connect(self.order_sell)
         self.cbox_con.activated.connect(self.con_search)
         self.cbox_con.activated.connect(self.deactivate_real)
         self.ckbox_real.stateChanged.connect(self.real_activate)
@@ -99,6 +101,28 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
         if self.ckbox_real.isChecked():
             self.ckbox_real.toggle()
 
+
+    def order(self):
+        accno = self.cbox.currentText()
+        code = self.view_selec_coin_lbl.text()
+        amt = self.order_amount.text()
+        if amt == "":
+            amt = 1
+
+        ret = kw.SendOrder(1, accno, code, amt)
+
+        print(ret)
+
+    def order_sell(self):
+        accno = self.cbox.currentText()
+        code = self.view_selec_coin_lbl.text()#매도 테이블에서 골라야 함
+        amt = self.order_amount_2.text()
+        if amt == "":
+            amt = 1
+
+        ret = kw.SendOrder_sell(2, accno, code, amt)
+
+        print(ret)
 
 
 def int_format(val):

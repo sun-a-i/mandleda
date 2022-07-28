@@ -176,18 +176,25 @@ class Kiwoom():
 
     #=======================주문 관련 함수===========================
 
-    def SendOrder(self, name, scrnb, accno, ordertype, code, amount, price, hoga):
-        self.ocx.dynamicCall("SendOrder(QString, QString, QString, int, QString, int, int, QString, QString)",
-                             name, scrnb, accno, ordertype, code, amount, price, hoga)
-        pass
+    def SendOrder(self,type, accno, code, amount):#시장가 매수
+        try:
+            #print("send order")
+            return self.ocx.dynamicCall("SendOrder(QString, QString, QString, int, QString, int   , int, QString, QString)",
+                                                ["test_name", "0101", accno  , type  , code   , amount, 0  , "03", ""])
+        except Exception as e:
+            lm.logger.debug(e)
+            lm.logger.debug(lm.traceback.format_exc())
+
 
     #def OnReceiveTrData(self, screen, rqname, trcode, record, next):
 
     def OnReceiveMsg(self, sScrNo, sRQName, sTrCode, sMsg):
-        pass
+        print("OnReceiveMsg",sScrNo, sRQName, sTrCode, sMsg)
 
     def OnReceiveChejanData(self, sGubun, nItemCnt, sFIdList):
-        pass
+        print("OnReceiveChejanData",sGubun, nItemCnt, sFIdList)
+
+        #print(self.GetChejanData(Fid))
 
     def GetChejanData(self, nFid):
         pass

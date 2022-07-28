@@ -30,3 +30,80 @@ AttributeError: 'MyWindow' object has no attribute 'view_selec_coin_lbl'
 [2022-07-28 20:22:40,772][DEBUG|kw_main.py:15] >> window start
 [2022-07-28 20:35:22,027][DEBUG|kw_main.py:15] >> window start
 [2022-07-28 20:50:11,750][DEBUG|kw_main.py:15] >> window start
+[2022-07-28 21:31:58,597][DEBUG|kw_main.py:15] >> window start
+[2022-07-28 21:32:30,068][DEBUG|kw_main.py:15] >> window start
+[2022-07-28 21:34:16,769][DEBUG|kw_main.py:15] >> window start
+[2022-07-28 21:35:31,893][DEBUG|kw_main.py:15] >> window start
+[2022-07-28 21:37:24,807][DEBUG|kw_main.py:15] >> window start
+[2022-07-28 21:40:48,436][DEBUG|kw_main.py:15] >> window start
+[2022-07-28 21:41:48,273][DEBUG|kw_main.py:15] >> window start
+[2022-07-28 21:41:52,811][DEBUG|kw.py:185] >> arguments did not match any overloaded call:
+  dynamicCall(self, str, Iterable[Any]): argument 2 has unexpected type 'str'
+  dynamicCall(self, str, value1: Any = None, value2: Any = None, value3: Any = None, value4: Any = None, value5: Any = None, value6: Any = None, value7: Any = None, value8: Any = None): too many arguments
+[2022-07-28 21:41:52,811][DEBUG|kw.py:186] >> Traceback (most recent call last):
+  File "C:\Users\kdonn\PycharmProjects\pythonProject\testdH\kw.py", line 183, in SendOrder
+    "test_name", "0101", accno  , 1  , code   , amount, 0  , "03", "")
+TypeError: arguments did not match any overloaded call:
+  dynamicCall(self, str, Iterable[Any]): argument 2 has unexpected type 'str'
+  dynamicCall(self, str, value1: Any = None, value2: Any = None, value3: Any = None, value4: Any = None, value5: Any = None, value6: Any = None, value7: Any = None, value8: Any = None): too many arguments
+
+[2022-07-28 21:44:08,759][DEBUG|kw.py:185] >> arguments did not match any overloaded call:
+  dynamicCall(self, str, Iterable[Any]): argument 2 has unexpected type 'str'
+  dynamicCall(self, str, value1: Any = None, value2: Any = None, value3: Any = None, value4: Any = None, value5: Any = None, value6: Any = None, value7: Any = None, value8: Any = None): too many arguments
+[2022-07-28 21:44:08,759][DEBUG|kw.py:186] >> Traceback (most recent call last):
+  File "C:\Users\kdonn\PycharmProjects\pythonProject\testdH\kw.py", line 183, in SendOrder
+    "test_name", "0101", accno  , 1  , code   , int(amount), 0  , "03", "")
+TypeError: arguments did not match any overloaded call:
+  dynamicCall(self, str, Iterable[Any]): argument 2 has unexpected type 'str'
+  dynamicCall(self, str, value1: Any = None, value2: Any = None, value3: Any = None, value4: Any = None, value5: Any = None, value6: Any = None, value7: Any = None, value8: Any = None): too many arguments
+
+[2022-07-28 21:44:18,507][DEBUG|kw_main.py:15] >> window start
+[2022-07-28 21:44:21,276][DEBUG|kw.py:185] >> arguments did not match any overloaded call:
+  dynamicCall(self, str, Iterable[Any]): argument 2 has unexpected type 'str'
+  dynamicCall(self, str, value1: Any = None, value2: Any = None, value3: Any = None, value4: Any = None, value5: Any = None, value6: Any = None, value7: Any = None, value8: Any = None): too many arguments
+[2022-07-28 21:44:21,276][DEBUG|kw.py:186] >> Traceback (most recent call last):
+  File "C:\Users\kdonn\PycharmProjects\pythonProject\testdH\kw.py", line 183, in SendOrder
+    "test_name", "0101", accno  , 1  , code   , int(amount), 0  , "03", "")
+TypeError: arguments did not match any overloaded call:
+  dynamicCall(self, str, Iterable[Any]): argument 2 has unexpected type 'str'
+  dynamicCall(self, str, value1: Any = None, value2: Any = None, value3: Any = None, value4: Any = None, value5: Any = None, value6: Any = None, value7: Any = None, value8: Any = None): too many arguments
+
+[2022-07-28 21:45:49,874][DEBUG|kw_main.py:15] >> window start
+[2022-07-28 21:45:54,993][DEBUG|kw.py:185] >> arguments did not match any overloaded call:
+  dynamicCall(self, str, Iterable[Any]): argument 2 has unexpected type 'str'
+  dynamicCall(self, str, value1: Any = None, value2: Any = None, value3: Any = None, value4: Any = None, value5: Any = None, value6: Any = None, value7: Any = None, value8: Any = None): too many arguments
+[2022-07-28 21:45:54,994][DEBUG|kw.py:186] >> Traceback (most recent call last):
+  File "C:\Users\kdonn\PycharmProjects\pythonProject\testdH\kw.py", line 183, in SendOrder
+    "test_name", "0101", int(accno)  , 1  , code   , amount, 0  , "03", "")
+TypeError: arguments did not match any overloaded call:
+  dynamicCall(self, str, Iterable[Any]): argument 2 has unexpected type 'str'
+  dynamicCall(self, str, value1: Any = None, value2: Any = None, value3: Any = None, value4: Any = None, value5: Any = None, value6: Any = None, value7: Any = None, value8: Any = None): too many arguments
+
+[2022-07-28 21:45:59,502][DEBUG|kw.py:185] >> arguments did not match any overloaded call:
+  dynamicCall(self, str, Iterable[Any]): argument 2 has unexpected type 'str'
+  dynamicCall(self, str, value1: Any = None, value2: Any = None, value3: Any = None, value4: Any = None, value5: Any = None, value6: Any = None, value7: Any = None, value8: Any = None): too many arguments
+[2022-07-28 21:45:59,502][DEBUG|kw.py:186] >> Traceback (most recent call last):
+  File "C:\Users\kdonn\PycharmProjects\pythonProject\testdH\kw.py", line 183, in SendOrder
+    "test_name", "0101", int(accno)  , 1  , code   , amount, 0  , "03", "")
+TypeError: arguments did not match any overloaded call:
+  dynamicCall(self, str, Iterable[Any]): argument 2 has unexpected type 'str'
+  dynamicCall(self, str, value1: Any = None, value2: Any = None, value3: Any = None, value4: Any = None, value5: Any = None, value6: Any = None, value7: Any = None, value8: Any = None): too many arguments
+
+[2022-07-28 21:47:38,877][DEBUG|kw.py:185] >> arguments did not match any overloaded call:
+  dynamicCall(self, str, Iterable[Any]): argument 2 has unexpected type 'str'
+  dynamicCall(self, str, value1: Any = None, value2: Any = None, value3: Any = None, value4: Any = None, value5: Any = None, value6: Any = None, value7: Any = None, value8: Any = None): too many arguments
+[2022-07-28 21:47:38,877][DEBUG|kw.py:186] >> Traceback (most recent call last):
+  File "C:\Users\kdonn\PycharmProjects\pythonProject\testdH\kw.py", line 183, in SendOrder
+    "test_name", "0101", int(accno)  , 1  , code   , amount, 0  , "03", "")
+TypeError: arguments did not match any overloaded call:
+  dynamicCall(self, str, Iterable[Any]): argument 2 has unexpected type 'str'
+  dynamicCall(self, str, value1: Any = None, value2: Any = None, value3: Any = None, value4: Any = None, value5: Any = None, value6: Any = None, value7: Any = None, value8: Any = None): too many arguments
+
+[2022-07-28 21:49:30,558][DEBUG|kw_main.py:15] >> window start
+[2022-07-28 22:01:07,204][DEBUG|kw_main.py:15] >> window start
+[2022-07-28 22:01:25,461][DEBUG|kw_main.py:15] >> window start
+[2022-07-28 22:03:35,729][DEBUG|kw_main.py:15] >> window start
+[2022-07-28 22:03:58,833][DEBUG|kw_main.py:15] >> window start
+[2022-07-28 22:05:05,854][DEBUG|kw_main.py:15] >> window start
+[2022-07-28 22:05:43,206][DEBUG|kw_main.py:15] >> window start
+[2022-07-28 22:05:56,881][DEBUG|kw_main.py:15] >> window start
