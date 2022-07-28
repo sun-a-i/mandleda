@@ -19,3 +19,14 @@ AttributeError: 'MyWindow' object has no attribute 'view_selec_coin_lbl'
 [2022-07-28 18:49:39,054][DEBUG|kw_main.py:19] >> window start
 [2022-07-28 18:52:16,101][DEBUG|kw_main.py:15] >> window start
 [2022-07-28 19:17:48,757][DEBUG|kw_main.py:15] >> window start
+[2022-07-28 19:37:53,740][DEBUG|kw_main.py:15] >> window start
+[2022-07-28 19:39:20,841][DEBUG|kw_main.py:15] >> window start
+[2022-07-28 19:39:38,771][DEBUG|kw_main.py:15] >> window start
+[2022-07-28 20:02:45,305][DEBUG|kw_main.py:15] >> window start
+[2022-07-28 20:18:16,361][DEBUG|kw_main.py:15] >> window start
+[2022-07-28 20:18:52,722][DEBUG|kw_main.py:15] >> window start
+[2022-07-28 20:19:59,042][DEBUG|kw_main.py:15] >> window start
+[2022-07-28 20:22:02,757][DEBUG|kw_main.py:15] >> window start
+[2022-07-28 20:22:40,772][DEBUG|kw_main.py:15] >> window start
+[2022-07-28 20:35:22,027][DEBUG|kw_main.py:15] >> window start
+[2022-07-28 20:50:11,750][DEBUG|kw_main.py:15] >> window start

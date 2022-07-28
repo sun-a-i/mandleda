@@ -16,21 +16,21 @@
   <widget class="QPushButton" name="btn1">
    <property name="geometry">
     <rect>
-     <x>240</x>
-     <y>50</y>
-     <width>121</width>
-     <height>41</height>
+     <x>110</x>
+     <y>400</y>
+     <width>71</width>
+     <height>31</height>
     </rect>
    </property>
    <property name="text">
-    <string>버튼</string>
+    <string>직접갱신</string>
    </property>
   </widget>
   <widget class="QPushButton" name="btn2">
    <property name="geometry">
     <rect>
-     <x>140</x>
-     <y>70</y>
+     <x>210</x>
+     <y>60</y>
      <width>75</width>
      <height>23</height>
     </rect>
@@ -160,33 +160,6 @@
 매수</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="pushButton_2">
-   <property name="geometry">
-    <rect>
-     <x>620</x>
-     <y>600</y>
-     <width>61</width>
-     <height>51</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>지정가
-매수</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_3">
-   <property name="geometry">
-    <rect>
-     <x>540</x>
-     <y>545</y>
-     <width>56</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>지정가</string>
-   </property>
-  </widget>
   <widget class="QTableWidget" name="table_con_2">
    <property name="geometry">
     <rect>
@@ -248,16 +221,6 @@
     <string>보유 주식 목록</string>
    </property>
   </widget>
-  <widget class="QLineEdit" name="lineEdit">
-   <property name="geometry">
-    <rect>
-     <x>540</x>
-     <y>570</y>
-     <width>113</width>
-     <height>20</height>
-    </rect>
-   </property>
-  </widget>
   <widget class="QLabel" name="label_6">
    <property name="geometry">
     <rect>
@@ -283,43 +246,6 @@
    <property name="text">
     <string>시장가
 매도</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="pushButton_4">
-   <property name="geometry">
-    <rect>
-     <x>620</x>
-     <y>310</y>
-     <width>61</width>
-     <height>51</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>지정가
-매도</string>
-   </property>
-  </widget>
-  <widget class="QLineEdit" name="lineEdit_2">
-   <property name="geometry">
-    <rect>
-     <x>540</x>
-     <y>280</y>
-     <width>113</width>
-     <height>20</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_7">
-   <property name="geometry">
-    <rect>
-     <x>540</x>
-     <y>250</y>
-     <width>56</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>지정가</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_8">

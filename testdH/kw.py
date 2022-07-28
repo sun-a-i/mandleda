@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox
 import const
 import log_manager as lm
 
-class Kiwoom:
+class Kiwoom():
     def __init__(self):
         self.rd = False
         self.ocx = QAxWidget("KHOPENAPI.KHOpenAPICtrl.1")
@@ -25,9 +25,9 @@ class Kiwoom:
         self.ocx.OnReceiveRealCondition.connect(self.OnReceiveRealCondition)
         self.con_list = []
         self.code_list = []
-        self.coin_price_list = {}
+        self.recieved_dic = {}
         self.realcondition = False
-
+    #=======로그인 관련 함수========
     def CommConnect(self):
         self.ocx.dynamicCall("CommConnect()")
         while self.login is False:
@@ -37,19 +37,29 @@ class Kiwoom:
         self.login = True
         print("login is done", code)
 
+    #======기타 요청 함수==========
     def GetLoginInfo(self, tag):
         ret = self.ocx.dynamicCall("GetLoginInfo(QString)", tag)
         return ret
+
+    def GetMasterCodeName(self, code):
+        ret = self.ocx.dynamicCall("GetMasterCodeName(QString)", code)
+        return ret
+
+    def GetMasterLastPrice(self, code):
+        ret = self.ocx.dynamicCall("GetMasterLastPrice(QString)", code)
+        return ret
+
+
+
+    #============== 조건검색 관련 함수 =============
+
 
     def GetConditionLoad(self):#이걸 부르면
         self.ocx.dynamicCall("GetConditionLoad()")
         while self.condition is False:
             #print("asd")
             pythoncom.PumpWaitingMessages()
-
-    def SendConditionStop(self):
-        pass
-
 
     def OnReceiveConditionVer(self): #이게 호출
         self.condition = True
@@ -62,30 +72,35 @@ class Kiwoom:
 
     def SendCondition(self,i):
         self.condition = False
-        er = self.ocx.dynamicCall("SendCondition(QString,QString,QInt,QInt)", "0156", self.con_list[i][1], int(self.con_list[i][0]), 0)
+        er = self.ocx.dynamicCall("SendCondition(QString,QString,QInt,QInt)", "0156",
+                                  self.con_list[i][1], int(self.con_list[i][0]), 0)
         if er:
-            print("조건식 조회 성공")
+            #print("조건식 조회 성공")
+            pass
         else:
             print("조건식 조회 실패")
 
         while self.condition is False:
             pythoncom.PumpWaitingMessages()
+        #===초기설정===
 
-    def OnReceiveTrCondition(self,screennomb,codelist,conname,idx,next):
+    def OnReceiveTrCondition(self,screennomb,codelist,conname,idx,next): #조건검색 후 받아오는 이벤트
         self.condition = True
         #print(screennomb,codelist,conname,idx,next)
-        ret = codelist.split(";")[:-1]
+        ret = {}
+
+        tmp = codelist.split(";")[:-1]
+
+        for i in tmp:
+            kv = i.split("^")
+            if len(kv[0]) == 6:
+                ret[kv[0]] = kv[1].lstrip("0")
+            else:
+                print("종목코드 자리수 오류",kv[0],kv[1])
+
+        #print(ret)
         self.code_list.append(ret)
 
-    def GetMasterCodeName(self, code):
-        ret = self.ocx.dynamicCall("GetMasterCodeName(QString)", code)
-        return ret
-
-    def GetMasterLastPrice(self, code):
-        ret = self.ocx.dynamicCall("GetMasterLastPrice(QString)", code)
-        return int(ret)
-
-    #============== 조건검색 관련 함수 =============
     def SetInputValue(self, id, value):
         self.ocx.dynamicCall("SetInputValue(QString, QString)", id, value)
 
@@ -109,17 +124,11 @@ class Kiwoom:
     def OnReceiveRealCondition(self, code, etype, con_name, con_idx):
         self.realcondition = True
         if etype == 'I':#종목편입
-            self.con_list[con_idx].append(code)
+            self.code_list[con_idx][code] = None
         elif etype == 'D':#종목이탈
-            del self.con_list[con_idx][self.con_list[con_idx].indx(code)]
+            del self.code_list[con_idx][code]
         else:
             print("이건 뭐지 ? OnReceiveRealCondition")
-
-
-
-
-
-
         pass
 
     """
@@ -131,11 +140,11 @@ class Kiwoom:
 
     # =======================실시간 관련 함수===========================
 
-    def SetRealReg(self, screen, code_list, FID_list, type):
-        code_list = ";".join(code_list)
+    def SetRealReg(self, screen, codelist, FID_list, type):
+        codelist = ";".join(codelist)
         self.rd = False
         self.ocx.dynamicCall("SetRealReg(QString, QString, QString, QString)",
-                             screen, code_list, FID_list, type)
+                             screen, codelist, FID_list, type)
 
         while self.rd is False:
             #print(0)
@@ -154,8 +163,8 @@ class Kiwoom:
             #print(self.GetCommRealData(code, 10))
             price = self.GetCommRealData(code, 10)
 
-            self.coin_price_list[code] = price
-            print(code, price)
+            self.recieved_dic[code] = price#추후 삭제
+            print(code, price)#추후 삭제
         except Exception as e:
             lm.logger.debug(e)
             lm.logger.debug(lm.traceback.format_exc())
@@ -168,7 +177,7 @@ class Kiwoom:
     #=======================주문 관련 함수===========================
 
     def SendOrder(self, name, scrnb, accno, ordertype, code, amount, price, hoga):
-        self.ocx.dynamicCall("SendOrder(QString, QString, QString, int, QString,, int, int, QString, QString)",
+        self.ocx.dynamicCall("SendOrder(QString, QString, QString, int, QString, int, int, QString, QString)",
                              name, scrnb, accno, ordertype, code, amount, price, hoga)
         pass
 
@@ -182,6 +191,11 @@ class Kiwoom:
 
     def GetChejanData(self, nFid):
         pass
+
+    #==========KOA_Function() 함수======
+
+    def SetConditionSearchFlag(self):#조건검색에 결과에 현재가 포함으로 설정
+        self.ocx.dynamicCall("KOA_Functions(QString, QString)", "SetConditionSearchFlag", "AddPrice")
 
     """
 sRQName, // 사용자
@@ -213,18 +227,18 @@ sHogaGb, // 거래구분
 
 
 
-
-
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     kiwoom = Kiwoom()
     kiwoom.CommConnect()
+    kiwoom.SetConditionSearchFlag()
 
-    """
     kiwoom.GetConditionLoad()
     for i in range(len(kiwoom.con_list)):
         kiwoom.SendCondition(i)
 
+    print(kiwoom.code_list)
+    """
     for i in kiwoom.code_list[1] :
         kiwoom.GetPrice(i)
         time.sleep(0.5)

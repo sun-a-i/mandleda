@@ -71,22 +71,25 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
         for i in kw.con_list:
             self.cbox_con.addItem(" ".join(i))#조건검색 목록
 
-    def con_search(self, i = 0):
+    def con_search(self, combobox_list_index = 0):
         #print(kw.code_list[i])
-        self.table_con.setRowCount(len(kw.code_list[i]))
-
-        for j in range(len(kw.code_list[i])):
-            self.table_con.setItem(j, 0, QTableWidgetItem(kw.code_list[i][j]))
-            self.table_con.setItem(j, 1, QTableWidgetItem(kw.GetMasterCodeName(kw.code_list[i][j])))
-            self.table_con.setItem(j, 2, None)
-            self.table_con.setItem(j, 3, QTableWidgetItem(str(kw.GetMasterLastPrice(kw.code_list[i][j]))))
+        self.table_con.setRowCount(len(kw.code_list[combobox_list_index]))
+        tmp_index = 0
+        for code_key in kw.code_list[combobox_list_index]:
+            self.table_con.setItem(tmp_index, 0, QTableWidgetItem(code_key))
+            self.table_con.setItem(tmp_index, 1, QTableWidgetItem(kw.GetMasterCodeName(code_key)))
+            self.table_con.setItem(tmp_index, 2, QTableWidgetItem(kw.code_list[combobox_list_index][code_key]))
+            self.table_con.setItem(tmp_index, 3,
+                                   QTableWidgetItem(
+                                       str(kw.GetMasterLastPrice(kw.code_list[combobox_list_index][code_key]))))
+            tmp_index += 1
 
     def real_activate(self):
         #print("real_activate")
         if self.ckbox_real.isChecked():
             #print(self.real)
             self.real = True
-            kw.SetRealReg("0101", kw.code_list[self.cbox_con.currentIndex()], "9001;10;16;17;302;", '0')
+            kw.SetRealReg("0101", kw.code_list[self.cbox_con.currentIndex()].keys(), "9001;10;16;17;302;", '0')
             pass
         else:
             self.real = False
@@ -96,21 +99,13 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
         if self.ckbox_real.isChecked():
             self.ckbox_real.toggle()
 
-    def set_code_to_table(self, code, price):
-        try:
-            #print("set_code_to_table")
-            for i in range(len(kw.code_list[self.cbox_con.currentIndex()])):
-                #print(i)
-                if code == kw.code_list[self.cbox_con.currentIndex()][i]:
-                    #print("found")
-                    self.table_con.setItem(i, 2, QTableWidgetItem(str(price)))
-                    self.table_con.update()
-
-        except Exception as e:
-            lm.logger.debug(e)
-            lm.logger.debug(lm.traceback.format_exc())
 
 
+def int_format(val):
+    if val[0] == '+' or val[0] == '-':
+        return val[1:]
+    else:
+        return val
 
 #aaaa
 import sys
@@ -130,19 +125,15 @@ class MyThread(QThread):
             time.sleep(0.5)
             #print(kw.coin_price_list)
 
-            if kw.realcondition: #실시간 조건 변동 이벤트
+            if kw.realcondition: #실시간 조건 변동 이벤트(편입,삭제)
                 kw.realcondition = False
                 myWindow.con_search(myWindow.cbox_con.currentIndex())
 
-            if myWindow.real:
-                try:
-                    for i, j in kw.coin_price_list.items():
-                        print(i, j)
-                        myWindow.set_code_to_table(i, j)
-
-                except:
-                    print("error")
-                    pass
+            if myWindow.real:#실시간 체크 가격 update
+                for i, j in kw.recieved_dic.items():
+                    #print(i, j)
+                    kw.code_list[myWindow.cbox_con.currentIndex()][i] = int_format(j)
+                myWindow.con_search(myWindow.cbox_con.currentIndex())
 
 
 
@@ -157,6 +148,7 @@ if  __name__ == "__main__":
     app = QApplication(sys.argv)
     kw = Kiwoom()
     kw.CommConnect()
+    kw.SetConditionSearchFlag()
     kw.GetConditionLoad()
     for i in range(len(kw.con_list)):
         kw.SendCondition(i)
