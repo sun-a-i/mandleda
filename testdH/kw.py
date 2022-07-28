@@ -6,10 +6,10 @@ import sys
 from queue import Queue
 from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox
 import const
+import log_manager as lm
 
 class Kiwoom:
     def __init__(self):
-        self.received_data = Queue()
         self.rd = False
         self.ocx = QAxWidget("KHOPENAPI.KHOpenAPICtrl.1")
         self.ocx.OnEventConnect.connect(self.OnEventConnect)
@@ -22,8 +22,11 @@ class Kiwoom:
         self.ocx.OnReceiveRealData.connect(self.OnReceiveRealData)
         self.ocx.OnReceiveMsg.connect(self.OnReceiveMsg)
         self.ocx.OnReceiveChejanData.connect(self.OnReceiveChejanData)
+        self.ocx.OnReceiveRealCondition.connect(self.OnReceiveRealCondition)
         self.con_list = []
         self.code_list = []
+        self.coin_price_list = {}
+        self.realcondition = False
 
     def CommConnect(self):
         self.ocx.dynamicCall("CommConnect()")
@@ -81,7 +84,8 @@ class Kiwoom:
     def GetMasterLastPrice(self, code):
         ret = self.ocx.dynamicCall("GetMasterLastPrice(QString)", code)
         return int(ret)
-    #===tr===
+
+    #============== 조건검색 관련 함수 =============
     def SetInputValue(self, id, value):
         self.ocx.dynamicCall("SetInputValue(QString, QString)", id, value)
 
@@ -101,6 +105,22 @@ class Kiwoom:
         name = self.GetCommData(trcode, rqname, 0, "종목명")
         price = self.GetCommData(trcode, rqname, 0, "현재가")
         print(name, price)
+
+    def OnReceiveRealCondition(self, code, etype, con_name, con_idx):
+        self.realcondition = True
+        if etype == 'I':#종목편입
+            self.con_list[con_idx].append(code)
+        elif etype == 'D':#종목이탈
+            del self.con_list[con_idx][self.con_list[con_idx].indx(code)]
+        else:
+            print("이건 뭐지 ? OnReceiveRealCondition")
+
+
+
+
+
+
+        pass
 
     """
     def GetPrice(self,code):
@@ -127,14 +147,18 @@ class Kiwoom:
         return data
 
     def OnReceiveRealData(self, code, realtype, realdata):
-        self.rd = True
-        #print(code, "리시브 이벤트 발생")
-        #print(self.GetCommRealData(code, 302))
-        #print(self.GetCommRealData(code, 10))
-        price = self.GetCommRealData(code, 10)
+        try:
+            self.rd = True
+            #print(code, "리시브 이벤트 발생")
+            #print(self.GetCommRealData(code, 302))
+            #print(self.GetCommRealData(code, 10))
+            price = self.GetCommRealData(code, 10)
 
-        self.received_data.put(code)
-        self.received_data.put(price)
+            self.coin_price_list[code] = price
+            print(code, price)
+        except Exception as e:
+            lm.logger.debug(e)
+            lm.logger.debug(lm.traceback.format_exc())
 
     def DisconnectRealData(self, screen):
         self.ocx.dynamicCall("DisconnectRealData(QString)", screen)

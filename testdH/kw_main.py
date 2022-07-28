@@ -1,7 +1,9 @@
+import logging
 import sys
 from PyQt5 import uic
 from kw import Kiwoom
 from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox, QLabel, QTableWidgetItem
+import log_manager as lm
 
 main_ui = './ui/main.ui'
 main_class = uic.loadUiType(main_ui)[0]
@@ -10,6 +12,7 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
 
     def __init__(self):
         super().__init__()
+        lm.logger.debug("window start")
         self.real = False
         self.setupUi(self)
         self.btn1.clicked.connect(self.btn1_clicked_func)
@@ -21,7 +24,24 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
         self.Thread1 = MyThread()
         self.Thread1.start()
         self.con_search()
+
+        #cell 선택 시
+        self.table_con.cellClicked.connect(self.cell_cliked_func)
         pass
+
+    """
+    cell selected fuction
+    """
+    def cell_cliked_func(self):
+        try:
+            num = self.table_con.currentRow()
+            select_code = self.table_con.item(num, 0).text()
+
+            self.view_selec_coin_lbl.setText(select_code)
+
+        except Exception as e:
+            lm.logger.debug(e)
+            lm.logger.debug(lm.traceback.format_exc())
 
     def btn1_clicked_func(self):
         QMessageBox.information(self, 'check', 'clicked a btn')
@@ -51,7 +71,7 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
         for i in kw.con_list:
             self.cbox_con.addItem(" ".join(i))#조건검색 목록
 
-    def con_search(self, i=0):
+    def con_search(self, i = 0):
         #print(kw.code_list[i])
         self.table_con.setRowCount(len(kw.code_list[i]))
 
@@ -62,12 +82,11 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
             self.table_con.setItem(j, 3, QTableWidgetItem(str(kw.GetMasterLastPrice(kw.code_list[i][j]))))
 
     def real_activate(self):
-        print("real_activate")
+        #print("real_activate")
         if self.ckbox_real.isChecked():
-            print(self.real)
+            #print(self.real)
             self.real = True
             kw.SetRealReg("0101", kw.code_list[self.cbox_con.currentIndex()], "9001;10;16;17;302;", '0')
-            print(kw.received_data)
             pass
         else:
             self.real = False
@@ -78,13 +97,18 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
             self.ckbox_real.toggle()
 
     def set_code_to_table(self, code, price):
-        #print("set_code_to_table")
+        try:
+            #print("set_code_to_table")
+            for i in range(len(kw.code_list[self.cbox_con.currentIndex()])):
+                #print(i)
+                if code == kw.code_list[self.cbox_con.currentIndex()][i]:
+                    #print("found")
+                    self.table_con.setItem(i, 2, QTableWidgetItem(str(price)))
+                    self.table_con.update()
 
-        for i in range(len(kw.code_list[self.cbox_con.currentIndex()])):
-            #print(i)
-            if code == kw.code_list[self.cbox_con.currentIndex()][i]:
-                #print("found")
-                self.table_con.setItem(i, 2, QTableWidgetItem(str(price)))
+        except Exception as e:
+            lm.logger.debug(e)
+            lm.logger.debug(lm.traceback.format_exc())
 
 
 
@@ -103,18 +127,24 @@ class MyThread(QThread):
         while True:
             self.cnt = self.cnt + 1
             #print("running %d" % self.cnt)
-            #time.sleep(0.1)
+            time.sleep(0.5)
+            #print(kw.coin_price_list)
+
+            if kw.realcondition: #실시간 조건 변동 이벤트
+                kw.realcondition = False
+                myWindow.con_search(myWindow.cbox_con.currentIndex())
+
             if myWindow.real:
                 try:
-                    code = kw.received_data.get()
-                    #print("code get",code,type(code))
-                    price = kw.received_data.get()
-                    #print("price get",price,type(price))
-                    myWindow.set_code_to_table(code, price)
+                    for i, j in kw.coin_price_list.items():
+                        print(i, j)
+                        myWindow.set_code_to_table(i, j)
 
                 except:
                     print("error")
                     pass
+
+
 
 
 
