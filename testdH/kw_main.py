@@ -17,7 +17,7 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
         self.real = False
         self.setupUi(self)
         self.btn1.clicked.connect(self.btn1_clicked_func)
-        self.btn2.clicked.connect(self.real_activate)
+        self.btn2.clicked.connect(self.btn2_clicked_func)
         self.pushButton.clicked.connect(self.order)
         self.pushButton_3.clicked.connect(self.order_sell)
         self.cbox_con.activated.connect(self.con_search)
@@ -51,7 +51,7 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
         QMessageBox.information(self, 'check', 'clicked a btn')
 
     def btn2_clicked_func(self):
-        QMessageBox.information(self, 'check', 'sec clicked a btn')
+        self.update_jango()
 
     def get_info(self):
         account_cnt = kw.GetLoginInfo("ACCOUNT_CNT")
@@ -59,6 +59,10 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
         user_id = kw.GetLoginInfo("USER_ID")
         user_name = kw.GetLoginInfo("USER_NAME")
         sever = kw.GetLoginInfo("GetServerGubun")
+
+        print(kw.Calljango(account_list[0]))
+        print(account_list)
+
 
         print(
             account_cnt,
@@ -128,10 +132,37 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
         if amt == "":
             amt = 1
 
-        ret = kw.SendOrder_sell(2, accno, code, amt)
+        ret = kw.SendOrder(2, accno, code, amt)
 
         print(ret)
 
+
+    def update_jango(self):
+        try:
+            self.table_jango.setItem(0,0,QTableWidgetItem(kw.jango["예수금"]))
+            self.table_jango.setItem(1,0,QTableWidgetItem(kw.jango["예수금D+1"]))
+            self.table_jango.setItem(2,0,QTableWidgetItem(kw.jango["예수금D+2"]))
+            self.table_jango.setItem(3,0,QTableWidgetItem(kw.jango["출금가능금액"]))
+            self.table_jango.setItem(4,0,QTableWidgetItem(kw.jango["주식매수총액"]))
+            self.table_jango.setItem(5,0,QTableWidgetItem(kw.jango["평가금액합계"]))
+            self.table_jango.setItem(6,0,QTableWidgetItem(kw.jango["미수확보금"]))
+            self.table_jango.setItem(7,0,QTableWidgetItem(kw.jango["현금미수금"]))
+
+            self.table_maedo.setRowCount(len(kw.jango["종목리스트"]))
+            for i in range(len(kw.jango["종목리스트"])):
+                self.table_maedo.setItem(i, 0, QTableWidgetItem(kw.jango["종목리스트"][i]["종목번호"]))
+                self.table_maedo.setItem(i, 1, QTableWidgetItem(kw.jango["종목리스트"][i]["종목명"]))
+                self.table_maedo.setItem(i, 2, QTableWidgetItem(kw.jango["종목리스트"][i]["현재가"]))
+                self.table_maedo.setItem(i, 3, QTableWidgetItem(kw.jango["종목리스트"][i]["매입금액"]))
+                self.table_maedo.setItem(i, 4, QTableWidgetItem(kw.jango["종목리스트"][i]["평가금액"]))
+
+        except Exception as e:
+            lm.logger.debug(e)
+            lm.logger.debug(lm.traceback.format_exc())
+
+
+
+        print(kw.jango)
 
 def int_format(val):
     if val[0] == '+' or val[0] == '-':
@@ -151,6 +182,8 @@ class MyThread(QThread):
     def __init__(self):
         super().__init__()
         finished = pyqtSignal()
+        #jango_update_sig = pyqtSignal()
+
     def run(self):
         while True:
             self.cnt = self.cnt + 1

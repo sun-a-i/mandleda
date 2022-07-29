@@ -15,7 +15,6 @@ class Kiwoom():
         self.ocx.OnEventConnect.connect(self.OnEventConnect)
         self.login = False
         self.condition = False
-        self.tr = False
         self.ocx.OnReceiveConditionVer.connect(self.OnReceiveConditionVer) #안에 ?
         self.ocx.OnReceiveTrCondition.connect(self.OnReceiveTrCondition)#안에 ?
         self.ocx.OnReceiveTrData.connect(self.OnReceiveTrData)
@@ -27,6 +26,7 @@ class Kiwoom():
         self.code_list = []
         self.recieved_dic = {}
         self.realcondition = False
+        self.jango = {}
     #=======로그인 관련 함수========
     def CommConnect(self):
         self.ocx.dynamicCall("CommConnect()")
@@ -57,6 +57,7 @@ class Kiwoom():
 
     def GetConditionLoad(self):#이걸 부르면
         self.ocx.dynamicCall("GetConditionLoad()")
+
         while self.condition is False:
             #print("asd")
             pythoncom.PumpWaitingMessages()
@@ -105,21 +106,76 @@ class Kiwoom():
         self.ocx.dynamicCall("SetInputValue(QString, QString)", id, value)
 
     def CommRqData(self, rqname, trcode, next, screen):
-        self.tr = False
-        self.ocx.dynamicCall("CommRqData(QString, QString, int, QString)", rqname, trcode, next, screen)
-        while self.tr is False:
-            pythoncom.PumpWaitingMessages()
+        return self.ocx.dynamicCall("CommRqData(QString, QString, int, QString)", rqname, trcode, next, screen)
 
     def GetCommData(self, trcode, rqname, index, item):
         data = self.ocx.dynamicCall("GetCommData(QString, QString, int, QString)", trcode, rqname, index, item)
         return data.strip()
 
-    def OnReceiveTrData(self, screen, rqname, trcode, record, next):
-        print(screen, rqname, trcode, record, next)
-        self.tr = True
-        name = self.GetCommData(trcode, rqname, 0, "종목명")
-        price = self.GetCommData(trcode, rqname, 0, "현재가")
-        print(name, price)
+    def GetTRCount(self,trcode, rqname):
+        return self.ocx.dynamicCall("GetRepeatCnt(QString, QString)", trcode, rqname)
+
+    def OnReceiveTrData(self, screen, rcname, trcode, record, next):
+        print("OnReceiveTrData", screen, rcname, trcode, record, next)
+        if next == "2":
+            print("데이터 더 있음 !!")
+
+        #print(screen, rqname, trcode, record, next)
+        #name = self.GetCommData(trcode, rcname, 0, "종목명")
+        #price = self.GetCommData(trcode, rcname, 0, "현재가")
+
+        if rcname == "잔고요청":
+            """
+            print("잔고요청 받습니다")
+            print(self.GetCommData("opw00005", "잔고요청", 0,"예수금"),"예수금")
+            print(self.GetCommData("opw00005", "잔고요청", 0,"예수금D+1"),"예수금D+1")
+            print(self.GetCommData("opw00005", "잔고요청", 0,"예수금D+2"),"예수금D+2")
+            print(self.GetCommData("opw00005", "잔고요청", 0,"출금가능금액"),"출금가능금액")
+            print(self.GetCommData("opw00005", "잔고요청", 0,"미수확보금"),"미수확보금")
+            print(self.GetCommData("opw00005", "잔고요청", 0,"현금미수금"),"현금미수금")
+            print(self.GetCommData("opw00005", "잔고요청", 0,"주식매수총액"),"주식매수총액")
+            print(self.GetCommData("opw00005", "잔고요청", 0,"증거금현금"),"증거금현금")
+            print(self.GetCommData("opw00005", "잔고요청", 0,"평가금액합계"),"평가금액합계")
+            #====멀티tr====
+            #print(self.GetTRCount("opw00005", "잔고요청"), "trconut")
+            for i in range(self.GetTRCount("opw00005", "잔고요청")):
+                print(self.GetCommData("opw00005", "잔고요청", i,"종목번호"),"종목번호")
+                print(self.GetCommData("opw00005", "잔고요청", i,"종목명"),"종목명")
+                print(self.GetCommData("opw00005", "잔고요청", i, "현재가"), "현재가")
+                print(self.GetCommData("opw00005", "잔고요청", i,"매입금액"),"매입금액")
+                print(self.GetCommData("opw00005", "잔고요청", i,"평가금액"),"평가금액")"""
+
+
+            self.jango["예수금"] = self.GetCommData("opw00005", "잔고요청", 0, "예수금").lstrip("0")
+            self.jango["예수금D+1"] = self.GetCommData("opw00005", "잔고요청", 0, "예수금D+1").lstrip("0")
+            self.jango["예수금D+2"] = self.GetCommData("opw00005", "잔고요청", 0, "예수금D+2").lstrip("0")
+            self.jango["출금가능금액"] = self.GetCommData("opw00005", "잔고요청", 0, "출금가능금액").lstrip("0")
+            self.jango["미수확보금"] = self.GetCommData("opw00005", "잔고요청", 0, "미수확보금").lstrip("0")
+            self.jango["현금미수금"] = self.GetCommData("opw00005", "잔고요청", 0, "현금미수금").lstrip("0")
+            self.jango["주식매수총액"] = self.GetCommData("opw00005", "잔고요청", 0, "주식매수총액").lstrip("0")
+            self.jango["증거금현금"] = self.GetCommData("opw00005", "잔고요청", 0, "증거금현금").lstrip("0")
+            self.jango["평가금액합계"] = self.GetCommData("opw00005", "잔고요청", 0, "평가금액합계").lstrip("0")
+            # ====멀티tr====
+            # print(self.GetTRCount("opw00005", "잔고요청"), "trconut")
+
+            self.jango["종목리스트"] = []
+            for i in range(self.GetTRCount("opw00005", "잔고요청")):
+                tmp = {}
+                tmp["종목번호"] = self.GetCommData("opw00005", "잔고요청", i, "종목번호").lstrip("0")
+                tmp["종목명"] = self.GetCommData("opw00005", "잔고요청", i, "종목명").lstrip("0")
+                tmp["현재가"] = self.GetCommData("opw00005", "잔고요청", i, "현재가").lstrip("0")
+                tmp["매입금액"] = self.GetCommData("opw00005", "잔고요청", i, "매입금액").lstrip("0")
+                tmp["평가금액"] = self.GetCommData("opw00005", "잔고요청", i, "평가금액").lstrip("0")
+                self.jango["종목리스트"].append(tmp)
+
+            #signal to update jango
+            #print(self.jango)
+
+        elif rcname == "othertr":
+            pass
+
+
+        #print(name, price)
 
     def OnReceiveRealCondition(self, code, etype, con_name, con_idx):
         self.realcondition = True
@@ -204,6 +260,19 @@ class Kiwoom():
 
     def SetConditionSearchFlag(self):#조건검색에 결과에 현재가 포함으로 설정
         self.ocx.dynamicCall("KOA_Functions(QString, QString)", "SetConditionSearchFlag", "AddPrice")
+
+    #==============기타 함수==================
+
+    def Calljango(self,accno):#잔고 요청
+        self.SetInputValue("계좌번호",accno)
+        self.SetInputValue("비밀번호","")
+        self.SetInputValue("비밀번호입력매체구분","")
+        print("잔고요청 전송됨")
+        ret = self.CommRqData("잔고요청","opw00005","0","0101")
+        if ret != 0 :
+            print("잔고 조회 오류코드 : ",ret)
+        else:
+            print("잔고요청 성공")
 
     """
 sRQName, // 사용자
