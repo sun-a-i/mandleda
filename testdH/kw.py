@@ -123,6 +123,7 @@ class Kiwoom():
 
     def OnReceiveRealCondition(self, code, etype, con_name, con_idx):
         self.realcondition = True
+        print("조건검색 변동 이벤트 발생 :", etype, code)
         if etype == 'I':#종목편입
             self.code_list[con_idx][code] = None
         elif etype == 'D':#종목이탈
@@ -163,8 +164,8 @@ class Kiwoom():
             #print(self.GetCommRealData(code, 10))
             price = self.GetCommRealData(code, 10)
 
-            self.recieved_dic[code] = price#추후 삭제
-            print(code, price)#추후 삭제
+            self.recieved_dic[code] = price
+            #print(code, price)
         except Exception as e:
             lm.logger.debug(e)
             lm.logger.debug(lm.traceback.format_exc())

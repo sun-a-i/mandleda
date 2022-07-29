@@ -4,6 +4,7 @@ from PyQt5 import uic
 from kw import Kiwoom
 from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox, QLabel, QTableWidgetItem
 import log_manager as lm
+from PyQt5.QtCore import *
 
 main_ui = './ui/main.ui'
 main_class = uic.loadUiType(main_ui)[0]
@@ -24,6 +25,7 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
         self.ckbox_real.stateChanged.connect(self.real_activate)
         self.get_info()
         self.Thread1 = MyThread()
+        self.Thread1.finished.connect(self.con_search)
         self.Thread1.start()
         self.con_search()
 
@@ -73,18 +75,24 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
         for i in kw.con_list:
             self.cbox_con.addItem(" ".join(i))#조건검색 목록
 
-    def con_search(self, combobox_list_index = 0):
-        #print(kw.code_list[i])
+    @pyqtSlot()
+    def con_search(self):
+        combobox_list_index = self.cbox_con.currentIndex()
+        if combobox_list_index == "": combobox_list_index = 0
+        #print("con_search")
+        #print(combobox_list_index)
+        #print(kw.code_list[combobox_list_index])
         self.table_con.setRowCount(len(kw.code_list[combobox_list_index]))
+        #print("len(kw.code_list[combobox_list_index])",len(kw.code_list[combobox_list_index]))
         tmp_index = 0
         for code_key in kw.code_list[combobox_list_index]:
             self.table_con.setItem(tmp_index, 0, QTableWidgetItem(code_key))
             self.table_con.setItem(tmp_index, 1, QTableWidgetItem(kw.GetMasterCodeName(code_key)))
             self.table_con.setItem(tmp_index, 2, QTableWidgetItem(kw.code_list[combobox_list_index][code_key]))
-            self.table_con.setItem(tmp_index, 3,
-                                   QTableWidgetItem(
-                                       str(kw.GetMasterLastPrice(kw.code_list[combobox_list_index][code_key]))))
+            self.table_con.setItem(tmp_index, 3, QTableWidgetItem(str(kw.GetMasterLastPrice(code_key).lstrip("0"))))
+            #self.table_con.setItem(tmp_index, 4, QTableWidgetItem(str(tmp_index)))
             tmp_index += 1
+
 
     def real_activate(self):
         #print("real_activate")
@@ -134,7 +142,7 @@ def int_format(val):
 #aaaa
 import sys
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtCore import QThread
 import time
 class MyThread(QThread):
@@ -142,22 +150,24 @@ class MyThread(QThread):
 
     def __init__(self):
         super().__init__()
+        finished = pyqtSignal()
     def run(self):
         while True:
             self.cnt = self.cnt + 1
             #print("running %d" % self.cnt)
-            time.sleep(0.5)
-            #print(kw.coin_price_list)
+            time.sleep(2)
+
 
             if kw.realcondition: #실시간 조건 변동 이벤트(편입,삭제)
                 kw.realcondition = False
                 myWindow.con_search(myWindow.cbox_con.currentIndex())
-
+                self.finished.emit()
             if myWindow.real:#실시간 체크 가격 update
                 for i, j in kw.recieved_dic.items():
                     #print(i, j)
-                    kw.code_list[myWindow.cbox_con.currentIndex()][i] = int_format(j)
-                myWindow.con_search(myWindow.cbox_con.currentIndex())
+                    if i in kw.code_list[myWindow.cbox_con.currentIndex()]:
+                        kw.code_list[myWindow.cbox_con.currentIndex()][i] = int_format(j)
+                self.finished.emit()
 
 
 
