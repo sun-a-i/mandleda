@@ -5,17 +5,23 @@ from kw import Kiwoom
 from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox, QLabel, QTableWidgetItem
 import log_manager as lm
 from PyQt5.QtCore import *
+import traceback
+from time import sleep
+
 
 main_ui = './ui/main.ui'
 main_class = uic.loadUiType(main_ui)[0]
+
+kname_list = {}
+code_list = {}
 
 class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui path
 
     def __init__(self):
         super().__init__()
-        lm.logger.debug("window start")
         self.real = False
         self.setupUi(self)
+        #self.init()
         self.btn1.clicked.connect(self.btn1_clicked_func)
         self.btn2.clicked.connect(self.btn2_clicked_func)
         self.pushButton.clicked.connect(self.order)
@@ -32,6 +38,32 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
         #cell 선택 시
         self.table_con.cellClicked.connect(self.cell_cliked_func)
         pass
+
+    def init(self):
+        try:
+            global kname_list, code_list
+            # 종목코드 불러오기
+            kospi_code_list = kw.GetCodeListByMarket("0")
+            if len(kospi_code_list) > 0:
+                for i in kospi_code_list:  # 삼성전자 : 006950
+                    kname_list.update({i: kw.get_master_code_name(i)})
+                    code_list.update({kw.get_master_code_name(i): i})
+            sleep(1)
+
+            kosdak_code_list = kw.GetCodeListByMarket('10')
+            if len(kosdak_code_list) > 0:
+                for i in kosdak_code_list:
+                    kname_list.update({i: kw.get_master_code_name(i)})
+                    code_list.update({kw.get_master_code_name(i): i})
+
+            lm.logger.debug("kospi = %s, kosdak = %s, kname_list = %s, code_list = %s", len(kospi_code_list),
+                         len(kosdak_code_list),
+                         len(kname_list), len(code_list))
+
+            sleep(1)
+        except Exception as e:
+            lm.logger.debug("except")
+            lm.logger.debug(lm.traceback.format_exc())
 
     """
     cell selected fuction
@@ -60,11 +92,7 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
         user_name = kw.GetLoginInfo("USER_NAME")
         sever = kw.GetLoginInfo("GetServerGubun")
 
-        print(kw.Calljango(account_list[0]))
-        print(account_list)
-
-
-        print(
+        lm.logger.debug("%s, %s, %s, %s, %s",
             account_cnt,
             account_list,
             user_id,
@@ -79,15 +107,17 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
         for i in kw.con_list:
             self.cbox_con.addItem(" ".join(i))#조건검색 목록
 
+        kw.Calljango(account_list[0])
+
     @pyqtSlot()
     def con_search(self):
         combobox_list_index = self.cbox_con.currentIndex()
         if combobox_list_index == "": combobox_list_index = 0
-        #print("con_search")
-        #print(combobox_list_index)
-        #print(kw.code_list[combobox_list_index])
+        #lm.logger.debug("con_search")
+        #lm.logger.debug(combobox_list_index)
+        #lm.logger.debug(kw.code_list[combobox_list_index])
         self.table_con.setRowCount(len(kw.code_list[combobox_list_index]))
-        #print("len(kw.code_list[combobox_list_index])",len(kw.code_list[combobox_list_index]))
+        #lm.logger.debug("len(kw.code_list[combobox_list_index])",len(kw.code_list[combobox_list_index]))
         tmp_index = 0
         for code_key in kw.code_list[combobox_list_index]:
             self.table_con.setItem(tmp_index, 0, QTableWidgetItem(code_key))
@@ -99,9 +129,9 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
 
 
     def real_activate(self):
-        #print("real_activate")
+        #lm.logger.debug("real_activate")
         if self.ckbox_real.isChecked():
-            #print(self.real)
+            #lm.logger.debug(self.real)
             self.real = True
             kw.SetRealReg("0101", kw.code_list[self.cbox_con.currentIndex()].keys(), "9001;10;16;17;302;", '0')
             pass
@@ -123,7 +153,7 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
 
         ret = kw.SendOrder(1, accno, code, amt)
 
-        print(ret)
+        lm.logger.debug(ret)
 
     def order_sell(self):
         accno = self.cbox.currentText()
@@ -134,7 +164,7 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
 
         ret = kw.SendOrder(2, accno, code, amt)
 
-        print(ret)
+        lm.logger.debug(ret)
 
 
     def update_jango(self):
@@ -160,9 +190,25 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
             lm.logger.debug(e)
             lm.logger.debug(lm.traceback.format_exc())
 
+        lm.logger.debug(kw.jango)
 
+"""
+param1:현재가
+param2:계산할 퍼센티지
+리턴 : 계산 후 가격
+"""
+def calc_next_price(cp, per):
+    try:
+        cp = int(cp)
+        per = float(per)
 
-        print(kw.jango)
+        val = 0.0
+        val = cp + ((cp / 100) * per)
+
+        return val
+    except Exception as e:  # 모든 예외의 에러 메시지를 출력할 때는 Exception을 사용
+        lm.logger.debug("예외가 발생했습니다. %s", e)
+        lm.logger.debug(lm.traceback.format_exc())
 
 def int_format(val):
     if val[0] == '+' or val[0] == '-':
@@ -187,7 +233,7 @@ class MyThread(QThread):
     def run(self):
         while True:
             self.cnt = self.cnt + 1
-            #print("running %d" % self.cnt)
+            #lm.logger.debug("running %d" % self.cnt)
             time.sleep(2)
 
 
@@ -197,21 +243,15 @@ class MyThread(QThread):
                 self.finished.emit()
             if myWindow.real:#실시간 체크 가격 update
                 for i, j in kw.recieved_dic.items():
-                    #print(i, j)
+                    #lm.logger.debug(i, j)
                     if i in kw.code_list[myWindow.cbox_con.currentIndex()]:
                         kw.code_list[myWindow.cbox_con.currentIndex()][i] = int_format(j)
                 self.finished.emit()
 
-
-
-
-
-
 #aaaa
 
-
-
 if  __name__ == "__main__":
+    lm.logger.debug("window start")
     app = QApplication(sys.argv)
     kw = Kiwoom()
     kw.CommConnect()
@@ -219,8 +259,13 @@ if  __name__ == "__main__":
     kw.GetConditionLoad()
     for i in range(len(kw.con_list)):
         kw.SendCondition(i)
-    #print(kw.code_list)
+    #lm.logger.debug(kw.code_list)
 
     myWindow = MyWindow()
     myWindow.show()
     app.exec_()
+
+
+
+
+

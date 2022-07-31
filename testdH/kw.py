@@ -27,15 +27,21 @@ class Kiwoom():
         self.recieved_dic = {}
         self.realcondition = False
         self.jango = {}
+
     #=======로그인 관련 함수========
     def CommConnect(self):
-        self.ocx.dynamicCall("CommConnect()")
-        while self.login is False:
-            pythoncom.PumpWaitingMessages()
+        try:
+            self.ocx.dynamicCall("CommConnect()")
+            while self.login is False:
+                pythoncom.PumpWaitingMessages()
+
+        except Exception as e:
+            lm.logger.debug(e)
+            lm.logger.debug(lm.traceback.format_exc())
 
     def OnEventConnect(self, code):
         self.login = True
-        print("login is done", code)
+        lm.logger.debug("login is done %s", code)
 
     #======기타 요청 함수==========
     def GetLoginInfo(self, tag):
@@ -50,57 +56,77 @@ class Kiwoom():
         ret = self.ocx.dynamicCall("GetMasterLastPrice(QString)", code)
         return ret
 
+    def GetCodeListByMarket(self, market):
+        ret = self.ocx.dynamicCall("GetCodeListByMarket(QString)", market)
+        codes = ret.split(';')[:-1]
+        return codes
 
 
     #============== 조건검색 관련 함수 =============
 
 
     def GetConditionLoad(self):#이걸 부르면
-        self.ocx.dynamicCall("GetConditionLoad()")
-
-        while self.condition is False:
-            #print("asd")
-            pythoncom.PumpWaitingMessages()
+        try:
+            self.ocx.dynamicCall("GetConditionLoad()")
+            while self.condition is False:
+                #lm.logger.debug("asd")
+                pythoncom.PumpWaitingMessages()
+        except Exception as e:
+            lm.logger.debug(e)
+            lm.logger.debug(lm.traceback.format_exc())
 
     def OnReceiveConditionVer(self): #이게 호출
         self.condition = True
-        print("condition is got")
+        lm.logger.debug("condition is got")
         con_str = self.ocx.dynamicCall("GetConditionNameList()").split(";")[:-1]
         self.con_list = []
+
+        lm.logger.debug("수집된 조건식명 리스트 : %s", con_str)
         for i in con_str:
             self.con_list.append(i.split("^"))
-        print(self.con_list)
+        lm.logger.debug(self.con_list)
 
     def SendCondition(self,i):
-        self.condition = False
-        er = self.ocx.dynamicCall("SendCondition(QString,QString,QInt,QInt)", "0156",
-                                  self.con_list[i][1], int(self.con_list[i][0]), 0)
-        if er:
-            #print("조건식 조회 성공")
-            pass
-        else:
-            print("조건식 조회 실패")
+        try:
+            self.condition = False
+            er = self.ocx.dynamicCall("SendCondition(QString,QString,QInt,QInt)", "0156",
+                                      self.con_list[i][1], int(self.con_list[i][0]), 0)
+            if er:
+                lm.logger.debug("조건식 조회 성공")
+                pass
+            else:
+                lm.logger.debug("조건식 조회 실패")
 
-        while self.condition is False:
-            pythoncom.PumpWaitingMessages()
-        #===초기설정===
+            count = 1
+            while self.condition is False:
+                if count > 5: break
+                pythoncom.PumpWaitingMessages()
+                count += 1
+            #===초기설정===
+        except Exception as e:
+            lm.logger.debug(e)
+            lm.logger.debug(lm.traceback.format_exc())
 
     def OnReceiveTrCondition(self,screennomb,codelist,conname,idx,next): #조건검색 후 받아오는 이벤트
-        self.condition = True
-        #print(screennomb,codelist,conname,idx,next)
-        ret = {}
+        try:
+            self.condition = True
+            #lm.logger.debug(screennomb,codelist,conname,idx,next)
+            ret = {}
 
-        tmp = codelist.split(";")[:-1]
+            tmp = codelist.split(";")[:-1]
 
-        for i in tmp:
-            kv = i.split("^")
-            if len(kv[0]) == 6:
-                ret[kv[0]] = kv[1].lstrip("0")
-            else:
-                print("종목코드 자리수 오류",kv[0],kv[1])
+            for i in tmp:
+                kv = i.split("^")
+                if len(kv[0]) == 6:
+                    ret[kv[0]] = kv[1].lstrip("0")
+                else:
+                    lm.logger.debug("종목코드 자리수 오류",kv[0],kv[1])
 
-        #print(ret)
-        self.code_list.append(ret)
+            #lm.logger.debug(ret)
+            self.code_list.append(ret)
+        except Exception as e:
+            lm.logger.debug(e)
+            lm.logger.debug(lm.traceback.format_exc())
 
     def SetInputValue(self, id, value):
         self.ocx.dynamicCall("SetInputValue(QString, QString)", id, value)
@@ -116,34 +142,34 @@ class Kiwoom():
         return self.ocx.dynamicCall("GetRepeatCnt(QString, QString)", trcode, rqname)
 
     def OnReceiveTrData(self, screen, rcname, trcode, record, next):
-        print("OnReceiveTrData", screen, rcname, trcode, record, next)
+        lm.logger.debug("OnReceiveTrData %s, %s, %s, %s, %s", screen, rcname, trcode, record, next)
         if next == "2":
-            print("데이터 더 있음 !!")
+            lm.logger.debug("데이터 더 있음 !!")
 
-        #print(screen, rqname, trcode, record, next)
-        #name = self.GetCommData(trcode, rcname, 0, "종목명")
+        #lm.logger.debug(screen, rqname, trcode, record, next)
+        #name = self.GetCommData(trcode, rcname, 0, "종목명")\
         #price = self.GetCommData(trcode, rcname, 0, "현재가")
 
         if rcname == "잔고요청":
             """
-            print("잔고요청 받습니다")
-            print(self.GetCommData("opw00005", "잔고요청", 0,"예수금"),"예수금")
-            print(self.GetCommData("opw00005", "잔고요청", 0,"예수금D+1"),"예수금D+1")
-            print(self.GetCommData("opw00005", "잔고요청", 0,"예수금D+2"),"예수금D+2")
-            print(self.GetCommData("opw00005", "잔고요청", 0,"출금가능금액"),"출금가능금액")
-            print(self.GetCommData("opw00005", "잔고요청", 0,"미수확보금"),"미수확보금")
-            print(self.GetCommData("opw00005", "잔고요청", 0,"현금미수금"),"현금미수금")
-            print(self.GetCommData("opw00005", "잔고요청", 0,"주식매수총액"),"주식매수총액")
-            print(self.GetCommData("opw00005", "잔고요청", 0,"증거금현금"),"증거금현금")
-            print(self.GetCommData("opw00005", "잔고요청", 0,"평가금액합계"),"평가금액합계")
+            lm.logger.debug("잔고요청 받습니다")
+            lm.logger.debug(self.GetCommData("opw00005", "잔고요청", 0,"예수금"),"예수금")
+            lm.logger.debug(self.GetCommData("opw00005", "잔고요청", 0,"예수금D+1"),"예수금D+1")
+            lm.logger.debug(self.GetCommData("opw00005", "잔고요청", 0,"예수금D+2"),"예수금D+2")
+            lm.logger.debug(self.GetCommData("opw00005", "잔고요청", 0,"출금가능금액"),"출금가능금액")
+            lm.logger.debug(self.GetCommData("opw00005", "잔고요청", 0,"미수확보금"),"미수확보금")
+            lm.logger.debug(self.GetCommData("opw00005", "잔고요청", 0,"현금미수금"),"현금미수금")
+            lm.logger.debug(self.GetCommData("opw00005", "잔고요청", 0,"주식매수총액"),"주식매수총액")
+            lm.logger.debug(self.GetCommData("opw00005", "잔고요청", 0,"증거금현금"),"증거금현금")
+            lm.logger.debug(self.GetCommData("opw00005", "잔고요청", 0,"평가금액합계"),"평가금액합계")
             #====멀티tr====
-            #print(self.GetTRCount("opw00005", "잔고요청"), "trconut")
+            #lm.logger.debug(self.GetTRCount("opw00005", "잔고요청"), "trconut")
             for i in range(self.GetTRCount("opw00005", "잔고요청")):
-                print(self.GetCommData("opw00005", "잔고요청", i,"종목번호"),"종목번호")
-                print(self.GetCommData("opw00005", "잔고요청", i,"종목명"),"종목명")
-                print(self.GetCommData("opw00005", "잔고요청", i, "현재가"), "현재가")
-                print(self.GetCommData("opw00005", "잔고요청", i,"매입금액"),"매입금액")
-                print(self.GetCommData("opw00005", "잔고요청", i,"평가금액"),"평가금액")"""
+                lm.logger.debug(self.GetCommData("opw00005", "잔고요청", i,"종목번호"),"종목번호")
+                lm.logger.debug(self.GetCommData("opw00005", "잔고요청", i,"종목명"),"종목명")
+                lm.logger.debug(self.GetCommData("opw00005", "잔고요청", i, "현재가"), "현재가")
+                lm.logger.debug(self.GetCommData("opw00005", "잔고요청", i,"매입금액"),"매입금액")
+                lm.logger.debug(self.GetCommData("opw00005", "잔고요청", i,"평가금액"),"평가금액")"""
 
 
             self.jango["예수금"] = self.GetCommData("opw00005", "잔고요청", 0, "예수금").lstrip("0")
@@ -156,7 +182,7 @@ class Kiwoom():
             self.jango["증거금현금"] = self.GetCommData("opw00005", "잔고요청", 0, "증거금현금").lstrip("0")
             self.jango["평가금액합계"] = self.GetCommData("opw00005", "잔고요청", 0, "평가금액합계").lstrip("0")
             # ====멀티tr====
-            # print(self.GetTRCount("opw00005", "잔고요청"), "trconut")
+            # lm.logger.debug(self.GetTRCount("opw00005", "잔고요청"), "trconut")
 
             self.jango["종목리스트"] = []
             for i in range(self.GetTRCount("opw00005", "잔고요청")):
@@ -169,23 +195,23 @@ class Kiwoom():
                 self.jango["종목리스트"].append(tmp)
 
             #signal to update jango
-            #print(self.jango)
+            #lm.logger.debug(self.jango)
 
         elif rcname == "othertr":
             pass
 
 
-        #print(name, price)
+        #lm.logger.debug(name, price)
 
     def OnReceiveRealCondition(self, code, etype, con_name, con_idx):
         self.realcondition = True
-        print("조건검색 변동 이벤트 발생 :", etype, code)
+        lm.logger.debug("조건검색 변동 이벤트 발생 :", etype, code)
         if etype == 'I':#종목편입
             self.code_list[con_idx][code] = None
         elif etype == 'D':#종목이탈
             del self.code_list[con_idx][code]
         else:
-            print("이건 뭐지 ? OnReceiveRealCondition")
+            lm.logger.debug("이건 뭐지 ? OnReceiveRealCondition")
         pass
 
     """
@@ -204,9 +230,9 @@ class Kiwoom():
                              screen, codelist, FID_list, type)
 
         while self.rd is False:
-            #print(0)
+            #lm.logger.debug(0)
             pythoncom.PumpWaitingMessages()
-            #print(1)
+            #lm.logger.debug(1)
 
     def GetCommRealData(self, code, fid):
         data = self.ocx.dynamicCall("GetCommRealData(QString, int)", code, fid)
@@ -215,27 +241,28 @@ class Kiwoom():
     def OnReceiveRealData(self, code, realtype, realdata):
         try:
             self.rd = True
-            #print(code, "리시브 이벤트 발생")
-            #print(self.GetCommRealData(code, 302))
-            #print(self.GetCommRealData(code, 10))
+            #lm.logger.debug(code, "리시브 이벤트 발생")
+            #lm.logger.debug(self.GetCommRealData(code, 302))
+            #lm.logger.debug(self.GetCommRealData(code, 10))
             price = self.GetCommRealData(code, 10)
 
             self.recieved_dic[code] = price
-            #print(code, price)
+
+            #lm.logger.debug(code, price)
         except Exception as e:
             lm.logger.debug(e)
             lm.logger.debug(lm.traceback.format_exc())
 
     def DisconnectRealData(self, screen):
         self.ocx.dynamicCall("DisconnectRealData(QString)", screen)
-        print("구독해지됨")
+        lm.logger.debug("구독해지됨")
 
 
     #=======================주문 관련 함수===========================
 
     def SendOrder(self,type, accno, code, amount):#시장가 매수
         try:
-            #print("send order")
+            #lm.logger.debug("send order")
             return self.ocx.dynamicCall("SendOrder(QString, QString, QString, int, QString, int   , int, QString, QString)",
                                                 ["test_name", "0101", accno  , type  , code   , amount, 0  , "03", ""])
         except Exception as e:
@@ -246,12 +273,12 @@ class Kiwoom():
     #def OnReceiveTrData(self, screen, rqname, trcode, record, next):
 
     def OnReceiveMsg(self, sScrNo, sRQName, sTrCode, sMsg):
-        print("OnReceiveMsg",sScrNo, sRQName, sTrCode, sMsg)
+        lm.logger.debug("OnReceiveMsg %s, %s, %s, %s",sScrNo, sRQName, sTrCode, sMsg)
 
     def OnReceiveChejanData(self, sGubun, nItemCnt, sFIdList):
-        print("OnReceiveChejanData",sGubun, nItemCnt, sFIdList)
+        lm.logger.debug("OnReceiveChejanData %s, %s, %s, %s",sGubun, nItemCnt, sFIdList)
 
-        #print(self.GetChejanData(Fid))
+        #lm.logger.debug(self.GetChejanData(Fid))
 
     def GetChejanData(self, nFid):
         pass
@@ -266,13 +293,13 @@ class Kiwoom():
     def Calljango(self,accno):#잔고 요청
         self.SetInputValue("계좌번호",accno)
         self.SetInputValue("비밀번호","")
-        self.SetInputValue("비밀번호입력매체구분","")
-        print("잔고요청 전송됨")
+        self.SetInputValue("비밀번호입력매체구분","00")
+        lm.logger.debug("잔고요청 전송됨")
         ret = self.CommRqData("잔고요청","opw00005","0","0101")
         if ret != 0 :
-            print("잔고 조회 오류코드 : ",ret)
+            lm.logger.debug("잔고 조회 오류코드 : ",ret)
         else:
-            print("잔고요청 성공")
+            lm.logger.debug("잔고요청 성공")
 
     """
 sRQName, // 사용자
@@ -300,10 +327,6 @@ sHogaGb, // 거래구분
 """
 
 
-
-
-
-
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     kiwoom = Kiwoom()
@@ -314,7 +337,7 @@ if __name__ == "__main__":
     for i in range(len(kiwoom.con_list)):
         kiwoom.SendCondition(i)
 
-    print(kiwoom.code_list)
+    lm.logger.debug(kiwoom.code_list)
     """
     for i in kiwoom.code_list[1] :
         kiwoom.GetPrice(i)
