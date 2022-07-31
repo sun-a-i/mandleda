@@ -1,0 +1,271 @@
+import logging
+import sys
+from PyQt5 import uic
+from kw import Kiwoom
+from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox, QLabel, QTableWidgetItem
+import log_manager as lm
+from PyQt5.QtCore import *
+import traceback
+from time import sleep
+
+
+main_ui = './ui/main.ui'
+main_class = uic.loadUiType(main_ui)[0]
+
+kname_list = {}
+code_list = {}
+
+class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui path
+
+    def __init__(self):
+        super().__init__()
+        self.real = False
+        self.setupUi(self)
+        #self.init()
+        self.btn1.clicked.connect(self.btn1_clicked_func)
+        self.btn2.clicked.connect(self.btn2_clicked_func)
+        self.pushButton.clicked.connect(self.order)
+        self.pushButton_3.clicked.connect(self.order_sell)
+        self.cbox_con.activated.connect(self.con_search)
+        self.cbox_con.activated.connect(self.deactivate_real)
+        self.ckbox_real.stateChanged.connect(self.real_activate)
+        self.get_info()
+        self.Thread1 = MyThread()
+        self.Thread1.finished.connect(self.con_search)
+        self.Thread1.start()
+        self.con_search()
+
+        #cell 선택 시
+        self.table_con.cellClicked.connect(self.cell_cliked_func)
+        pass
+
+    def init(self):
+        try:
+            global kname_list, code_list
+            # 종목코드 불러오기
+            kospi_code_list = kw.GetCodeListByMarket("0")
+            if len(kospi_code_list) > 0:
+                for i in kospi_code_list:  # 삼성전자 : 006950
+                    kname_list.update({i: kw.get_master_code_name(i)})
+                    code_list.update({kw.get_master_code_name(i): i})
+            sleep(1)
+
+            kosdak_code_list = kw.GetCodeListByMarket('10')
+            if len(kosdak_code_list) > 0:
+                for i in kosdak_code_list:
+                    kname_list.update({i: kw.get_master_code_name(i)})
+                    code_list.update({kw.get_master_code_name(i): i})
+
+            lm.logger.debug("kospi = %s, kosdak = %s, kname_list = %s, code_list = %s", len(kospi_code_list),
+                         len(kosdak_code_list),
+                         len(kname_list), len(code_list))
+
+            sleep(1)
+        except Exception as e:
+            lm.logger.debug("except")
+            lm.logger.debug(lm.traceback.format_exc())
+
+    """
+    cell selected fuction
+    """
+    def cell_cliked_func(self):
+        try:
+            num = self.table_con.currentRow()
+            select_code = self.table_con.item(num, 0).text()
+
+            self.view_selec_coin_lbl.setText(select_code)
+
+        except Exception as e:
+            lm.logger.debug(e)
+            lm.logger.debug(lm.traceback.format_exc())
+
+    def btn1_clicked_func(self):
+        QMessageBox.information(self, 'check', 'clicked a btn')
+
+    def btn2_clicked_func(self):
+        self.update_jango()
+
+    def get_info(self):
+        account_cnt = kw.GetLoginInfo("ACCOUNT_CNT")
+        account_list = kw.GetLoginInfo("ACCLIST").split(';')[:-1]
+        user_id = kw.GetLoginInfo("USER_ID")
+        user_name = kw.GetLoginInfo("USER_NAME")
+        sever = kw.GetLoginInfo("GetServerGubun")
+
+        lm.logger.debug("%s, %s, %s, %s, %s",
+            account_cnt,
+            account_list,
+            user_id,
+            user_name,
+            sever)
+
+        self.name.setText(user_name)#이름 설정
+
+        for i in account_list:
+            self.cbox.addItem(i)#계좌 목록
+
+        for i in kw.con_list:
+            self.cbox_con.addItem(" ".join(i))#조건검색 목록
+
+        kw.Calljango(account_list[0])
+
+    @pyqtSlot()
+    def con_search(self):
+        combobox_list_index = self.cbox_con.currentIndex()
+        if combobox_list_index == "": combobox_list_index = 0
+        #lm.logger.debug("con_search")
+        #lm.logger.debug(combobox_list_index)
+        #lm.logger.debug(kw.code_list[combobox_list_index])
+        self.table_con.setRowCount(len(kw.code_list[combobox_list_index]))
+        #lm.logger.debug("len(kw.code_list[combobox_list_index])",len(kw.code_list[combobox_list_index]))
+        tmp_index = 0
+        for code_key in kw.code_list[combobox_list_index]:
+            self.table_con.setItem(tmp_index, 0, QTableWidgetItem(code_key))
+            self.table_con.setItem(tmp_index, 1, QTableWidgetItem(kw.GetMasterCodeName(code_key)))
+            self.table_con.setItem(tmp_index, 2, QTableWidgetItem(kw.code_list[combobox_list_index][code_key]))
+            self.table_con.setItem(tmp_index, 3, QTableWidgetItem(str(kw.GetMasterLastPrice(code_key).lstrip("0"))))
+            #self.table_con.setItem(tmp_index, 4, QTableWidgetItem(str(tmp_index)))
+            tmp_index += 1
+
+
+    def real_activate(self):
+        #lm.logger.debug("real_activate")
+        if self.ckbox_real.isChecked():
+            #lm.logger.debug(self.real)
+            self.real = True
+            kw.SetRealReg("0101", kw.code_list[self.cbox_con.currentIndex()].keys(), "9001;10;16;17;302;", '0')
+            pass
+        else:
+            self.real = False
+            kw.DisconnectRealData("0101")
+
+    def deactivate_real(self):
+        if self.ckbox_real.isChecked():
+            self.ckbox_real.toggle()
+
+
+    def order(self):
+        accno = self.cbox.currentText()
+        code = self.view_selec_coin_lbl.text()
+        amt = self.order_amount.text()
+        if amt == "":
+            amt = 1
+
+        ret = kw.SendOrder(1, accno, code, amt)
+
+        lm.logger.debug(ret)
+
+    def order_sell(self):
+        accno = self.cbox.currentText()
+        code = self.view_selec_coin_lbl.text()#매도 테이블에서 골라야 함
+        amt = self.order_amount_2.text()
+        if amt == "":
+            amt = 1
+
+        ret = kw.SendOrder(2, accno, code, amt)
+
+        lm.logger.debug(ret)
+
+
+    def update_jango(self):
+        try:
+            self.table_jango.setItem(0,0,QTableWidgetItem(kw.jango["예수금"]))
+            self.table_jango.setItem(1,0,QTableWidgetItem(kw.jango["예수금D+1"]))
+            self.table_jango.setItem(2,0,QTableWidgetItem(kw.jango["예수금D+2"]))
+            self.table_jango.setItem(3,0,QTableWidgetItem(kw.jango["출금가능금액"]))
+            self.table_jango.setItem(4,0,QTableWidgetItem(kw.jango["주식매수총액"]))
+            self.table_jango.setItem(5,0,QTableWidgetItem(kw.jango["평가금액합계"]))
+            self.table_jango.setItem(6,0,QTableWidgetItem(kw.jango["미수확보금"]))
+            self.table_jango.setItem(7,0,QTableWidgetItem(kw.jango["현금미수금"]))
+
+            self.table_maedo.setRowCount(len(kw.jango["종목리스트"]))
+            for i in range(len(kw.jango["종목리스트"])):
+                self.table_maedo.setItem(i, 0, QTableWidgetItem(kw.jango["종목리스트"][i]["종목번호"]))
+                self.table_maedo.setItem(i, 1, QTableWidgetItem(kw.jango["종목리스트"][i]["종목명"]))
+                self.table_maedo.setItem(i, 2, QTableWidgetItem(kw.jango["종목리스트"][i]["현재가"]))
+                self.table_maedo.setItem(i, 3, QTableWidgetItem(kw.jango["종목리스트"][i]["매입금액"]))
+                self.table_maedo.setItem(i, 4, QTableWidgetItem(kw.jango["종목리스트"][i]["평가금액"]))
+
+        except Exception as e:
+            lm.logger.debug(e)
+            lm.logger.debug(lm.traceback.format_exc())
+
+        lm.logger.debug(kw.jango)
+
+"""
+param1:현재가
+param2:계산할 퍼센티지
+리턴 : 계산 후 가격
+"""
+def calc_next_price(cp, per):
+    try:
+        cp = int(cp)
+        per = float(per)
+
+        val = 0.0
+        val = cp + ((cp / 100) * per)
+
+        return val
+    except Exception as e:  # 모든 예외의 에러 메시지를 출력할 때는 Exception을 사용
+        lm.logger.debug("예외가 발생했습니다. %s", e)
+        lm.logger.debug(lm.traceback.format_exc())
+
+def int_format(val):
+    if val[0] == '+' or val[0] == '-':
+        return val[1:]
+    else:
+        return val
+
+#aaaa
+import sys
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import QThread
+import time
+class MyThread(QThread):
+    cnt = 0
+
+    def __init__(self):
+        super().__init__()
+        finished = pyqtSignal()
+        #jango_update_sig = pyqtSignal()
+
+    def run(self):
+        while True:
+            self.cnt = self.cnt + 1
+            #lm.logger.debug("running %d" % self.cnt)
+            time.sleep(2)
+
+
+            if kw.realcondition: #실시간 조건 변동 이벤트(편입,삭제)
+                kw.realcondition = False
+                myWindow.con_search(myWindow.cbox_con.currentIndex())
+                self.finished.emit()
+            if myWindow.real:#실시간 체크 가격 update
+                for i, j in kw.recieved_dic.items():
+                    #lm.logger.debug(i, j)
+                    if i in kw.code_list[myWindow.cbox_con.currentIndex()]:
+                        kw.code_list[myWindow.cbox_con.currentIndex()][i] = int_format(j)
+                self.finished.emit()
+
+#aaaa
+
+if  __name__ == "__main__":
+    lm.logger.debug("window start")
+    app = QApplication(sys.argv)
+    kw = Kiwoom()
+    kw.CommConnect()
+    kw.SetConditionSearchFlag()
+    kw.GetConditionLoad()
+    for i in range(len(kw.con_list)):
+        kw.SendCondition(i)
+    #lm.logger.debug(kw.code_list)
+
+    myWindow = MyWindow()
+    myWindow.show()
+    app.exec_()
+
+
+
+
+
