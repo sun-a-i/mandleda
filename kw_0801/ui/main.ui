@@ -123,14 +123,14 @@
   <widget class="QLabel" name="label_2">
    <property name="geometry">
     <rect>
-     <x>250</x>
+     <x>260</x>
      <y>10</y>
-     <width>41</width>
+     <width>31</width>
      <height>21</height>
     </rect>
    </property>
    <property name="text">
-    <string>예수금</string>
+    <string>잔고</string>
    </property>
   </widget>
   <widget class="QPushButton" name="pushButton">
@@ -179,6 +179,16 @@
    <column>
     <property name="text">
      <string>평가금액</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>보유수량</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>결제잔고</string>
     </property>
    </column>
   </widget>
@@ -337,37 +347,17 @@
    </row>
    <row>
     <property name="text">
-     <string>D+1</string>
+     <string>D+2추정예수금</string>
     </property>
    </row>
    <row>
     <property name="text">
-     <string>D+2</string>
+     <string>총매입금액</string>
     </property>
    </row>
    <row>
     <property name="text">
-     <string>출금가능금액</string>
-    </property>
-   </row>
-   <row>
-    <property name="text">
-     <string>주식매수총액</string>
-    </property>
-   </row>
-   <row>
-    <property name="text">
-     <string>평가금액합계</string>
-    </property>
-   </row>
-   <row>
-    <property name="text">
-     <string>미수확보금</string>
-    </property>
-   </row>
-   <row>
-    <property name="text">
-     <string>현금미수금</string>
+     <string>누적손익률</string>
     </property>
    </row>
    <column>
@@ -376,12 +366,12 @@
     </property>
    </column>
   </widget>
-  <widget class="QLabel" name="label_9">
+  <widget class="QLabel" name="money">
    <property name="geometry">
     <rect>
-     <x>310</x>
+     <x>300</x>
      <y>10</y>
-     <width>41</width>
+     <width>71</width>
      <height>21</height>
     </rect>
    </property>

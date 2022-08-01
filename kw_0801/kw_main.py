@@ -45,29 +45,23 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
         self.ocx.OnReceiveChejanData.connect(self.OnReceiveChejanData)
         self.ocx.OnReceiveRealCondition.connect(self.OnReceiveRealCondition)
 
-
-
-
-
         #===================UI=====================
 
         self.setupUi(self)
-        # self.init()
         self.pushButton.clicked.connect(self.order)#매수
         self.pushButton_3.clicked.connect(self.order_sell)#매도
         self.con_re.clicked.connect(self.condition_refresh)#직접갱신
-
         self.cbox_con.activated.connect(self.update_con)
-
         self.cbox_con.activated.connect(self.deactivate_real)
         self.ckbox_real.stateChanged.connect(self.real_activate)
-
 
 
         # cell 선택 시
         self.table_con.cellClicked.connect(self.cell_cliked_func)
         self.table_maedo.cellClicked.connect(self.cell_cliked_func_2)
 
+
+        #init
         self.initial()
 
     def initial(self):
@@ -75,9 +69,17 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
         self.SetConditionSearchFlag()
         self.condition_refresh()
         self.set_info()
-        #self.update_con()
-
+        self.update_con()
         #self.load_code
+
+        try:
+            self.mythread1 = MyThread()
+            self.mythread1.finished.connect(self.update_con)
+            self.mythread1.start()
+        except Exception as e:
+            lm.logger.debug(e)
+            lm.logger.debug(lm.traceback.format_exc())
+
     def condition_refresh(self):
         self.GetConditionLoad()
         for i in self.con_list:
@@ -112,7 +114,8 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
 
 
 
-        # ===================================키움 api======================================
+    # ===================================키움 api======================================
+     #==============================로그인 관련 함수 ========================
     def CommConnect(self):
         ptr("로그인 요청")
         try:
@@ -228,6 +231,22 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
             lm.logger.debug(lm.traceback.format_exc())
 
 
+    def OnReceiveRealCondition(self, code, etype, con_name, con_idx): #테스트 중 # 조건검색 변동 이벤트 함수
+        lm.logger.debug("OnReceiveRealCondition 조건검색 변동 이벤트 발생 :" + str(code))
+        print("OnReceiveRealCondition 조건검색 변동 이벤트 발생 :", code, etype, con_name, con_idx)
+        if etype == 'I':  # 종목편입
+            ptr(code + "종목 편입 이벤트 발생")
+            self.con_list[str_format(con_idx)]["list"][code] = None
+            self.SetRealReg("0101",code,"9001;10;16;17;302;", '1') #실시간 추가 등록
+        elif etype == 'D':  # 종목이탈
+            ptr(code + "종목 이탈 이벤트 발생")
+            del self.self.con_list[str_format(con_idx)]["list"][code]
+        else:
+            lm.logger.debug("이건 뭐지 ? OnReceiveRealCondition")
+        pass
+
+    #==========================TR 관련 함수==============================
+
     def SetInputValue(self, id, value):
         self.ocx.dynamicCall("SetInputValue(QString, QString)", id, value)
 
@@ -241,8 +260,33 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
     def GetTRCount(self, trcode, rqname):
         return self.ocx.dynamicCall("GetRepeatCnt(QString, QString)", trcode, rqname)
 
+    def Calljango(self, accno):  # 잔고 요청
+        self.SetInputValue("계좌번호", accno)
+        self.SetInputValue("비밀번호", "")
+        self.SetInputValue("비밀번호입력매체구분", "00")
+        lm.logger.debug("잔고요청 전송됨")
+        ret = self.CommRqData("잔고요청", "opw00005", "0", "0101")
+        if ret != 0:
+            lm.logger.debug("잔고 조회 오류코드 : ", ret)
+        else:
+            lm.logger.debug("잔고요청 성공")
+
+    def Calljango2(self, accno):  # 잔고 요청
+        self.SetInputValue("계좌번호", accno)
+        self.SetInputValue("비밀번호", "")
+        self.SetInputValue("상장폐지조회구분", "1")
+        self.SetInputValue("비밀번호입력매체구분", "00")
+        lm.logger.debug("잔고요청2 전송됨")
+        ret = self.CommRqData("잔고요청2", "opw00004", "0", "0101")
+        if ret != 0:
+            lm.logger.debug("잔고 조회2 오류코드 : ", ret)
+        else:
+            lm.logger.debug("잔고요청2 성공")
+
+
+
     def OnReceiveTrData(self, screen, rcname, trcode, record, next):# tr 수신 이벤트
-        #lm.logger.debug("OnReceiveTrData %s, %s, %s, %s, %s", screen, rcname, trcode, record, next)
+        lm.logger.debug("OnReceiveTrData %s, %s, %s, %s, %s", screen, rcname, trcode, record, next)
         if next == "2":
             ptr("데이터 더 있음 !! 요청 이름 : " + str(rcname))
 
@@ -266,7 +310,7 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
             self.jango["종목리스트"] = []
             for i in range(self.GetTRCount("opw00005", "잔고요청")):
                 tmp = {}
-                tmp["종목번호"] = self.GetCommData("opw00005", "잔고요청", i, "종목번호").lstrip("0")
+                tmp["종목번호"] = self.GetCommData("opw00005", "잔고요청", i, "종목번호").lstrip("0")[1:]#A123455->123455
                 tmp["종목명"] = self.GetCommData("opw00005", "잔고요청", i, "종목명").lstrip("0")
                 tmp["현재가"] = self.GetCommData("opw00005", "잔고요청", i, "현재가").lstrip("0")
                 tmp["매입금액"] = self.GetCommData("opw00005", "잔고요청", i, "매입금액").lstrip("0")
@@ -277,28 +321,41 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
             ptr("잔고요청 업데이트 완료")
 
         elif rcname == "order":
-            lm.logger.debug(screen, rcname, trcode, record, next)
+            #print(screen, rcname, trcode, record, next)#debug 메세지 에러
             #update jango?
-
-        elif rcname == "othertt":
             pass
+
+        elif rcname == "잔고요청2":
+            ptr("잔고요청2 수신 발생")
+            self.jango["예수금"] = self.GetCommData("opw00004", "잔고요청2", 0, "예수금").lstrip("0")
+            self.jango["D+2추정예수금"] = self.GetCommData("opw00004", "잔고요청2", 0, "D+2추정예수금").lstrip("0")
+            self.jango["총매입금액"] = self.GetCommData("opw00004", "잔고요청2", 0, "총매입금액").lstrip("0")
+            self.jango["누적손익률"] = self.GetCommData("opw00004", "잔고요청2", 0, "누적손익률").lstrip("0")
+
+            # ====멀티tr====
+            self.jango["종목리스트"] = []
+            for i in range(self.GetTRCount("opw00004", "잔고요청2")):
+                tmp = {}
+                tmp["종목코드"] = self.GetCommData("opw00004", "잔고요청2", i, "종목코드").lstrip("0")[1:]#A123455->123455
+                tmp["종목명"] = self.GetCommData("opw00004", "잔고요청2", i, "종목명").lstrip("0")
+                tmp["현재가"] = self.GetCommData("opw00004", "잔고요청2", i, "현재가").lstrip("0")
+                tmp["매입금액"] = self.GetCommData("opw00004", "잔고요청2", i, "매입금액").lstrip("0")
+                tmp["평가금액"] = self.GetCommData("opw00004", "잔고요청2", i, "평가금액").lstrip("0")
+                tmp["보유수량"] = self.GetCommData("opw00004", "잔고요청2", i, "보유수량").lstrip("0")
+                tmp["결제잔고"] = self.GetCommData("opw00004", "잔고요청2", i, "결제잔고").lstrip("0")
+                self.jango["종목리스트"].append(tmp)
+
+            self.update_jango()
+            ptr("잔고요청2 업데이트 완료")
 
         else:
             ptr("이 수신 데이터는 ?")
             lm.logger.debug(screen, rcname, trcode, record, next)
 
 
-        # lm.logger.debug(name, price)
 
-    def OnReceiveRealCondition(self, code, etype, con_name, con_idx): #테스트 필요 sendcondition에서 1로 활성화 시켜야함
-        lm.logger.debug("OnReceiveRealCondition 조건검색 변동 이벤트 발생 :", code, etype, con_name, con_idx)
-        if etype == 'I':  # 종목편입
-            self.con_list[str_format(con_idx)]["list"][code] = None #수정 필요 하나의 가격 데이터
-        elif etype == 'D':  # 종목이탈
-            del self.self.con_list[str_format(con_idx)]["list"][code]
-        else:
-            lm.logger.debug("이건 뭐지 ? OnReceiveRealCondition")
-        pass
+
+
 
     """
     def GetPrice(self,code):
@@ -311,8 +368,9 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
     # =======================실시간 관련 함수===========================
 
     def SetRealReg(self, screen, codelist, FID_list, type):
+        if type == "0": ptr(str(self.cbox_con.currentText()[:3]) + " 조건식 실시간 등록")
+        elif type == "1" : ptr(str(codelist) + " 종목 실시간 추가 등록")
 
-        ptr(str(self.cbox_con.currentText()[:3]) + " :실시간 등록 요청")
         codelist = ";".join(codelist)
         self.rd = False
         self.ocx.dynamicCall("SetRealReg(QString, QString, QString, QString)",
@@ -357,13 +415,31 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
     def OnReceiveMsg(self, sScrNo, sRQName, sTrCode, sMsg):
         lm.logger.debug("OnReceiveMsg %s, %s, %s, %s", sScrNo, sRQName, sTrCode, sMsg)
 
-    def OnReceiveChejanData(self, sGubun, nItemCnt, sFIdList):
-        lm.logger.debug("OnReceiveChejanData %s, %s, %s, %s", sGubun, nItemCnt, sFIdList)
+    def OnReceiveChejanData(self, gubun, nItemCnt, sFIdList):
+        print("OnReceiveChejanData ", gubun, nItemCnt, sFIdList)#debug msg error
+        """
+        for i in sFIdList.split(";")[:-1]:
+            print(i, ", ", self.GetChejanData(i))
+        """
+
+        if gubun == '1': #국내주식 잔고변경
+            if str(self.GetChejanData("946")) == "2":
+                tmp = "매수"
+            elif str(self.GetChejanData("946")) == "1":
+                tmp = "매도"
+            ptr(str(self.GetChejanData("9001")[1:]) + str(self.GetChejanData("302").strip() + " : " + tmp + " 주문 성공 "))
+
+            self.Calljango2(self.account_list.currentText())
+            pass
+
+        elif gubun == '4': #파생잔고변경
+            pass
 
         # lm.logger.debug(self.GetChejanData(Fid))
 
     def GetChejanData(self, nFid):
-        pass
+        ret = self.ocx.dynamicCall("GetChejanData(int)", nFid)
+        return ret
 
     # ==========KOA_Function() 함수======
 
@@ -372,16 +448,7 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
 
     # ==============기타 함수==================
 
-    def Calljango(self, accno):  # 잔고 요청
-        self.SetInputValue("계좌번호", accno)
-        self.SetInputValue("비밀번호", "")
-        self.SetInputValue("비밀번호입력매체구분", "00")
-        lm.logger.debug("잔고요청 전송됨")
-        ret = self.CommRqData("잔고요청", "opw00005", "0", "0101")
-        if ret != 0:
-            lm.logger.debug("잔고 조회 오류코드 : ", ret)
-        else:
-            lm.logger.debug("잔고요청 성공")
+
 
 
 
@@ -417,12 +484,6 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
             lm.logger.debug(e)
             lm.logger.debug(lm.traceback.format_exc())
 
-    def btn1_clicked_func(self):
-        QMessageBox.information(self, 'check', 'clicked a btn')
-
-    def btn2_clicked_func(self):
-        self.update_jango()
-
     def set_info(self):
         account_cnt = self.GetLoginInfo("ACCOUNT_CNT")
         account_list = self.GetLoginInfo("ACCLIST").split(';')[:-1]
@@ -445,7 +506,7 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
         for i in self.con_list:
             self.cbox_con.addItem(i + " " + self.con_list[i]["name"])#조건검색 목록
 
-        self.Calljango(account_list[0])
+        self.Calljango2(account_list[0])
 
     @pyqtSlot()
     def update_con(self):
@@ -493,8 +554,11 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
                 amt = 1
 
             ret = self.SendOrder(1, accno, code, amt)
+            if ret == 0:
+                ptr("매수 주문 요청 성공")
+            else:
+                ptr("매수 주문 요청 실패 오류코드 : "+str(ret))
 
-            lm.logger.debug(ret)
         except Exception as e:
             lm.logger.debug(e)
             lm.logger.debug(lm.traceback.format_exc())
@@ -502,34 +566,39 @@ class MyWindow(QMainWindow, main_class): #param1 = windows : 창,  param2 = ui p
 
     def order_sell(self):
         accno = self.account_list.currentText()
-        code = self.view_selec_coin_lbl.text()#매도 테이블에서 골라야 함
+        code = self.view_selec_coin_lbl.text()
         amt = self.order_amount_2.text()
         if amt == "":
             amt = 1
 
         ret = self.SendOrder(2, accno, code, amt)
-
-        lm.logger.debug(ret)
+        if ret == 0:
+            ptr("매도 주문 요청 성공")
+        else:
+            ptr("매도 주문 요청 실패 오류코드 : " + str(ret))
 
 
     def update_jango(self):
         try:
+            """
+            tmp = 0
+            for i in range(self.jango):
+                self.table_jango.setItem(tmp, 0, QTableWidgetItem(self.jango[i]))"""
+            self.money.setText(self.jango["D+2추정예수금"])
             self.table_jango.setItem(0,0,QTableWidgetItem(self.jango["예수금"]))
-            self.table_jango.setItem(1,0,QTableWidgetItem(self.jango["예수금D+1"]))
-            self.table_jango.setItem(2,0,QTableWidgetItem(self.jango["예수금D+2"]))
-            self.table_jango.setItem(3,0,QTableWidgetItem(self.jango["출금가능금액"]))
-            self.table_jango.setItem(4,0,QTableWidgetItem(self.jango["주식매수총액"]))
-            self.table_jango.setItem(5,0,QTableWidgetItem(self.jango["평가금액합계"]))
-            self.table_jango.setItem(6,0,QTableWidgetItem(self.jango["미수확보금"]))
-            self.table_jango.setItem(7,0,QTableWidgetItem(self.jango["현금미수금"]))
+            self.table_jango.setItem(1,0,QTableWidgetItem(self.jango["D+2추정예수금"]))
+            self.table_jango.setItem(2,0,QTableWidgetItem(self.jango["총매입금액"]))
+            self.table_jango.setItem(3,0,QTableWidgetItem(self.jango["누적손익률"]))
 
             self.table_maedo.setRowCount(len(self.jango["종목리스트"]))
             for i in range(len(self.jango["종목리스트"])):
-                self.table_maedo.setItem(i, 0, QTableWidgetItem(self.jango["종목리스트"][i]["종목번호"]))
+                self.table_maedo.setItem(i, 0, QTableWidgetItem(self.jango["종목리스트"][i]["종목코드"]))
                 self.table_maedo.setItem(i, 1, QTableWidgetItem(self.jango["종목리스트"][i]["종목명"]))
                 self.table_maedo.setItem(i, 2, QTableWidgetItem(self.jango["종목리스트"][i]["현재가"]))
                 self.table_maedo.setItem(i, 3, QTableWidgetItem(self.jango["종목리스트"][i]["매입금액"]))
                 self.table_maedo.setItem(i, 4, QTableWidgetItem(self.jango["종목리스트"][i]["평가금액"]))
+                self.table_maedo.setItem(i, 5, QTableWidgetItem(self.jango["종목리스트"][i]["보유수량"]))
+                self.table_maedo.setItem(i, 6, QTableWidgetItem(self.jango["종목리스트"][i]["결제잔고"]))
 
         except Exception as e:
             lm.logger.debug(e)
@@ -545,14 +614,19 @@ class MyThread(QThread):
 
     def run(self):
         while True:
-            if self.ckbox_real.isChecked():#실시간 체크 가격 update
-                combobox_list_index = self.cbox_con.currentText()[:3]
-                for i, j in self.recieved_dic.items():
-                    if i in self.con_list[combobox_list_index]["list"]:
-                        self.con_list[combobox_list_index]["list"][i] = int_format(j)
-                self.finished.emit()
+            try:
+                if myWindow.ckbox_real.isChecked():#실시간 체크 가격 update
+                    #ptr("실시간 활성화중")
+                    combobox_list_index = myWindow.cbox_con.currentText()[:3]
+                    for i, j in myWindow.recieved_dic.items():
+                        if i in myWindow.con_list[combobox_list_index]["list"]:
+                            myWindow.con_list[combobox_list_index]["list"][i] = int_format(j)
+                    self.finished.emit()
 
-            time.sleep(1)
+                time.sleep(1)
+            except Exception as e:
+                lm.logger.debug(e)
+                lm.logger.debug(lm.traceback.format_exc())
 
 
 def ptr(val): #debug msg
