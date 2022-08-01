@@ -1,20 +1,19 @@
 
 
 
-#con_list = {"000": {"name": "1번 조건식", "list" : ["123556","123123"] }}
+#con_list = {"000": {"name": "1번 조건식", "list" : {"123556":"8200", "100000" : "23560"} } , { "001" :  { "name" "2번 조건식", "list" : {"123456" : "150" ...
 
+
+#이하는 선언 순서
 con_list = {}
 con_list["000"] = {}
 con_list["000"]["name"] = "1번조건식"
 con_list["000"]["dic"] = {"123556":"123123"}
 
+
+#이하는 접근 방법
 print(con_list)
-print(con_list["000"]["name"])
-print(con_list["000"]["dic"])
+print(con_list["000"]["name"]) #000번 조건식의 이름
+print(con_list["000"]["list"]) #000번 조건식에 해당하는 종목 코드 리스트
+print(con_list["000"]["list"]["123556"]) #000번 조건식의 123556 종목의 가격
 
-
-for i in con_list:
-
-    a = i+con_list[i]["name"]
-
-print(a[:3])
