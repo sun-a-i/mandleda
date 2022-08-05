@@ -470,6 +470,7 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
                         logger.debug(txt)
                         self.real_log_widget.addItem(txt)
                         self.SetRealReg("0102", code, "9001;10;16;17;302;", '0')
+                        #!! 체잔데이터때 실시간 등록함 !
                         
                         #여기서 딕셔너리 key 생성, 전문 오는 곳에서는 key 없는 종목들은 거르도록...
                         #안그러면 사용자가 매수한 종목도 키 값에 들어가는 에러 발생
@@ -504,6 +505,7 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
 
                 trade_list = list(stock_data.keys())
                 self.SetRealReg("0102", trade_list, "9001;10;16;17;302;", '1')
+                #체잔데이터 받아올때 실시간 등록함 !!
 
                 txt = ""
                 for i in trade_list:
@@ -699,12 +701,7 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
                     i = i.split("^")
                     self.con_list[i[0]] = {}  # con_list["000"] = {}
                     self.con_list[i[0]]["name"] = i[1]  # con_list["000"]["name"] = "1번조건식"
-
-                # 수신 성공 시 바로 업데이트
-                if len(self.con_list) > 1:
-                    self.cbox_con.clear()
-                    for i in self.con_list:
-                        self.cbox_con.addItem(i + " " + self.con_list[i]["name"])  # 조건검색 목록
+                    self.con_list[i[0]]["list"] = []
 
                 logger.debug("수집된 조건식 : " + str(self.con_list))
             logger.debug("조건검색 목록 호출 완료")
@@ -757,7 +754,7 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
         #logger.debug("OnReceiveRealCondition 조건검색 변동 이벤트 발생 :" + str(code))
         logger.debug("OnReceiveRealCondition 조건검색 변동 이벤트 발생 : %s %s %s %s ", code, etype, con_name, con_idx)
         try:
-            if str_format(con_idx) == str_format(self.cbox_con.currentText()[:3]):
+            if str_format(con_idx) == str(self.cbox_con.currentText()[:3]):
                 if etype == 'I':  # 종목편입
                     #logger.debug(code + "종목 편입 이벤트 발생")
                     self.con_list[str_format(con_idx)]["list"][code] = "0"
@@ -907,7 +904,7 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
                 self.update_jango()
                 self.update_table()
                 logger.debug("잔고요청2 업데이트 완료")
-            if rcname == "OPT10001":
+            elif rcname == "OPT10001":
                 self.one_stock_data = self.GetCommData(trcode, record, 0, "현재가")
                 self.one_stock_flag = True
                 logger.debug("one stock data = %s", self.one_stock_data)
@@ -1193,35 +1190,37 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
 
             # 유저 정보 저장
             account_list_re = []
-            for i in range(len(account_list)):
-                account_list_re.append(account_list[i][:-2])
+            global test
+            if not test:
+                for i in range(len(account_list)):
+                    account_list_re.append(account_list[i][:-2])
 
-            user_data[user_name] = account_list_re
-            self.name.setText(user_name)  # 이름 설정
-            logger.debug("기본 데이터 수집 완료 계좌 수 : %s, 계좌 번호 %s,  유저 아이디 : %s, 유저 이름 %s, %s",
-                         account_cnt,
-                         account_list,
-                         user_id,
-                         user_name,
-                         sever)
+                user_data[user_name] = account_list_re
+                self.name.setText(user_name)  # 이름 설정
+                logger.debug("기본 데이터 수집 완료 계좌 수 : %s, 계좌 번호 %s,  유저 아이디 : %s, 유저 이름 %s, %s",
+                             account_cnt,
+                             account_list,
+                             user_id,
+                             user_name,
+                             sever)
 
 
-            logger.debug("%s %s", key['ak'], key['sk'])
-            logger.debug("%s %s", user_data.keys(), user_data.values())
-            if key['ak'] in user_data.keys():
-                if key['sk'] in user_data[key['ak']]:
-                    logger.debug("name, account 인증 완료, 로그인 성공")
+                logger.debug("%s %s", key['ak'], key['sk'])
+                logger.debug("%s %s", user_data.keys(), user_data.values())
+                if key['ak'] in user_data.keys():
+                    if key['sk'] in user_data[key['ak']]:
+                        logger.debug("name, account 인증 완료, 로그인 성공")
 
-                    login_flag = True
-                    self.close()
+                        login_flag = True
+                        self.close()
+                    else:
+                        logger.debug("등록된 계좌와 서버 저장계좌가 다름, 로그인 실패")
+                        QMessageBox.information(self, '확인', '등록된 회원이나, 계좌정보가 다릅니다.\n실 사용자만 등록 후 사용 가능합니다.')
+                        self.close()
                 else:
-                    logger.debug("등록된 계좌와 서버 저장계좌가 다름, 로그인 실패")
-                    QMessageBox.information(self, '확인', '등록된 회원이나, 계좌정보가 다릅니다.\n실 사용자만 등록 후 사용 가능합니다.')
+                    logger.debug("user name 과 서버 name 다름, 로그인 실패")
+                    QMessageBox.information(self, '확인', '등록된 회원이나, 이름이 다릅니다.\n실 사용자만 등록 후 사용 가능합니다.')
                     self.close()
-            else:
-                logger.debug("user name 과 서버 name 다름, 로그인 실패")
-                QMessageBox.information(self, '확인', '등록된 회원이나, 이름이 다릅니다.\n실 사용자만 등록 후 사용 가능합니다.')
-                self.close()
 
 
 
@@ -1240,9 +1239,10 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
     @pyqtSlot(dict)
     def price_comp_func(self, price_dict):
         try:
+            self.update_table()
             global stock_data, kname_list
             stock_sub = stock_data
-            logger.debug("차이발생")
+            #logger.debug("차이발생")
             if (len(price_dict) >= 1)& (len(stock_data) >= 1):
                 for code, price in self.recieved_dic.items():
                     if code in stock_sub:
@@ -1426,7 +1426,7 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
     def deactivate_real(self):  # 체크돼있는데 조건검색 변경시 전의 실시간을 등록 해지 후 새로운 조건검색 인덱스로 실시간 등록
         try:
             combobox_list_index = self.cbox_con.currentText()[:3]
-            self.DisconnectRealData("0101")
+            #self.DisconnectRealData("0101")
 
             #기존에 있던게 추가되는듯... 우선 제외
             #self.SetRealReg("0101", self.con_list[combobox_list_index]["list"].keys(), "9001;10;16;17;302;", '0')
@@ -1481,12 +1481,12 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
             tmp = 0
             for i in range(self.jango):
                 self.table_jango.setItem(tmp, 0, QTableWidgetItem(self.jango[i]))"""
-            # self.money.setText(self.jango["D+2추정예수금"])
 
             self.table_jango.setItem(0, 0, QTableWidgetItem(format(int(self.jango["예수금"]), ",")))
-            #self.table_jango.setItem(1, 0, QTableWidgetItem(format(int(str(self.jango["출금가능금액"]).strip().lstrip('+').lstrip('-')), ",")))
-            #self.table_jango.setItem(2, 0, QTableWidgetItem(format(int(self.jango["주식매수총액"]), ",")))
-            #self.table_jango.setItem(3, 0, QTableWidgetItem(format(int(self.jango["평가금액합계"]), ",")))
+            self.table_jango.setItem(1, 0, QTableWidgetItem(format(int(str(self.jango["출금가능금액"]).strip().lstrip('+').lstrip('-')), ",")))
+            self.table_jango.setItem(2, 0, QTableWidgetItem(format(int(self.jango["주식매수총액"]), ",")))
+            self.table_jango.setItem(3, 0, QTableWidgetItem(format(int(self.jango["평가금액합계"]), ",")))
+
             tot_hab = self.jango["총손익합계"]
             if tot_hab[0] == '-':
                 res = "-" + format(int(tot_hab[1:]), ",")
@@ -1531,34 +1531,36 @@ class MyThread(QThread):
             logger.debug(traceback.format_exc())
     def run(self):   # 매초마다 받아온 데이터 집어넣기
         try:
-            global stock_data, login_flag, auto_flag
+            global stock_data, login_flag, auto_flag, test
             heartBeat = 0
             while True:
                 time.sleep(1)
 
                 heartBeat += 1
-                if heartBeat > 100:
+                if heartBeat > 60:
                     logger.debug("myThread heartBeat...!")
                     heartBeat = 0
 
                 if login_flag == True:
                     #time.sleep(5)
-                    if auto_flag == True:
+                    if auto_flag == True or test:
                         self.em = False
                         combobox_list_index = main.cbox_con.currentText()[:3]
                         if len(main.recieved_dic) > 1:
                             for code_key, price in main.recieved_dic.items():
-                                if code_key in main.con_list[combobox_list_index]["list"]:  # 현재의 조건식에 있는 코드만 비교
-                                    if main.con_list[combobox_list_index]["list"][code_key] != int_format(price):  # 가격이 변동되었을때
-                                        main.con_list[combobox_list_index]["list"][code_key] = int_format(price)
-                                        self.em = True
-
                                 for jango_code in main.jango["종목리스트"]:
                                     if jango_code["종목코드"] == code_key:
                                         if jango_code["현재가"] != int_format(price):  # 가격이 변동되었을때
                                             jango_code["현재가"] = int_format(price)
+                                            #logger.debug(str(code_key) + "종목 가격 변동 to : " + str(int_format(price)))
                                             self.em = True
-
+                            """
+                            for code_key, price in main.recieved_dic.items():
+                                if code_key in main.con_list[combobox_list_index]["list"]:  # 현재의 조건식에 있는 코드만 비교
+                                    if main.con_list[combobox_list_index]["list"][code_key] != int_format(price):  # 가격이 변동되었을때
+                                        main.con_list[combobox_list_index]["list"][code_key] = int_format(price)
+                                        logger.debug(str(code_key) + "종목 가격 변동 to : " + str(int_format(price)))
+                                        self.em = True """ #조건검색 목록 실시간 삭제중
                         #매수한 종목의 가격 변화 시 전달
                         #todo
 
@@ -1861,8 +1863,20 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     #main = Main()
-    myWindow = MyWindow()
-    myWindow.show()
+    #myWindow = MyWindow()
+    #myWindow.show()
+
+
+    # test main
+    global test
+    test = False
+    if test:
+        login_flag = True
+        main = Main()
+        main.show()
+    else:
+        myWindow = MyWindow()
+        myWindow.show()
 
     # test version
     # main = Main_UI()
