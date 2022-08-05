@@ -340,7 +340,7 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
             self.recieved_dic = {}  # 실시간 종목별 금액 데이터 저장 딕셔너리
             self.recieved_dic_sub = {}  # 비교 딕셔너리
 
-            self.jango = {}
+            self.jango = {} # 계좌 귀속 데이터 저장 딕셔너리
             self.jango["종목리스트"] = []
 
             self.one_stock_data = ""
@@ -363,16 +363,13 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
             self.sell_btn.clicked.connect(self.order_sell)  # 매도
             # self.con_re.clicked.connect(self.condition_refresh)  # 직접갱신
             self.cbox_con.currentIndexChanged.connect(self.condition_refresh)
-            self.cbox_con.activated.connect(self.update_table)
-            self.cbox_con.activated.connect(self.deactivate_real)
             self.trading_start_btn.clicked.connect(lambda: self.trading_state_func('start'))
             self.trading_stop_btn.clicked.connect(lambda: self.trading_state_func('stop'))
             self.buy_amount_edit.textChanged.connect(self.amount_change_function)
+            self.account_list.currentIndexChanged.connect(self.accno_change_func)
 
             # cell 선택 시
-            self.table_con.cellClicked.connect(self.cell_cliked_func)
-            self.table_maedo.cellClicked.connect(self.cell_cliked_func_2)
-
+            self.table_maedo.cellClicked.connect(self.cell_cliked_func)
 
             #쓰레드2
             self.timer_thread = TimerThread()
@@ -394,10 +391,9 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
     def initial(self):
         self.CommConnect()
         self.SetConditionSearchFlag()
-
         self.GetConditionLoad()  # 조건검색식 호출
-        self.condition_refresh()
         self.set_info()
+        self.condition_refresh()
         self.load_code()  # update_table보다 우선순위로 작동
         self.update_table()
         self.table_init()
@@ -585,6 +581,7 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
     def condition_refresh(self):
         try:
             if self.cbox_con.currentText() != "":
+                logger.debug("조건검색식 종목 호출")
                 logger.debug(self.cbox_con.currentText())
                 logger.debug(self.con_list)
                 con_txt = self.cbox_con.currentText()[:3]
@@ -746,24 +743,20 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
             self.con_list[idx]["list"] = ret
             logger.debug("조건식 이름: " + conname + ", 조건식 인덱스 : " + idx + ", 조건검색 업데이트 완료")
             logger.debug(str(self.con_list))
+            self.update_table()
         except Exception as e:
             logger.debug(e)
             logger.debug(traceback.format_exc())
 
     def OnReceiveRealCondition(self, code, etype, con_name, con_idx):  # 테스트 중 # 조건검색 변동 이벤트 함수
-        #logger.debug("OnReceiveRealCondition 조건검색 변동 이벤트 발생 :" + str(code))
         logger.debug("OnReceiveRealCondition 조건검색 변동 이벤트 발생 : %s %s %s %s ", code, etype, con_name, con_idx)
         try:
             if str_format(con_idx) == str(self.cbox_con.currentText()[:3]):
                 if etype == 'I':  # 종목편입
                     #logger.debug(code + "종목 편입 이벤트 발생")
                     self.con_list[str_format(con_idx)]["list"][code] = "0"
-                    #조건검색은 실시간 추가 제외, 종목명만 갱신
-                    #self.SetRealReg("0101", code, "9001;10;16;17;302;", '1')  # 실시간 추가 등록
                     sd.Beep(400, 200)
                     sd.Beep(480, 300)
-
-                    #logger.debug("%s", self.con_list)
 
                 elif etype == 'D':  # 종목이탈
                     #logger.debug(code + "종목 이탈 이벤트 발생")
@@ -772,7 +765,6 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
                     #self.SetRealRemove("0101", code)
                 else:
                     logger.debug("이건 뭐지 ? OnReceiveRealCondition")
-
                 self.update_table()
             else:
                 #logger.debug("현재 설정한 조건검색과 다른 변동 이벤트 무시 %s", con_idx)
@@ -934,9 +926,9 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
                     logger.debug("%s 종목 실시간 등록",kname_list[i])
 
             #logger.debug(codelist)
-            if type == "0":
-                logger.debug(str(self.cbox_con.currentText()[:3]) + " 조건식 실시간 등록")
-            elif type == "1":
+            if type == "0": #체잔데이터 이벤트때 등록
+                logger.debug("보유주식목록 실시간 등록")
+            elif type == "1": #종목편입 이벤트때 추가등록
                 logger.debug(str(codelist) + " 종목 실시간 추가 등록")
             codelist = ";".join(codelist)
             self.ocx.dynamicCall("SetRealReg(QString, QString, QString, QString)",
@@ -1158,17 +1150,6 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
 
     def cell_cliked_func(self):
         try:
-            num = self.table_con.currentRow()
-            select_code = self.table_con.item(num, 0).text()
-
-            self.view_selec_coin_lbl.setText(select_code)
-
-        except Exception as e:
-            logger.debug(e)
-            logger.debug(traceback.format_exc())
-
-    def cell_cliked_func_2(self):
-        try:
             num = self.table_maedo.currentRow()
             select_code = self.table_maedo.item(num, 0).text()
 
@@ -1177,6 +1158,15 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
         except Exception as e:
             logger.debug(e)
             logger.debug(traceback.format_exc())
+
+
+    def accno_change_func(self):
+        try:
+            self.Calljango(self.account_list.currentText())
+        except Exception as e:
+            logger.debug(e)
+            logger.debug(traceback.format_exc())
+
 
     def set_info(self):
         try:
@@ -1187,6 +1177,12 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
             user_id = self.GetLoginInfo("USER_ID")
             user_name = self.GetLoginInfo("USER_NAME")
             sever = self.GetLoginInfo("GetServerGubun")
+            self.name.setText(user_name)  # 이름 설정
+            for i in account_list:
+                self.account_list.addItem(i)  # 계좌 목록
+
+            for i in self.con_list:
+                self.cbox_con.addItem(i + " " + self.con_list[i]["name"])  # 조건검색 목록
 
             # 유저 정보 저장
             account_list_re = []
@@ -1196,7 +1192,7 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
                     account_list_re.append(account_list[i][:-2])
 
                 user_data[user_name] = account_list_re
-                self.name.setText(user_name)  # 이름 설정
+
                 logger.debug("기본 데이터 수집 완료 계좌 수 : %s, 계좌 번호 %s,  유저 아이디 : %s, 유저 이름 %s, %s",
                              account_cnt,
                              account_list,
@@ -1222,16 +1218,7 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
                     QMessageBox.information(self, '확인', '등록된 회원이나, 이름이 다릅니다.\n실 사용자만 등록 후 사용 가능합니다.')
                     self.close()
 
-
-
-
-            for i in account_list:
-                self.account_list.addItem(i)  # 계좌 목록
-
-            for i in self.con_list:
-                self.cbox_con.addItem(i + " " + self.con_list[i]["name"])  # 조건검색 목록
-
-            self.Calljango(account_list[0])
+            self.Calljango(self.account_list.currentText())
         except Exception as e:
             logger.debug(e)
             logger.debug(traceback.format_exc())
@@ -1378,19 +1365,17 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
             except:
                 logger.debug("콤보박스 리스트 인덱스 없음 !")
                 combobox_list_index = ""
-
             self.table_con.setRowCount(len(self.con_list[combobox_list_index]["list"]))
-
             tmp_index = 0
             for code_key in self.con_list[combobox_list_index]["list"]:
                 # logger.debug(code_key)
-
                 self.table_con.setItem(tmp_index, 0, QTableWidgetItem(code_key))
                 self.table_con.setItem(tmp_index, 1, QTableWidgetItem(kname_list[code_key]))
-                # self.table_con.setItem(tmp_index, 2, QTableWidgetItem(self.con_list[combobox_list_index]["list"][code_key]))
-
+                last = int(self.GetMasterLastPrice(code_key).lstrip("0"))
+                self.table_con.setItem(tmp_index, 2, QTableWidgetItem(format(int(str(last).lstrip("0")), ",")))
+                """
                 cp = int(self.con_list[combobox_list_index]["list"][code_key])
-                last_p = int(self.GetMasterLastPrice(code_key).lstrip("0"))
+                
                 if cp >= last_p:
                     txt = "▲" + format(cp, ",")
                     self.table_con.setItem(tmp_index, 2, QTableWidgetItem(txt))
@@ -1399,11 +1384,8 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
                     txt = "▼" + format(cp, ",")
                     self.table_con.setItem(tmp_index, 2, QTableWidgetItem(txt))
                     self.table_con.item(tmp_index, 2).setForeground(QtGui.QColor(0, 0, 255))
+                """
 
-                self.table_con.setItem(tmp_index, 3, QTableWidgetItem(format(int(str(last_p).lstrip("0")), ",")))
-
-                # self.table_con.setItem(tmp_index, 3, QTableWidgetItem(str(self.GetMasterLastPrice(code_key).lstrip("0"))))
-                # self.table_con.setItem(tmp_index, 4, QTableWidgetItem(str(tmp_index)))
 
                 tmp_index += 1
 
@@ -1412,27 +1394,28 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
                 # logger.debug(self.jango)
                 self.table_maedo.setItem(i, 0, QTableWidgetItem(self.jango["종목리스트"][i]["종목코드"]))
                 self.table_maedo.setItem(i, 1, QTableWidgetItem(self.jango["종목리스트"][i]["종목이름"]))
-                self.table_maedo.setItem(i, 2, QTableWidgetItem(format(int(self.jango["종목리스트"][i]["현재가"]), ",")))
+                #self.table_maedo.setItem(i, 2, QTableWidgetItem(format(int(self.jango["종목리스트"][i]["현재가"]), ",")))
                 self.table_maedo.setItem(i, 3, QTableWidgetItem(format(int(self.jango["종목리스트"][i]["매입금액"]), ",")))
                 self.table_maedo.setItem(i, 4, QTableWidgetItem(format(int(self.jango["종목리스트"][i]["평가금액"]), ",")))
                 # self.table_maedo.setItem(i, 5, QTableWidgetItem(format(int(self.jango["종목리스트"][i]["보유수량"]), ",")))
                 # self.table_maedo.setItem(i, 6, QTableWidgetItem(self.jango["종목리스트"][i]["결제잔고"]))
 
+                last_p = int(self.GetMasterLastPrice(self.jango["종목리스트"][i]["종목코드"]).lstrip("0"))
+                cp = int(self.jango["종목리스트"][i]["현재가"])
+
+                if cp >= last_p:
+                    txt = "▲" + format(cp, ",")
+                    self.table_maedo.setItem(i, 2, QTableWidgetItem(txt))
+                    self.table_maedo.item(i, 2).setForeground(QtGui.QColor(255, 0, 0))
+                else:
+                    txt = "▼" + format(cp, ",")
+                    self.table_maedo.setItem(i, 2, QTableWidgetItem(txt))
+                    self.table_maedo.item(i, 2).setForeground(QtGui.QColor(0, 0, 255))
 
         except Exception as e:
             logger.debug(e)
             logger.debug(traceback.format_exc())
 
-    def deactivate_real(self):  # 체크돼있는데 조건검색 변경시 전의 실시간을 등록 해지 후 새로운 조건검색 인덱스로 실시간 등록
-        try:
-            combobox_list_index = self.cbox_con.currentText()[:3]
-            #self.DisconnectRealData("0101")
-
-            #기존에 있던게 추가되는듯... 우선 제외
-            #self.SetRealReg("0101", self.con_list[combobox_list_index]["list"].keys(), "9001;10;16;17;302;", '0')
-        except Exception as e:
-            logger.debug("예외가 발생했습니다. %s", e)
-            logger.debug(traceback.format_exc())
 
     def order(self):
         try:
@@ -1458,9 +1441,8 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
 
             accno = self.account_list.currentText()
             code = self.view_selec_coin_lbl.text()
-            amt = self.order_amount_2.text()
-            if amt == "":
-                amt = 1
+            #amt = self.order_amount_2.text()
+            amt = 1
 
             name = kname_list[code]
             reply = QMessageBox.question(self, '확인', name + ' 종목을 매도하시겠습니까?')
@@ -1869,12 +1851,14 @@ if __name__ == "__main__":
 
     # test main
     global test
-    test = False
+    test = True
     if test:
+        logger.debug("test start")
         login_flag = True
         main = Main()
         main.show()
     else:
+        logger.debug("real start")
         myWindow = MyWindow()
         myWindow.show()
 
