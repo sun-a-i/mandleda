@@ -318,6 +318,8 @@ class init_data(QThread):
 # user_data
 user_data = {}
 
+#자동매매 플래그
+auto_flag = False
 
 class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
 
@@ -331,7 +333,7 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
 
             self.login = False  # 로그인 리시브 대기 변수
             self.condition = False  # 조건검색 리시브 대기 변수
-            self.auto_maemae = False  # 자동매매 변수
+            #self.auto_maemae = False  # 자동매매 변수
 
             self.con_list = {}
 
@@ -372,15 +374,17 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
             self.table_maedo.cellClicked.connect(self.cell_cliked_func_2)
 
 
+            #쓰레드2
+            self.timer_thread = TimerThread()
+            self.timer_thread.time_flag.connect(self.same_time_process)
+            self.timer_thread.start()
+
             #쓰레드1
             self.mythread1 = MyThread()
             self.mythread1.finished.connect(self.price_comp_func)
             self.mythread1.start()
 
-            #쓰레드2
-            self.timer_thread = TimerThread()
-            self.timer_thread.time_flag.connect(self.same_time_process)
-            self.timer_thread.start()
+
 
         except Exception as e:
             logger.debug(e)
@@ -425,12 +429,13 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
 
                     accno = self.account_list.currentText()
                     code = conList[0]
+                    
                     buy_amount = str(self.buy_amount_edit.text()).replace(",", "")
 
-                    if int(buy_amount) > int(self.jango["출금가능금액"]):
-                        self.real_log_widget.addItem("설정한 금액보다 보유 현금이 적으므로 보유금액에 맞추어 매수 진행")
-                        logger.debug("설정한 금액보다 보유 현금이 적으므로 보유금액에 맞추어 매수 진행")
-                        buy_amount = int(self.jango["출금가능금액"])
+                    #if int(buy_amount) > int(self.jango["출금가능금액"]):
+                    #    self.real_log_widget.addItem("설정한 금액보다 보유 현금이 적으므로 보유금액에 맞추어 매수 진행")
+                    #    logger.debug("설정한 금액보다 보유 현금이 적으므로 보유금액에 맞추어 매수 진행")
+                    #    buy_amount = int(self.jango["출금가능금액"])
 
                     """
                     SendOrder(
@@ -465,6 +470,12 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
                         logger.debug(txt)
                         self.real_log_widget.addItem(txt)
                         self.SetRealReg("0102", code, "9001;10;16;17;302;", '0')
+                        #!! 체잔데이터때 실시간 등록함 !
+                        
+                        #여기서 딕셔너리 key 생성, 전문 오는 곳에서는 key 없는 종목들은 거르도록...
+                        #안그러면 사용자가 매수한 종목도 키 값에 들어가는 에러 발생
+                        if code in stock_data.keys():
+                            stock_data[code] = {}
 
                     else:
                         txt = "매수 주문 요청 실패 오류코드 : " + str(ret)
@@ -492,9 +503,17 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
                 with open(stock_data_path, 'rb') as f:
                     stock_data = pickle.load(f)
 
-                for i in stock_data:
-                    self.SetRealReg("0102", i, "9001;10;16;17;302;", '1')
-                    time.sleep(0.3)
+                trade_list = list(stock_data.keys())
+                self.SetRealReg("0102", trade_list, "9001;10;16;17;302;", '1')
+                #체잔데이터 받아올때 실시간 등록함 !!
+
+                txt = ""
+                for i in trade_list:
+                    txt = txt + i
+
+                txt = "매수한 종목 : " + txt
+                self.real_log_widget.addItem(txt)
+
 
         except Exception as e:
             logger.debug(e)
@@ -534,10 +553,10 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
 
     def trading_state_func(self, state):
         try:
-
+            global auto_flag
             logger.debug("trading_state_func : %s", state)
             if state == 'start':
-                self.auto_maemae = True
+                auto_flag = True
                 self.trading_start_btn.setEnabled(False)
                 self.trading_start_btn.setStyleSheet("color:gray")
 
@@ -549,7 +568,7 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
                 logger.debug(txt)
 
             else:
-                self.auto_maemae = False
+                auto_flag = False
                 self.trading_start_btn.setEnabled(True)
                 self.trading_start_btn.setStyleSheet("color:white")
                 self.trading_start_btn.setStyleSheet("background:red")
@@ -683,7 +702,6 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
                     self.con_list[i[0]] = {}  # con_list["000"] = {}
                     self.con_list[i[0]]["name"] = i[1]  # con_list["000"]["name"] = "1번조건식"
                     self.con_list[i[0]]["list"] = []
-
 
                 logger.debug("수집된 조건식 : " + str(self.con_list))
             logger.debug("조건검색 목록 호출 완료")
@@ -911,10 +929,9 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
         try:
             global kname_list
 
-            """
             for i in codelist:
-                logger.debug("%s 종목 실시간 등록",kname_list[i])
-            """
+                if i in kname_list:
+                    logger.debug("%s 종목 실시간 등록",kname_list[i])
 
             #logger.debug(codelist)
             if type == "0":
@@ -947,6 +964,8 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
             # logger.debug(code, "리시브 이벤트 발생")
             price = self.GetCommRealData(code, 10)
             self.recieved_dic[code] = price
+            #self.recieved_dic = price
+            #logger.debug("%s", self.recieved_dic)
         except Exception as e:
             logger.debug(e)
             logger.debug(traceback.format_exc())
@@ -1056,8 +1075,7 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
                 pass
 
             if (dummy[code]['매도수구분'] == 2) & (dummy[code]['주문상태'] == '체결'):  # 1:매도, 2:매수
-                if code not in stock_data.keys():
-                    stock_data[code] = {}
+                if code in stock_data.keys():
                     stock_data[code].update({'code': code})  # 종목코드
                     stock_data[code].update({'name': dummy[code]['종목명']})  # 종목명
 
@@ -1170,10 +1188,10 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
             user_name = self.GetLoginInfo("USER_NAME")
             sever = self.GetLoginInfo("GetServerGubun")
 
+            # 유저 정보 저장
+            account_list_re = []
             global test
             if not test:
-                # 유저 정보 저장
-                account_list_re = []
                 for i in range(len(account_list)):
                     account_list_re.append(account_list[i][:-2])
 
@@ -1213,7 +1231,6 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
             for i in self.con_list:
                 self.cbox_con.addItem(i + " " + self.con_list[i]["name"])  # 조건검색 목록
 
-
             self.Calljango(account_list[0])
         except Exception as e:
             logger.debug(e)
@@ -1222,37 +1239,39 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
     @pyqtSlot(dict)
     def price_comp_func(self, price_dict):
         try:
-            global stock_data
+            self.update_table()
+            global stock_data, kname_list
             stock_sub = stock_data
+            #logger.debug("차이발생")
             if (len(price_dict) >= 1)& (len(stock_data) >= 1):
-                for i in price_dict:
-                    if i in stock_sub:
-                        logger.debug("매매 종목 내 가격 변동 생성 : %s", price_dict)
+                for code, price in self.recieved_dic.items():
+                    if code in stock_sub:
+                        logger.debug("매매 종목 내 가격 변동 생성 : %s, %s",kname_list[code], price)
 
                         # 현 상태 BUY
-                        if stock_data[i]['STATE'] == BUY:
+                        if stock_data[code]['STATE'] == BUY:
                             # 감시가 도달
-                            if int(stock_data[i]['obs_p']) <= int(price_dict[i]):
-                                logger.debug("%s 종목 감시가 도달 : %s", i, price_dict[i])
-                                txt = i + " 종목 감시가 도달, " + str(price_dict[i])
+                            if int(stock_data[code]['obs_p']) <= int(price):
+                                logger.debug("%s 종목 감시가 도달 : %s", code, price)
+                                txt = code + " 종목 감시가 도달, " + str(price)
                                 self.real_log_widget.addItem(txt)
 
                                 # 트레일링가 계산
-                                res = calc_next_price(price_dict[i], TRAIL_PER)
-                                stock_data[i]['trail_p'] = res
-                                stock_data[i]['STATE'] = OBSERVATION  # 감시가 도달 상태로 변경
+                                res = calc_next_price(price, TRAIL_PER)
+                                stock_data[code]['trail_p'] = res
+                                stock_data[code]['STATE'] = OBSERVATION  # 감시가 도달 상태로 변경
 
                                 # 데이터 저장
                                 self.save_data_func()
 
                             # 손절가 도달
-                            elif int(stock_data[i]['obs_p']) < int(price_dict[i]):
-                                logger.debug("%s 종목 손절가 도달 : %s", i, price_dict[i])
+                            elif int(stock_data[code]['obs_p']) < int(price):
+                                logger.debug("%s 종목 손절가 도달 : %s", code, price)
 
                                 # todo - sell
                                 accno = self.account_list.currentText()
-                                code = i
-                                amt = stock_data[i]['amount']
+                                code = code
+                                amt = stock_data[code]['amount']
                                 """
                                 SendOrder(
                                 BSTR sRQName,     // 사용자 >구분명
@@ -1281,7 +1300,7 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
                                     self.real_log_widget.addItem(txt)
 
                                 # todo - stock_data 에서 pop
-                                self.stock_data.pop(i)
+                                self.stock_data.pop(code)
                                 # 데이터 저장
                                 self.save_data_func()
 
@@ -1290,32 +1309,32 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
                                 self.save_data_func()
 
                         # 현 상태 OBSERVATION
-                        elif stock_data[i]['STATE'] == OBSERVATION:
+                        elif stock_data[code]['STATE'] == OBSERVATION:
                             # 최고가 갱신
-                            if stock_data[i]['high'] < price_dict[i]:
-                                logger.debug("%s 종목 감시가 도달 : %s->%s", stock_data[i]['high'], price_dict[i])
-                                stock_data[i]['high'] = price_dict[i]
-                                txt = i + " 종목 최고가 갱신, " + str(stock_data[i]['high']) + "->" + str(price_dict[i])
+                            if stock_data[code]['high'] < price:
+                                logger.debug("%s 종목 감시가 도달 : %s->%s", stock_data[code]['high'], price)
+                                stock_data[code]['high'] = price
+                                txt = code + " 종목 최고가 갱신, " + str(stock_data[code]['high']) + "->" + str(price)
                                 self.real_log_widget.addItem(txt)
 
                                 # 트레일링가 재계산
-                                res = calc_next_price(price_dict[i], TRAIL_PER)
-                                stock_data[i]['trail_p'] = res
+                                res = calc_next_price(price, TRAIL_PER)
+                                stock_data[code]['trail_p'] = res
 
                                 # 데이터 저장
                                 self.save_data_func()
 
                             # 트레일링가 도달
-                            elif stock_data[i]['trail_p'] > price_dict[i]:
-                                logger.debug("%s 종목 트레일링가 도달 : %s", i, stock_data[i]['trail_p'])
+                            elif stock_data[code]['trail_p'] > price:
+                                logger.debug("%s 종목 트레일링가 도달 : %s", code, stock_data[code]['trail_p'])
                                 # 매도 진행
-                                txt = i + " 종목 트레일링 실현"
+                                txt = code + " 종목 트레일링 실현"
                                 self.real_log_widget.addItem(txt)
 
                                 # todo - sell
                                 accno = self.account_list.currentText()
-                                code = i
-                                amt = stock_data[i]['amount']
+                                code = code
+                                amt = stock_data[code]['amount']
                                 """
                                 SendOrder(
                                 BSTR sRQName,     // 사용자 >구분명
@@ -1344,7 +1363,7 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
                                     self.real_log_widget.addItem(txt)
 
                                 # todo - stock_data 에서 pop
-                                self.stock_data.pop(i)
+                                self.stock_data.pop(code)
                                 # 데이터 저장
                                 self.save_data_func()
         except Exception as e:
@@ -1407,7 +1426,7 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
     def deactivate_real(self):  # 체크돼있는데 조건검색 변경시 전의 실시간을 등록 해지 후 새로운 조건검색 인덱스로 실시간 등록
         try:
             combobox_list_index = self.cbox_con.currentText()[:3]
-            self.DisconnectRealData("0101")
+            #self.DisconnectRealData("0101")
 
             #기존에 있던게 추가되는듯... 우선 제외
             #self.SetRealReg("0101", self.con_list[combobox_list_index]["list"].keys(), "9001;10;16;17;302;", '0')
@@ -1462,12 +1481,12 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
             tmp = 0
             for i in range(self.jango):
                 self.table_jango.setItem(tmp, 0, QTableWidgetItem(self.jango[i]))"""
-            # self.money.setText(self.jango["D+2추정예수금"])
 
             self.table_jango.setItem(0, 0, QTableWidgetItem(format(int(self.jango["예수금"]), ",")))
-            self.table_jango.setItem(1, 0, QTableWidgetItem(format(int(self.jango["출금가능금액"]), ",")))
+            self.table_jango.setItem(1, 0, QTableWidgetItem(format(int(str(self.jango["출금가능금액"]).strip().lstrip('+').lstrip('-')), ",")))
             self.table_jango.setItem(2, 0, QTableWidgetItem(format(int(self.jango["주식매수총액"]), ",")))
             self.table_jango.setItem(3, 0, QTableWidgetItem(format(int(self.jango["평가금액합계"]), ",")))
+
             tot_hab = self.jango["총손익합계"]
             if tot_hab[0] == '-':
                 res = "-" + format(int(tot_hab[1:]), ",")
@@ -1503,6 +1522,7 @@ class MyThread(QThread):
     def __init__(self):
         try:
             super().__init__()
+            #time.sleep(10)
             self.run_auto_buy = True
             logger.debug("run thread")
 
@@ -1511,35 +1531,43 @@ class MyThread(QThread):
             logger.debug(traceback.format_exc())
     def run(self):   # 매초마다 받아온 데이터 집어넣기
         try:
-            time.sleep(5)
-            global stock_data, login_flag, main
+            global stock_data, login_flag, auto_flag, test
             heartBeat = 0
             while True:
                 time.sleep(1)
 
                 heartBeat += 1
-                if heartBeat > 30:
+                if heartBeat > 60:
                     logger.debug("myThread heartBeat...!")
                     heartBeat = 0
 
-                if login_flag == True and main != object:
-                    self.em = False
-                    combobox_list_index = main.cbox_con.currentText()[:3]
-                    if len(main.recieved_dic) > 1:
-                        for code_key, price in main.recieved_dic.items():
-                            if code_key in main.con_list[combobox_list_index]["list"]:  # 현재의 조건식에 있는 코드만 비교
-                                if main.con_list[combobox_list_index]["list"][code_key] != int_format(price):  # 가격이 변동되었을때
-                                    main.con_list[combobox_list_index]["list"][code_key] = int_format(price)
-                                    logger.debug(str(code_key) + "종목 가격 변동 to : " + str(int_format(price)) )
-                                    self.em = True
-                            for jango_code in main.jango["종목리스트"]:
-                                if jango_code["종목코드"] == code_key:
-                                    if jango_code["현재가"] != int_format(price):  # 가격이 변동되었을때
-                                        jango_code["현재가"] = int_format(price)
-                                        self.em = True
+                if login_flag == True:
+                    #time.sleep(5)
+                    if auto_flag == True or test:
+                        self.em = False
+                        combobox_list_index = main.cbox_con.currentText()[:3]
+                        if len(main.recieved_dic) > 1:
+                            for code_key, price in main.recieved_dic.items():
+                                for jango_code in main.jango["종목리스트"]:
+                                    if jango_code["종목코드"] == code_key:
+                                        if jango_code["현재가"] != int_format(price):  # 가격이 변동되었을때
+                                            jango_code["현재가"] = int_format(price)
+                                            #logger.debug(str(code_key) + "종목 가격 변동 to : " + str(int_format(price)))
+                                            self.em = True
+                            """
+                            for code_key, price in main.recieved_dic.items():
+                                if code_key in main.con_list[combobox_list_index]["list"]:  # 현재의 조건식에 있는 코드만 비교
+                                    if main.con_list[combobox_list_index]["list"][code_key] != int_format(price):  # 가격이 변동되었을때
+                                        main.con_list[combobox_list_index]["list"][code_key] = int_format(price)
+                                        logger.debug(str(code_key) + "종목 가격 변동 to : " + str(int_format(price)))
+                                        self.em = True """ #조건검색 목록 실시간 삭제중
+                        #매수한 종목의 가격 변화 시 전달
+                        #todo
 
-                    if self.em:
-                        self.finished.emit(main.recieved_dic)  # 업데이트 발생
+                        if self.em:
+                            self.finished.emit(main.recieved_dic)  # 업데이트 발생
+
+
         except Exception as e:
             logger.debug(e)
             logger.debug(traceback.format_exc())
@@ -1555,14 +1583,14 @@ class TimerThread(QThread):
     def __init__(self):
         try:
             super().__init__()
-            time.sleep(10)
+            #time.sleep(10)
         except Exception as e:
             logger.debug(e)
             logger.debug(traceback.format_exc())
 
     def run(self):  # 동작
         try:
-            global login_flag
+            global login_flag, auto_flag
             logger.debug("Timer Thread Run")
             TimerHeartBeat = 0
             while True:
@@ -1572,7 +1600,7 @@ class TimerThread(QThread):
                     TimerHeartBeat = 0
 
                 if login_flag == True:
-                    if main.auto_maemae == True:
+                    if auto_flag == True:
                         set_time = main.timeEdit.time().toString()[:5]
                         now_time = time.strftime('%H:%M', time.localtime(time.time()))
 
@@ -1678,7 +1706,6 @@ class RegisterDialog(QDialog, register_class):
 
 #플래그 없으면 스레드 돌면서 main 작동되어 에러 발생함
 login_flag = False
-
 main = object
 
 class MyWindow(QMainWindow, start_class):
@@ -1758,7 +1785,7 @@ class MyWindow(QMainWindow, start_class):
 
     @pyqtSlot(dict)
     def window_close(self):
-        global user_data, key, login_flag , main
+        global user_data, key, login_flag, main
         try:
 
             # self.read_sucess.emit(user_name)
@@ -1836,19 +1863,20 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     #main = Main()
-
     #myWindow = MyWindow()
     #myWindow.show()
 
 
     # test main
     global test
-    test = True
-    login_flag = True
-    main = Main()
-    main.show()
-
-
+    test = False
+    if test:
+        login_flag = True
+        main = Main()
+        main.show()
+    else:
+        myWindow = MyWindow()
+        myWindow.show()
 
     # test version
     # main = Main_UI()
