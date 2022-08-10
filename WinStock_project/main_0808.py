@@ -121,15 +121,15 @@ down_3_p : 3차 하락 도달가
 ===== stock data 파라미터 설명 =====
 5일간 보관
 div_stock_data['code'] = { 
-name:한글이름,  
-fir_date : MM:dd
-last_price : 종가 가격
-avr_price : 평단가
-amt : 보유물량
+name:한글이름,  (편입시 업데이트)
+fir_date : MM:dd (종목편입시 업데이트)
+last_price : 전일종가 가격 (load시 업데이트)
+avr_price : 평단가 (calljango 시 업데이트)
+amt : 보유물량 (calljango 시 업데이트)
 
 
-종가 기준
-1차매수가격: -3% 보유금액의 7%
+종가 기준(load, 편입시 업데이트)
+1차매수가격: -3% 보유금액의 7% 
 2차매수가격: -11% 보유금액의 7%
 3차매수가격: -20% (1차매수액+2차매수액) * 2/3
 4차매수가격: -40% (1차매수액+2차매수액+3차매수액) * 2/3
@@ -547,6 +547,17 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
                 with open(div_stock_data_path, 'rb') as g:
                     div_stock_data = pickle.load(g)
 
+                for j in div_stock_data:
+                    div_stock_data[j][day] = (datetime.now() - div_stock_data[j]["fir_date"]).days #day 업데이트
+                    if div_stock_data[j]["day"] > 5 and div_stock_data[j]["state"] == "감시중": #감시중인 종목 5일이 넘으면 삭제
+                        del div_stock_data[j]
+                    div_stock_data[j]["last_price"] = self.GetMasterLastPrice(j) # load시 전일종가 업데이트
+                    div_stock_data[j]["1차매수가격"] = calc_next_price(div_stock_data[j]["last_price"], -3) #매수가격 업데이트
+                    div_stock_data[j]["1차매수가격"] = calc_next_price(div_stock_data[j]["last_price"], -11)
+                    div_stock_data[j]["1차매수가격"] = calc_next_price(div_stock_data[j]["last_price"], -20)
+                    div_stock_data[j]["1차매수가격"] = calc_next_price(div_stock_data[j]["last_price"], -40)
+
+                self.save_div_data_func()
                 div_trade_list = list(div_stock_data.keys())
                 self.SetRealReg("0103", div_trade_list, "9001;10;16;17;302;", '1')
 
@@ -827,20 +838,23 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
                     sd.Beep(480, 300)
                     if div_flag :
                         div_stock_data[code]["name"] = self.GetMasterCodeName(code)
-                        div_stock_data[code]["fir_date"] = "08:08"
-                        div_stock_data[code]["last_price"] = 0
+                        div_stock_data[code]["fir_date"] = datetime.now()
+                        div_stock_data[code]["last_price"] = self.GetMasterLastPrice(code) ## day 1부터? 0부터 ?
                         div_stock_data[code]["avr_price"] = 0
                         div_stock_data[code]["amt"] = 0
                         div_stock_data[code]["day"] = 0
-                        div_stock_data[code]["1차매수가격"] = 0
-                        div_stock_data[code]["2차매수가격"] = 0
-                        div_stock_data[code]["3차매수가격"] = 0
-                        div_stock_data[code]["4차매수가격"] = 0
-                        div_stock_data[code]["1차매도가격"] = 0
-                        div_stock_data[code]["2차매도가격"] = 0
-                        div_stock_data[code]["3차매도가격"] = 0
-                        div_stock_data[code]["4차매도가격"] = 0
+                        div_stock_data[code]["1차매수가격"] = calc_next_price(div_stock_data[code]["last_price"], -3)
+                        div_stock_data[code]["2차매수가격"] = calc_next_price(div_stock_data[code]["last_price"], -11)
+                        div_stock_data[code]["3차매수가격"] = calc_next_price(div_stock_data[code]["last_price"], -20)
+                        div_stock_data[code]["4차매수가격"] = calc_next_price(div_stock_data[code]["last_price"], -40)
+                        div_stock_data[code]["1차매도가격"] = 999999999
+                        div_stock_data[code]["2차매도가격"] = 999999999
+                        div_stock_data[code]["3차매도가격"] = 999999999
+                        div_stock_data[code]["4차매도가격"] = 999999999
                         div_stock_data[code]["state"] = "감시중"
+                        div_stock_data[code]["현재가"] = 0
+                        self.save_div_data_func()
+
 
 
 
@@ -910,6 +924,7 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
             logger.debug(traceback.format_exc())
 
     def OnReceiveTrData(self, screen, rcname, trcode, record, next):  # tr 수신 이벤트
+        global div_stock_data
         logger.debug("OnReceiveTrData %s, %s, %s, %s, %s", screen, rcname, trcode, record, next)
         try:
             if next == "2":
@@ -948,7 +963,14 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
                     tmp["평가금액"] = self.GetCommData("opw00005", "잔고요청", i, "평가금액").lstrip("0")
                     tmp["평가손익"] = self.GetCommData("opw00005", "잔고요청", i, "평가손익").lstrip("0")
                     self.jango["종목리스트"].append(tmp)
-                    print(tmp)
+                    #print(tmp)
+                    if tmp["종목코드"] in div_stock_data:
+                        div_stock_data[tmp["종목코드"]]["현재가"] = tmp["현재가"]
+                        div_stock_data[tmp["종목코드"]]["amt"] = tmp["보유수량"]
+                        div_stock_data[tmp["종목코드"]]["avr_price"] = tmp["매입단가"]
+                        div_stock_data[tmp["종목코드"]]["매입금액"] = tmp["매입금액"]
+
+
 
                 logger.debug(self.jango["종목리스트"])
 
@@ -1052,11 +1074,10 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
 
     def OnReceiveRealData(self, code, realtype, realdata):  # 스레드로 스트림 데이터 처리
         try:
-            # logger.debug(code, "리시브 이벤트 발생")
             price = self.GetCommRealData(code, 10)
-            self.recieved_dic[code] = price
-            #self.recieved_dic = price
-            #logger.debug("%s", self.recieved_dic)
+            if len(price) != 0 :
+                self.recieved_dic[code] = int_format(price)
+
         except Exception as e:
             logger.debug(e)
             logger.debug(traceback.format_exc())
@@ -1454,14 +1475,99 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
 
             elif (len(price_dict) >= 1)& (len(div_stock_data) >= 1): #분할매매
                 for code, price in self.recieved_dic.items():
-                    if code in div_stock_data:
+                    div_stock_data_sub = div_stock_data
+                    if code in div_stock_data_sub:
                         logger.debug("분할 매매 종목 내 가격 변동 생성 : %s, %s",kname_list[code], price)
-
-
+                        if div_stock_data_sub[code]["state"] == "감시중" :
+                            if calc_per( price, div_stock_data_sub[code]["last_prce"]) < -3 :
+                                self.div_order_buy(1,code)#1차매수진행
+                        elif div_stock_data_sub[code]["state"] == "1차매수":
+                            if calc_per( price, div_stock_data_sub[code]["last_prce"]) < -11 :
+                                self.div_order_buy(2,code)#2차매수진행
+                            elif calc_per( price, div_stock_data_sub[code]["avr_prce"]) > 3 :
+                                self.div_order_sell(1,code)#1차매도진행
+                        elif div_stock_data_sub[code]["state"] == "2차매수":
+                            if calc_per( price, div_stock_data_sub[code]["last_prce"]) < -20 :
+                                self.div_order_buy(3,code)#3차매수진행
+                            elif calc_per( price, div_stock_data_sub[code]["avr_prce"]) > 5 :
+                                self.div_order_sell(2,code)#2차매도진행
+                        elif div_stock_data_sub[code]["state"] == "3차매수":
+                            if calc_per( price, div_stock_data_sub[code]["last_prce"]) < -40 :
+                                self.div_order_buy(4,code)#4차매수진행
+                            elif calc_per( price, div_stock_data_sub[code]["avr_prce"]) > 10 :
+                                self.div_order_sell(3,code)#3차매도진행
+                        elif div_stock_data_sub[code]["state"] == "4차매수":
+                            if calc_per( price, div_stock_data_sub[code]["avr_prce"]) > 10 :
+                                self.div_order_sell(4,code)#4차매도진행
             self.update_table()
         except Exception as e:
             logger.debug(e)
             logger.debug(traceback.format_exc())
+
+    def div_order_buy(self, state, code):
+        logger.debug(str(code) + "종목 " + str(state) + "차 매수 진행")
+        try:
+            if state == 1:
+                amt_p = calc_next_price(int(self.buy_amount_edit.text()).replace(",", ""),-93)
+                amt = int(amt_p / int(div_stock_data[code]["현재가"]))
+                ret = self.SendOrder(self.account_list.currentText(), 1, code, amt, 0, '03')
+                if ret == 0:
+                    logger.debug("매수 주문 요청 성공")
+                    div_stock_data[code]["state"] = "1차매수"
+                else:
+                    logger.debug("매수 주문 요청 실패 오류코드 : " + str(ret))
+
+                    div_stock_data[tmp["종목코드"]]["매입금액"]
+
+            elif state == 2:
+                amt_p = calc_next_price(int(self.buy_amount_edit.text()).replace(",", ""),-93)
+                amt = int(amt_p / int(div_stock_data[code]["현재가"]))
+                ret = self.SendOrder(self.account_list.currentText(), 1, code, amt, 0, '03')
+                if ret == 0:
+                    logger.debug("매수 주문 요청 성공")
+                    div_stock_data[code]["state"] = "2차매수"
+                else:
+                    logger.debug("매수 주문 요청 실패 오류코드 : " + str(ret))
+
+            elif state == 3:
+                amt_p = div_stock_data[code]["매입금액"] * 2 / 3
+                amt = int(amt_p / int(div_stock_data[code]["현재가"]))
+                ret = self.SendOrder(self.account_list.currentText(), 1, code, amt, 0, '03')
+                if ret == 0:
+                    logger.debug("매수 주문 요청 성공")
+                    div_stock_data[code]["state"] = "3차매수"
+                else:
+                    logger.debug("매수 주문 요청 실패 오류코드 : " + str(ret))
+
+            elif state == 4:
+                amt_p = div_stock_data[code]["매입금액"] * 2 / 3
+                amt = int(amt_p / int(div_stock_data[code]["현재가"]))
+                ret = self.SendOrder(self.account_list.currentText(), 1, code, amt, 0, '03')
+                if ret == 0:
+                    logger.debug("매수 주문 요청 성공")
+                    div_stock_data[code]["state"] = "4차매수"
+                else:
+                    logger.debug("매수 주문 요청 실패 오류코드 : " + str(ret))
+            self.save_div_data_func()
+        except Exception as e:
+            logger.debug(e)
+            logger.debug(traceback.format_exc())
+
+    def div_order_sell(self, state, code):
+        logger.debug(str(code) + "종목 " + str(state) + "차 매도 진행")
+        try:
+            amt = div_stock_data[code]["amt"]
+            ret = self.SendOrder(self.account_list.currentText(), 2, code, amt, 0, '03')
+            if ret == 0:
+                logger.debug("매도 주문 요청 성공")
+                del div_stock_data[code]
+            else:
+                logger.debug("매도 주문 요청 실패 오류코드 : " + str(ret))
+            self.save_div_data_func()
+        except Exception as e:
+            logger.debug(e)
+            logger.debug(traceback.format_exc())
+
 
     def update_table(self):  # 테이블 업데이트 함수
         global kname_list, code_list, stock_data, div_stock_data
@@ -1512,10 +1618,11 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
                 self.table_div.setItem(i, 0, QTableWidgetItem(i))
                 self.table_div.setItem(i, 1, QTableWidgetItem(i["종목이름"]))
                 self.table_div.setItem(i, 2, QTableWidgetItem(i["기준종가"]))
-                self.table_div.setItem(i, 3, QTableWidgetItem(i["평단가"]))
-                self.table_div.setItem(i, 4, QTableWidgetItem(i["amt"]))
-                self.table_div.setItem(i, 5, QTableWidgetItem(i["state"]))
-                self.table_div.setItem(i, 6, QTableWidgetItem(i["day"]))
+                self.table_div.setItem(i, 3, QTableWidgetItem(i["현재가"]))
+                self.table_div.setItem(i, 4, QTableWidgetItem(i["평단가"]))
+                self.table_div.setItem(i, 5, QTableWidgetItem(i["amt"]))
+                self.table_div.setItem(i, 6, QTableWidgetItem(i["state"]))
+                self.table_div.setItem(i, 7, QTableWidgetItem(i["day"]))
 
         except Exception as e:
             logger.debug(e)
@@ -1548,11 +1655,11 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
             code = self.view_selec_coin_lbl.text()
             #amt = self.order_amount_2.text()
             amt = 1
-
+            print(accno)
             name = kname_list[code]
             reply = QMessageBox.question(self, '확인', name + ' 종목을 매도하시겠습니까?')
             if reply == QMessageBox.Yes:
-                ret = self.SendOrder(2, accno, code, amt)
+                ret = self.SendOrder(2, str(accno), code, amt, 0, "03")
                 if ret == 0:
                     logger.debug("매도 주문 요청 성공")
                 else:
@@ -1577,16 +1684,7 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
                 res = format(int(tot_hab), ",")
             self.table_jango.setItem(4, 0, QTableWidgetItem(res))
 
-
-
-
-
             logger.debug("jango update suc")
-
-
-
-
-
 
         except Exception as e:
             logger.debug(e)
@@ -1628,25 +1726,22 @@ class MyThread(QThread):
                     if auto_flag == True or test:
                         self.em = False
                         combobox_list_index = main.cbox_con.currentText()[:3]
-                        if len(main.recieved_dic) > 1:
+                        if len(main.recieved_dic) > 1 :
                             for code_key, price in main.recieved_dic.items():
-                                for jango_code in main.jango["종목리스트"]:
-                                    if jango_code["종목코드"] == code_key:
-                                        try:
-                                            if len(price) == 0 :
-                                                #logger.debug(str(code_key)+str(price))
-                                                #logger.debug("종목 가격 받아오지 못함")
-                                                pass
-
-                                            elif jango_code["현재가"] != int_format(price):  # 가격이 변동되었을때
+                                if len(price) != 0:
+                                    for jango_code in main.jango["종목리스트"]:
+                                        if jango_code["종목코드"] == code_key :
+                                            if jango_code["현재가"] != int_format(price):  # 가격이 변동되었을때
                                                 jango_code["현재가"] = int_format(price)
                                                 #logger.debug(str(code_key) + "종목 가격 변동 to : " + str(int_format(price)))
                                                 self.em = True
+                                    if div_flag:
+                                        for div_code in div_stock_data:
+                                            if div_code == code_key:
+                                                if div_stock_data[code_key]["현재가"] != int_format(price):  # 가격이 변동되었을때
+                                                        div_stock_data[code_key]["현재가"] = int_format(price)
+                                                        self.em = True
 
-                                        except Exception as e:
-                                            logger.debug(e)
-                                            logger.debug(price)
-                                            logger.debug(traceback.format_exc())
                                 """     
                             for code_key, price in main.recieved_dic.items():
                                 if code_key in main.con_list[combobox_list_index]["list"]:  # 현재의 조건식에 있는 코드만 비교
@@ -1747,6 +1842,17 @@ def calc_next_price(cp, per):
         logger.debug("예외가 발생했습니다. %s", e)
         logger.debug(traceback.format_exc())
 
+"""
+param1 str   120  80 
+param2 str   100 100
+return float 20  -20 
+"""
+def calc_per(cp,np): #손익률 계산
+    cp = int(cp)
+    np = int(np)
+    round(float(cp / np - 1) * 100, 2)
+
+    return float()
 
 class RegisterDialog(QDialog, register_class):
     def __init__(self):
