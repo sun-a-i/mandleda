@@ -552,10 +552,10 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
                     if div_stock_data[j]["day"] > 5 and div_stock_data[j]["state"] == "감시중": #감시중인 종목 5일이 넘으면 삭제
                         del div_stock_data[j]
                     div_stock_data[j]["last_price"] = self.GetMasterLastPrice(j) # load시 전일종가 업데이트
-                    div_stock_data[j]["1차매수가격"] = calc_next_price(div_stock_data[j]["last_price"], -3) #매수가격 업데이트
-                    div_stock_data[j]["1차매수가격"] = calc_next_price(div_stock_data[j]["last_price"], -11)
-                    div_stock_data[j]["1차매수가격"] = calc_next_price(div_stock_data[j]["last_price"], -20)
-                    div_stock_data[j]["1차매수가격"] = calc_next_price(div_stock_data[j]["last_price"], -40)
+                    div_stock_data[j]["1차매수가격"] = calc_next_price(div_stock_data[j]["last_price"], -3) #매수가격 업데이트 -3%,-1%...
+                    div_stock_data[j]["2차매수가격"] = calc_next_price(div_stock_data[j]["last_price"], -11)
+                    div_stock_data[j]["3차매수가격"] = calc_next_price(div_stock_data[j]["last_price"], -20)
+                    div_stock_data[j]["4차매수가격"] = calc_next_price(div_stock_data[j]["last_price"], -40)
 
                 self.save_div_data_func()
                 div_trade_list = list(div_stock_data.keys())
@@ -1508,7 +1508,7 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
         logger.debug(str(code) + "종목 " + str(state) + "차 매수 진행")
         try:
             if state == 1:
-                amt_p = calc_next_price(int(self.buy_amount_edit.text()).replace(",", ""),-93)
+                amt_p = calc_next_price(int(self.buy_amount_edit.text()).replace(",", ""),-93)#가진 금액의 7%
                 amt = int(amt_p / int(div_stock_data[code]["현재가"]))
                 ret = self.SendOrder(self.account_list.currentText(), 1, code, amt, 0, '03')
                 if ret == 0:
@@ -1520,7 +1520,7 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
                     div_stock_data[tmp["종목코드"]]["매입금액"]
 
             elif state == 2:
-                amt_p = calc_next_price(int(self.buy_amount_edit.text()).replace(",", ""),-93)
+                amt_p = calc_next_price(int(self.buy_amount_edit.text()).replace(",", ""),-93)#가진 금액의 7%
                 amt = int(amt_p / int(div_stock_data[code]["현재가"]))
                 ret = self.SendOrder(self.account_list.currentText(), 1, code, amt, 0, '03')
                 if ret == 0:
@@ -1530,7 +1530,7 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
                     logger.debug("매수 주문 요청 실패 오류코드 : " + str(ret))
 
             elif state == 3:
-                amt_p = div_stock_data[code]["매입금액"] * 2 / 3
+                amt_p = div_stock_data[code]["매입금액"] * 2 / 3 #저장된 매입금액의 2/3
                 amt = int(amt_p / int(div_stock_data[code]["현재가"]))
                 ret = self.SendOrder(self.account_list.currentText(), 1, code, amt, 0, '03')
                 if ret == 0:
@@ -1540,7 +1540,7 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
                     logger.debug("매수 주문 요청 실패 오류코드 : " + str(ret))
 
             elif state == 4:
-                amt_p = div_stock_data[code]["매입금액"] * 2 / 3
+                amt_p = div_stock_data[code]["매입금액"] * 2 / 3 #저장된 매입금액의 2/3
                 amt = int(amt_p / int(div_stock_data[code]["현재가"]))
                 ret = self.SendOrder(self.account_list.currentText(), 1, code, amt, 0, '03')
                 if ret == 0:
