@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>739</width>
+    <width>874</width>
     <height>939</height>
    </rect>
   </property>
@@ -477,6 +477,9 @@ background-color:red;
    </property>
   </widget>
   <widget class="QPushButton" name="trading_stop_btn">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="geometry">
     <rect>
      <x>580</x>
@@ -495,11 +498,17 @@ background-color:red;
    <property name="styleSheet">
     <string notr="true">color:white;
 
-background-color:blue;
+background-color:gray;
 </string>
    </property>
    <property name="text">
     <string>자동매매 중단</string>
+   </property>
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
    </property>
   </widget>
   <widget class="QLabel" name="label_3">
@@ -651,7 +660,7 @@ background-color:blue;
     <rect>
      <x>10</x>
      <y>380</y>
-     <width>521</width>
+     <width>811</width>
      <height>161</height>
     </rect>
    </property>
@@ -722,6 +731,35 @@ background-color:blue;
    </property>
    <property name="text">
     <string>[분할매매 목록]</string>
+   </property>
+  </widget>
+  <widget class="QRadioButton" name="closeBuy_rdo_btn">
+   <property name="geometry">
+    <rect>
+     <x>740</x>
+     <y>560</y>
+     <width>101</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>종가매매기법</string>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QRadioButton" name="fellDown_rdo_btn">
+   <property name="geometry">
+    <rect>
+     <x>740</x>
+     <y>590</y>
+     <width>101</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>하락매수기법</string>
    </property>
   </widget>
  </widget>
