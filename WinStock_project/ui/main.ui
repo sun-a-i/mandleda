@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>748</width>
-    <height>781</height>
+    <width>739</width>
+    <height>939</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -76,8 +76,8 @@
   <widget class="QTableWidget" name="table_con">
    <property name="geometry">
     <rect>
-     <x>210</x>
-     <y>410</y>
+     <x>10</x>
+     <y>590</y>
      <width>521</width>
      <height>161</height>
     </rect>
@@ -113,8 +113,8 @@
   <widget class="QComboBox" name="cbox_con">
    <property name="geometry">
     <rect>
-     <x>530</x>
-     <y>380</y>
+     <x>330</x>
+     <y>560</y>
      <width>201</width>
      <height>22</height>
     </rect>
@@ -165,15 +165,20 @@
    </column>
    <column>
     <property name="text">
-     <string>평가금액</string>
+     <string>수량</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>손익률</string>
     </property>
    </column>
   </widget>
   <widget class="QLabel" name="label_4">
    <property name="geometry">
     <rect>
-     <x>210</x>
-     <y>380</y>
+     <x>10</x>
+     <y>560</y>
      <width>121</width>
      <height>21</height>
     </rect>
@@ -214,8 +219,8 @@
   <widget class="QLabel" name="label_6">
    <property name="geometry">
     <rect>
-     <x>440</x>
-     <y>380</y>
+     <x>240</x>
+     <y>560</y>
      <width>81</width>
      <height>21</height>
     </rect>
@@ -234,8 +239,8 @@
   <widget class="QPushButton" name="sell_btn">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>530</y>
+     <x>580</x>
+     <y>730</y>
      <width>131</width>
      <height>31</height>
     </rect>
@@ -342,8 +347,8 @@
   <widget class="QLineEdit" name="buy_amount_edit">
    <property name="geometry">
     <rect>
-     <x>90</x>
-     <y>378</y>
+     <x>640</x>
+     <y>578</y>
      <width>71</width>
      <height>21</height>
     </rect>
@@ -365,8 +370,8 @@
   <widget class="QLabel" name="label_10">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>378</y>
+     <x>580</x>
+     <y>578</y>
      <width>56</width>
      <height>21</height>
     </rect>
@@ -385,8 +390,8 @@
   <widget class="QLabel" name="label_11">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>404</y>
+     <x>580</x>
+     <y>604</y>
      <width>56</width>
      <height>21</height>
     </rect>
@@ -405,8 +410,8 @@
   <widget class="QLineEdit" name="order_amount_4">
    <property name="geometry">
     <rect>
-     <x>90</x>
-     <y>404</y>
+     <x>640</x>
+     <y>604</y>
      <width>31</width>
      <height>21</height>
     </rect>
@@ -428,8 +433,8 @@
   <widget class="QLabel" name="label_12">
    <property name="geometry">
     <rect>
-     <x>130</x>
-     <y>404</y>
+     <x>680</x>
+     <y>604</y>
      <width>21</width>
      <height>21</height>
     </rect>
@@ -448,8 +453,8 @@
   <widget class="QPushButton" name="trading_start_btn">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>450</y>
+     <x>580</x>
+     <y>650</y>
      <width>131</width>
      <height>31</height>
     </rect>
@@ -474,8 +479,8 @@ background-color:red;
   <widget class="QPushButton" name="trading_stop_btn">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>490</y>
+     <x>580</x>
+     <y>690</y>
      <width>131</width>
      <height>31</height>
     </rect>
@@ -531,8 +536,8 @@ background-color:blue;
   <widget class="QTimeEdit" name="timeEdit">
    <property name="geometry">
     <rect>
-     <x>90</x>
-     <y>350</y>
+     <x>640</x>
+     <y>550</y>
      <width>81</width>
      <height>22</height>
     </rect>
@@ -565,8 +570,8 @@ background-color:blue;
   <widget class="QLabel" name="label_13">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>350</y>
+     <x>580</x>
+     <y>550</y>
      <width>56</width>
      <height>21</height>
     </rect>
@@ -586,7 +591,7 @@ background-color:blue;
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>620</y>
+     <y>780</y>
      <width>721</width>
      <height>151</height>
     </rect>
@@ -603,7 +608,7 @@ background-color:blue;
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>590</y>
+     <y>750</y>
      <width>121</width>
      <height>31</height>
     </rect>
@@ -639,6 +644,84 @@ background-color:blue;
    </property>
    <property name="text">
     <string>[계좌 정보]</string>
+   </property>
+  </widget>
+  <widget class="QTableWidget" name="table_div">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>380</y>
+     <width>521</width>
+     <height>161</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>맑은 고딕</family>
+     <weight>50</weight>
+     <bold>false</bold>
+    </font>
+   </property>
+   <column>
+    <property name="text">
+     <string>종목코드</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>종목이름</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>기준종가</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>현재가</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>평단가</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>수량</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>현재상태</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>D+DAY</string>
+    </property>
+   </column>
+  </widget>
+  <widget class="QLabel" name="label_9">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>350</y>
+     <width>121</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>맑은 고딕</family>
+     <pointsize>12</pointsize>
+     <weight>50</weight>
+     <bold>false</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>[분할매매 목록]</string>
    </property>
   </widget>
  </widget>
