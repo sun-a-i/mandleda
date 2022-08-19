@@ -31,8 +31,9 @@ if not os.path.exists('DATA'):
 if not os.path.exists('logFile'):
     os.makedirs('logFile')
 
+import datetime as dt
 from datetime import datetime
-#import datetime
+
 import winsound as sd
 import pickle
 
@@ -1825,11 +1826,13 @@ class MyThread(QThread):
                     if len(main.recieved_dic) > 1:
                         for code_key, price in main.recieved_dic.items():
                             #logger.debug("{} {}".format(kname_list[code_key], price))
-                            if code_key in main.jango["종목리스트"]:
-                                if main.jango_code["현재가"] != int_format(price):  # 가격이 변동되었을때
-                                    main.jango_code["현재가"] = int_format(price)
-                                    # logger.debug(str(code_key) + "종목 가격 변동 to : " + str(int_format(price)))
-                                    self.finished.emit(str(code_key))
+
+                            for jong in main.jango["종목리스트"]:
+                                if code_key == jong["종목코드"]:
+                                    if jong["현재가"] != int_format(price):  # 가격이 변동되었을때
+                                        jong["현재가"] = int_format(price)
+                                        logger.debug(str(code_key) + "종목 가격 변동 to : " + str(int_format(price)))
+                                        self.finished.emit(str(code_key))
 
                             if trade_method == CloseTradeMethod:
                                 if code_key in stock_data:
@@ -2111,10 +2114,10 @@ class MyWindow(QMainWindow, start_class):
                     self.close()
                 elif connection_flag == 'ok':
                     self.update_frame.setVisible(False)
-                    previous_date = datetime.datetime(int(key['time'][:4]), int(key['time'][4:6]),
+                    previous_date = dt.datetime(int(key['time'][:4]), int(key['time'][4:6]),
                                                       int(key['time'][6:8]),
                                                       23, 59, 0)
-                    if previous_date < datetime.datetime.now():
+                    if previous_date < dt.datetime.now():
                         QMessageBox.information(self, "알람", "유효기간이 지났습니다.")
                         # logger.debug("작동시간 아님. peoriod1 = %s,  peoriod1 = %s",previous_date ,previous_date2)
                         self.login_timer.stop()
@@ -2162,7 +2165,7 @@ if __name__ == "__main__":
 
     # test main
     global test
-    test = True
+    test = 0
     if test:
         logger.debug("test start")
         login_flag = True
