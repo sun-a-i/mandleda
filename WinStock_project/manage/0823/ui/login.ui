@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>516</width>
+    <width>518</width>
     <height>787</height>
    </rect>
   </property>
@@ -265,9 +265,11 @@ background-color:green;
    </property>
    <property name="font">
     <font>
-     <family>Niagara Engraved</family>
-     <pointsize>72</pointsize>
+     <family>맑은 고딕</family>
+     <pointsize>65</pointsize>
+     <weight>75</weight>
      <italic>false</italic>
+     <bold>true</bold>
     </font>
    </property>
    <property name="styleSheet">

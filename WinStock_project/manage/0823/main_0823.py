@@ -150,10 +150,10 @@ FIR_BUY_PERCENT = -3
 SEC_BUY_PERCENT = -11
 THIR_BUY_PERCENT = -20
 FORTH_BUY_PERCENT = -40
-FIR_INCOME_PERCENT = 3
-SEC_INCOME_PERCENT = 5
-THIR_INCOME_PERCENT = 10
-FORTH_INCOME_PERCENT = 10
+FIR_INCOME_PERCENT = 7
+SEC_INCOME_PERCENT = 8
+THIR_INCOME_PERCENT = 7
+FORTH_INCOME_PERCENT = 6
 
 # 매매 데이터 저장 딕셔너리
 stock_data = {}
@@ -377,7 +377,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             super().__init__()
             self.setupUi(self)
             self.setWindowTitle("WIN_STOCK AutoTrading System ver 1.01")
-            self.setWindowIcon(QIcon("./image/winstock_icon.ico"))
+            self.setWindowIcon(QIcon("./image/icon.ico"))
 
             # ==============키움==============================
             self.ocx = QAxWidget("KHOPENAPI.KHOpenAPICtrl.1")
@@ -419,6 +419,9 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             self.buy_amount_edit.textChanged.connect(self.amount_change_function)
             self.account_list.currentIndexChanged.connect(self.accno_change_func)
 
+            self.closeBuy_rdo_btn.clicked.connect(self.radio_btn_click_func)
+            self.fellDown_rdo_btn.clicked.connect(self.radio_btn_click_func)
+
             # cell 선택 시
             self.table_holding.cellClicked.connect(self.cell_cliked_func)
 
@@ -449,11 +452,23 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
         self.update_holding_table()
         self.table_init()
 
+
+    def radio_btn_click_func(self):
+        try:
+            if self.closeBuy_rdo_btn.isChecked():
+                self.method_a_frame.setVisible(True)
+            else:
+                self.method_a_frame.setVisible(False)
+
+        except Exception as e:
+            logger.debug(e)
+            logger.debug(traceback.format_exc())
+
+
     """
     @ 매매 시간 도달 프로세스
     @ 매수할 종목 있는지 체크 후 매수 프로세스 진행 
     """
-
     @pyqtSlot(str)
     def same_time_process(self):
         try:
@@ -660,7 +675,6 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug("trading_state_func : %s", state)
 
             if state == 'start':
-
                 if self.cbox_con.currentText() == "000 1":
                     if self.closeBuy_rdo_btn.isChecked():
                         trade_method = CloseTradeMethod
@@ -709,7 +723,6 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                         trade_method = 0
                 else:
                     QMessageBox.information(self, '경고', '인식할 수 없는 조건 검색 목록입니다.\n조건검색식을 수정해주세요.')
-
             else:
                 trade_method = 0
                 auto_flag = False
@@ -1696,22 +1709,24 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     self.table_div.setItem(i, 2, QTableWidgetItem(
                         format(int(str(div_stock_data[j]["last_price"]).lstrip('0')), ",")))
 
-                per = calc_per(div_stock_data[j]["현재가"], div_stock_data[j]["last_price"])
+                    per = calc_per(div_stock_data[j]["현재가"], div_stock_data[j]["last_price"])
 
-                if int(div_stock_data[j]["현재가"]) >= int(div_stock_data[j]["last_price"]):
-                    txt = "▲" + format(int(div_stock_data[j]["현재가"]), ",")
-                    per = "▲" + str(per)
-                    self.table_div.setItem(i, 3, QTableWidgetItem(txt))
-                    self.table_div.item(i, 3).setForeground(QtGui.QColor(255, 0, 0))
-                    self.table_div.setItem(i, 4, QTableWidgetItem(per))
-                    self.table_div.item(i, 4).setForeground(QtGui.QColor(255, 0, 0))
+                    if int(div_stock_data[j]["현재가"]) >= int(div_stock_data[j]["last_price"]):
+                        txt = "▲" + format(int(div_stock_data[j]["현재가"]), ",")
+                        per = "▲" + str(per)
+                        self.table_div.setItem(i, 3, QTableWidgetItem(txt))
+                        self.table_div.item(i, 3).setForeground(QtGui.QColor(255, 0, 0))
+                        self.table_div.setItem(i, 4, QTableWidgetItem(per))
+                        self.table_div.item(i, 4).setForeground(QtGui.QColor(255, 0, 0))
+                    else:
+                        txt = "▼" + format(int(div_stock_data[j]["현재가"]), ",")
+                        per = "▼" + str(per)
+                        self.table_div.setItem(i, 3, QTableWidgetItem(txt))
+                        self.table_div.item(i, 3).setForeground(QtGui.QColor(0, 0, 255))
+                        self.table_div.setItem(i, 4, QTableWidgetItem(per))
+                        self.table_div.item(i, 4).setForeground(QtGui.QColor(0, 0, 255))
                 else:
-                    txt = "▼" + format(int(div_stock_data[j]["현재가"]), ",")
-                    per = "▼" + str(per)
-                    self.table_div.setItem(i, 3, QTableWidgetItem(txt))
-                    self.table_div.item(i, 3).setForeground(QtGui.QColor(0, 0, 255))
-                    self.table_div.setItem(i, 4, QTableWidgetItem(per))
-                    self.table_div.item(i, 4).setForeground(QtGui.QColor(0, 0, 255))
+                    self.table_div.setItem(i, 3, QTableWidgetItem(format(int(div_stock_data[j]["현재가"]), ",")))
 
                 self.table_div.setItem(i, 5, QTableWidgetItem(format(int(div_stock_data[j]["avr_price"]), ",")))
                 self.table_div.setItem(i, 6, QTableWidgetItem(div_stock_data[j]["amt"]))
@@ -2022,7 +2037,7 @@ class RegisterDialog(QDialog, register_class):
             super().__init__()
             self.setupUi(self)
             self.setWindowTitle("Register Setting")
-            self.setWindowIcon(QIcon("./image/winstock_icon.ico"))
+            self.setWindowIcon(QIcon("./image/icon.ico"))
             self.register_btn.clicked.connect(self.register_connect_func)
         except Exception as e:  # 모든 예외의 에러 메시지를 출력할 때는 Exception을 사용
             logger.debug("예외가 발생했습니다. %s", e)
@@ -2078,7 +2093,7 @@ class MyWindow(QMainWindow, start_class):
             super().__init__()
             self.setupUi(self)
             self.setWindowTitle("WIN_STOCK AutoTrading System ver 1.01")
-            self.setWindowIcon(QIcon("./image/winstock_icon.ico"))
+            self.setWindowIcon(QIcon("./image/icon.ico"))
             logger.debug("login init_process close...")
 
             self.update_frame.setVisible(False)
@@ -2159,7 +2174,7 @@ class MyWindow(QMainWindow, start_class):
                     connection_flag = ''
                     self.close()
                 elif connection_flag == 'ok':
-                    self.update_frame.setVisible(False)
+                    #self.update_frame.setVisible(False)
                     previous_date = datetime(int(key['time'][:4]), int(key['time'][4:6]),
                                              int(key['time'][6:8]),
                                              23, 59, 0)
