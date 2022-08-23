@@ -842,7 +842,7 @@ class MyThread(QThread):
 """
 import socket
 
-HOST_socket = '218.155.43.223'
+HOST_socket = 'local host'
 PORT_socket = 5000
 
 class socket_client_thread(QThread):
