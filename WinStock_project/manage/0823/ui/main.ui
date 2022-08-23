@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>744</width>
+    <width>749</width>
     <height>948</height>
    </rect>
   </property>
@@ -186,7 +186,7 @@
   <widget class="QLabel" name="label_4">
    <property name="geometry">
     <rect>
-     <x>10</x>
+     <x>20</x>
      <y>560</y>
      <width>121</width>
      <height>21</height>
@@ -201,7 +201,7 @@
     </font>
    </property>
    <property name="text">
-    <string>[조건검색 목록]</string>
+    <string>[매매 리스트]</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_5">
@@ -242,15 +242,15 @@
     </font>
    </property>
    <property name="text">
-    <string>조건검색 선택</string>
+    <string>       [타이틀]</string>
    </property>
   </widget>
   <widget class="QPushButton" name="sell_btn">
    <property name="geometry">
     <rect>
-     <x>450</x>
-     <y>720</y>
-     <width>271</width>
+     <x>629</x>
+     <y>65</y>
+     <width>101</width>
      <height>31</height>
     </rect>
    </property>
@@ -290,7 +290,7 @@
     <rect>
      <x>480</x>
      <y>70</y>
-     <width>241</width>
+     <width>121</width>
      <height>21</height>
     </rect>
    </property>
@@ -353,112 +353,6 @@
     </property>
    </column>
   </widget>
-  <widget class="QLineEdit" name="buy_amount_edit">
-   <property name="geometry">
-    <rect>
-     <x>510</x>
-     <y>588</y>
-     <width>71</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <family>맑은 고딕</family>
-     <weight>50</weight>
-     <bold>false</bold>
-    </font>
-   </property>
-   <property name="text">
-    <string>10,000,000</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_10">
-   <property name="geometry">
-    <rect>
-     <x>450</x>
-     <y>588</y>
-     <width>56</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <family>맑은 고딕</family>
-     <weight>50</weight>
-     <bold>false</bold>
-    </font>
-   </property>
-   <property name="text">
-    <string>매수금액:</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_11">
-   <property name="geometry">
-    <rect>
-     <x>450</x>
-     <y>614</y>
-     <width>56</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <family>맑은 고딕</family>
-     <weight>50</weight>
-     <bold>false</bold>
-    </font>
-   </property>
-   <property name="text">
-    <string>매도설정:</string>
-   </property>
-  </widget>
-  <widget class="QLineEdit" name="order_amount_4">
-   <property name="geometry">
-    <rect>
-     <x>510</x>
-     <y>614</y>
-     <width>31</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <family>맑은 고딕</family>
-     <weight>50</weight>
-     <bold>false</bold>
-    </font>
-   </property>
-   <property name="text">
-    <string>4</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_12">
-   <property name="geometry">
-    <rect>
-     <x>550</x>
-     <y>614</y>
-     <width>21</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <family>맑은 고딕</family>
-     <weight>50</weight>
-     <bold>false</bold>
-    </font>
-   </property>
-   <property name="text">
-    <string>%</string>
-   </property>
-  </widget>
   <widget class="QPushButton" name="trading_start_btn">
    <property name="enabled">
     <bool>true</bool>
@@ -466,7 +360,7 @@
    <property name="geometry">
     <rect>
      <x>450</x>
-     <y>660</y>
+     <y>665</y>
      <width>131</width>
      <height>41</height>
     </rect>
@@ -495,7 +389,7 @@ background-color:red;
    <property name="geometry">
     <rect>
      <x>590</x>
-     <y>660</y>
+     <y>665</y>
      <width>131</width>
      <height>41</height>
     </rect>
@@ -554,60 +448,6 @@ background-color:blue;
     <set>Qt::AlignCenter</set>
    </property>
   </widget>
-  <widget class="QTimeEdit" name="timeEdit">
-   <property name="geometry">
-    <rect>
-     <x>510</x>
-     <y>560</y>
-     <width>81</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <family>맑은 고딕</family>
-     <weight>50</weight>
-     <bold>false</bold>
-    </font>
-   </property>
-   <property name="dateTime">
-    <datetime>
-     <hour>15</hour>
-     <minute>15</minute>
-     <second>0</second>
-     <year>2000</year>
-     <month>1</month>
-     <day>1</day>
-    </datetime>
-   </property>
-   <property name="minimumTime">
-    <time>
-     <hour>0</hour>
-     <minute>0</minute>
-     <second>0</second>
-    </time>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_13">
-   <property name="geometry">
-    <rect>
-     <x>450</x>
-     <y>560</y>
-     <width>56</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <family>맑은 고딕</family>
-     <weight>50</weight>
-     <bold>false</bold>
-    </font>
-   </property>
-   <property name="text">
-    <string>매수시간:</string>
-   </property>
-  </widget>
   <widget class="QListWidget" name="real_log_widget">
    <property name="geometry">
     <rect>
@@ -628,7 +468,7 @@ background-color:blue;
   <widget class="QLabel" name="label_2">
    <property name="geometry">
     <rect>
-     <x>10</x>
+     <x>20</x>
      <y>755</y>
      <width>121</width>
      <height>31</height>
@@ -753,9 +593,9 @@ background-color:blue;
   <widget class="QRadioButton" name="closeBuy_rdo_btn">
    <property name="geometry">
     <rect>
-     <x>620</x>
-     <y>570</y>
-     <width>101</width>
+     <x>480</x>
+     <y>574</y>
+     <width>71</width>
      <height>21</height>
     </rect>
    </property>
@@ -765,7 +605,7 @@ background-color:blue;
     </font>
    </property>
    <property name="text">
-    <string>종가매매기법</string>
+    <string>A 기법</string>
    </property>
    <property name="checked">
     <bool>true</bool>
@@ -774,9 +614,9 @@ background-color:blue;
   <widget class="QRadioButton" name="fellDown_rdo_btn">
    <property name="geometry">
     <rect>
-     <x>620</x>
-     <y>600</y>
-     <width>101</width>
+     <x>480</x>
+     <y>604</y>
+     <width>71</width>
      <height>21</height>
     </rect>
    </property>
@@ -786,16 +626,229 @@ background-color:blue;
     </font>
    </property>
    <property name="text">
-    <string>하락매수기법</string>
+    <string>B 기법</string>
+   </property>
+  </widget>
+  <widget class="QFrame" name="method_a_frame">
+   <property name="geometry">
+    <rect>
+     <x>560</x>
+     <y>550</y>
+     <width>161</width>
+     <height>101</height>
+    </rect>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::Box</enum>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Raised</enum>
+   </property>
+   <widget class="QLabel" name="label_10">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>40</y>
+      <width>56</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>매수금액:</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="order_amount_4">
+    <property name="geometry">
+     <rect>
+      <x>70</x>
+      <y>66</y>
+      <width>31</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>4</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_12">
+    <property name="geometry">
+     <rect>
+      <x>110</x>
+      <y>66</y>
+      <width>21</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>%</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_11">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>66</y>
+      <width>56</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>매도설정:</string>
+    </property>
+   </widget>
+   <widget class="QTimeEdit" name="timeEdit">
+    <property name="geometry">
+     <rect>
+      <x>70</x>
+      <y>12</y>
+      <width>81</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="dateTime">
+     <datetime>
+      <hour>15</hour>
+      <minute>15</minute>
+      <second>0</second>
+      <year>2000</year>
+      <month>1</month>
+      <day>1</day>
+     </datetime>
+    </property>
+    <property name="minimumTime">
+     <time>
+      <hour>0</hour>
+      <minute>0</minute>
+      <second>0</second>
+     </time>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_13">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>12</y>
+      <width>56</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>매수시간:</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="buy_amount_edit">
+    <property name="geometry">
+     <rect>
+      <x>70</x>
+      <y>40</y>
+      <width>71</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>10,000,000</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QPushButton" name="sell_btn_2">
+   <property name="geometry">
+    <rect>
+     <x>450</x>
+     <y>720</y>
+     <width>131</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>맑은 고딕</family>
+     <weight>50</weight>
+     <bold>false</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>선택 종목 편입</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="sell_btn_3">
+   <property name="geometry">
+    <rect>
+     <x>590</x>
+     <y>720</y>
+     <width>131</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>맑은 고딕</family>
+     <weight>50</weight>
+     <bold>false</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>선택 종목 제거</string>
    </property>
   </widget>
  </widget>
  <tabstops>
   <tabstop>account_list</tabstop>
   <tabstop>table_jango</tabstop>
-  <tabstop>timeEdit</tabstop>
-  <tabstop>buy_amount_edit</tabstop>
-  <tabstop>order_amount_4</tabstop>
   <tabstop>trading_start_btn</tabstop>
   <tabstop>trading_stop_btn</tabstop>
   <tabstop>sell_btn</tabstop>
