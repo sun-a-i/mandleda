@@ -124,15 +124,15 @@ down_3_p : 3차 하락 도달가
 ===== div_stock_data 파라미터 설명 =====
 5일간 보관
 div_stock_data['code'] = { 
-name:한글이름,  (편입시 업데이트)
-fir_date : MM:dd (종목편입시 업데이트)
+name:한글이름,  (3:19시 업데이트)
+fir_date : MM:dd (3:19시 업데이트)
 last_price : 전일종가 가격 (load시 업데이트)
 avr_price : 평단가 (calljango 시 업데이트)
 amt : 보유물량 (calljango 시 업데이트)
 state : 현재상태 (감시중, 등록?, 1차매수, 2차매수, 3차매수)
 
 
-종가 기준(load, 편입시 업데이트)
+종가 기준(load, 3:19시 업데이트)
 1차매수가격: -3% 보유금액의 7% 
 2차매수가격: -11% 보유금액의 7%
 3차매수가격: -20% (1차매수액+2차매수액) * 2/3
@@ -368,7 +368,7 @@ class socket_server_thread(QThread):
         global test
         if test:
             # 내 아이피
-            self.CLIENT_HOST = '192.168.123.100'
+            self.CLIENT_HOST = '192.168.0.7'
         else:
             # 고객사 아이피
             self.CLIENT_HOST = "192.168.55.124"
@@ -517,7 +517,8 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
             global test
             if test:
-                self.send_test.clicked.connect(self.send_test_func)
+                #self.send_test.clicked.connect(self.send_test_func)
+                pass
 
             self.socket_server = socket_server_thread()
             self.socket_server.server_state.connect(self.check_socket_state)
@@ -695,6 +696,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
                     # 전일 종목 검색되어 아직 전일 종가를 모르는 상태
                     if diff > 0 and sub_dict[j]["state"] == "등록":
+                        #todo : 종목 등록 프로세스 수정 2일전 종가 비교
                         logger.debug('{}, 전일 등록 종목. "감시"로 상태 변경'.format(sub_dict[j]["name"]))
                         sub_dict[j]["last_price"] = self.GetMasterLastPrice(j)  ## day 1부터? 0부터 ?
                         time.sleep(0.2)
@@ -737,6 +739,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             pickle.dump(stock_data, f)
 
     def save_div_data_func(self):
+        logger.debug("업데이트된 분할매매 종목 데이터셋에 저장 중")
         with open(div_stock_data_path, 'wb') as f:
             pickle.dump(div_stock_data, f)
 
@@ -785,19 +788,25 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug("trading_state_func : %s", state)
 
             if state == 'start':
-                if self.cbox_con.currentText() == "000 1":
+                if self.cbox_con.currentText() == "000 1번조건식": #todo : test용 ?
                     if self.closeBuy_rdo_btn.isChecked():
                         trade_method = CloseTradeMethod
                         txt = "[A type]"
 
-                        # 시간 체크 쓰레드, 종가매매일 때만 필요한 쓰레드
+                        # 시간 체크 쓰레드
                         self.timer_thread = TimerThread()
                         self.timer_thread.time_flag.connect(self.same_time_process)
                         self.timer_thread.start()
 
-                    elif self.fellDown_rdo_btn.isChecked():
+                    elif self.fellDown_rdo_btn.isChecked():# 시간 체크 쓰레드
                         trade_method = FellDownMethod
                         txt = "[B type]"
+
+                        # 시간 체크 쓰레드
+                        self.timer_thread = TimerThread()
+                        self.timer_thread.div_time_flag.connect(self.update_div_data_set)
+                        self.timer_thread.start()
+
                     else:
                         txt = '매매기법 선택 안됨'
 
@@ -992,7 +1001,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
         try:
             logger.debug(str(key) + " 조건식 조회 요청")
             er = self.ocx.dynamicCall("SendCondition(QString,QString,QInt,QInt)", "0156",
-                                      self.con_list[key]["name"], key, 1)  # 실시간옵션. 0:조건검색만, 1:조건검색+실시간 조건검색
+                                      self.con_list[key]["name"], key, 0)  # 실시간옵션. 0:조건검색만, 1:조건검색+실시간 조건검색
             if er:
                 logger.debug(str(key) + " 조건식 조회 요청 성공")
                 while self.condition is False:
@@ -1049,34 +1058,10 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 if etype == 'I':  # 종목편입
                     # logger.debug(code + "종목 편입 이벤트 발생")
                     self.con_list[str_format(con_idx)]["list"][code] = "0"
-                    sd.Beep(400, 200)
+                    sd.Beep(400, 200) #!! 삭제처리 ?
                     sd.Beep(480, 300)
-                    if trade_method == FellDownMethod:
-                        if code not in div_stock_data:
-                            div_stock_data[code] = {}
-                            div_stock_data[code]["name"] = kname_list[code]
-                            div_stock_data[code]["fir_date"] = str(datetime.today().date())
-
-                            # 종목이 검색된 다음날, 전일 종가를 설정
-                            div_stock_data[code]["last_price"] = 0
-                            div_stock_data[code]["avr_price"] = 0
-                            div_stock_data[code]["amt"] = 0
-
-                            div_stock_data[code]["1차매수가격"] = 0
-                            div_stock_data[code]["2차매수가격"] = 0
-                            div_stock_data[code]["3차매수가격"] = 0
-                            div_stock_data[code]["4차매수가격"] = 0
-
-                            div_stock_data[code]["1차매도가격"] = 999999999
-                            div_stock_data[code]["2차매도가격"] = 999999999
-                            div_stock_data[code]["3차매도가격"] = 999999999
-                            div_stock_data[code]["4차매도가격"] = 999999999
-                            div_stock_data[code]["state"] = "등록"
-                            div_stock_data[code]["현재가"] = 0
-                            logger.debug("하락매수 - 종목 검색됨")
-                            logger.debug("name : {}, data : {}".format(kname_list[code], div_stock_data[code]))
-                            self.save_div_data_func()
-                            self.SetRealReg("0103", [code], "9001;10", '1')
+                    if trade_method == FellDownMethod:#todo : set div data 함수로 분리 필요 실시간 조건검색 변동이벤트 발생 x 3:19 스레드에서 처리
+                        pass
 
                 elif etype == 'D':  # 종목이탈
                     # logger.debug(code + "종목 이탈 이벤트 발생")
@@ -1167,7 +1152,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     tmp["평가손익"] = self.GetCommData("opw00005", "잔고요청", i, "평가손익").lstrip("0")
                     self.jango["종목리스트"].append(tmp)
                     # print(tmp)
-                    if tmp["종목코드"] in div_stock_data:
+                    if tmp["종목코드"] in div_stock_data: #update div data
                         div_stock_data[tmp["종목코드"]]["현재가"] = tmp["현재가"]
                         if (div_stock_data[tmp["종목코드"]]['state'] != '등록') & (div_stock_data[tmp["종목코드"]]['state'] != '감시중'):
                             div_stock_data[tmp["종목코드"]]["amt"] = tmp["보유수량"]
@@ -1231,7 +1216,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
             # logger.debug(codelist)
             if type == "0":  # 체잔데이터 이벤트때 등록
-                logger.debug("보유주식목록 실시간 등록")
+                logger.debug("주식목록 실시간 등록")
             elif type == "1":  # 종목편입 이벤트때 추가등록
                 logger.debug(str(codelist) + " 종목 실시간 추가 등록")
             codelist = ";".join(codelist)
@@ -1449,6 +1434,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug(traceback.format_exc())
 
     # ==============기타 함수==================
+
 
     # ==========================================UI FUNCTION ====================================================
     # ==========================================================================================================
@@ -1686,7 +1672,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                         self.update_holding_table()
 
             # elif trade_method == FellDownMethod:
-            if stock_code in div_stock_data:
+            if stock_code in div_stock_data: #todo : 작동하나 ?
                 if (len(stock_code) >= 1) & (len(div_stock_data) >= 1):  # 분할매매
                     price = self.recieved_dic[stock_code]
                     code = stock_code
@@ -1786,6 +1772,57 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
         except Exception as e:
             logger.debug(e)
             logger.debug(traceback.format_exc())
+
+    @pyqtSlot()
+    def update_div_data_set(self):
+        logger.debug("분할매매 종목 업데이트 작업 시작")
+        global kname_list, code_list, stock_data, div_stock_data
+        try:
+            try:
+                combobox_list_index = self.cbox_con.currentText()[:3]
+                logger.debug("조건식에 맞는 종목 업데이트 작업 중")
+                self.condition_refresh()
+                logger.debug("업데이트된 종목 데이터셋에 등록 중")
+                for code_key in self.con_list[combobox_list_index]["list"]:
+                    self.set_div_data(code_key)
+
+                self.save_div_data_func()
+                div_trade_list = list(div_stock_data.keys())
+                self.SetRealReg("0103", div_trade_list, "9001;10;", '0')
+            except:
+                logger.debug("콤보박스 리스트 인덱스 없음 !")
+        except Exception as e:
+            logger.debug(e)
+            logger.debug(traceback.format_exc())
+
+
+    def set_div_data(self, code):
+        global div_stock_data, kname_list
+        if code not in div_stock_data:
+            logger.debug("새로운 종목 발견 : " + str(code))
+            div_stock_data[code] = {}
+            div_stock_data[code]["name"] = kname_list[code]
+            div_stock_data[code]["fir_date"] = str(datetime.today().date())
+
+            # 종목이 검색된 다음날, 전일 종가를 설정
+            div_stock_data[code]["last_price"] = 0
+            div_stock_data[code]["avr_price"] = 0
+            div_stock_data[code]["amt"] = 0
+
+            div_stock_data[code]["1차매수가격"] = 0
+            div_stock_data[code]["2차매수가격"] = 0
+            div_stock_data[code]["3차매수가격"] = 0
+            div_stock_data[code]["4차매수가격"] = 0
+
+            div_stock_data[code]["1차매도가격"] = 999999999
+            div_stock_data[code]["2차매도가격"] = 999999999
+            div_stock_data[code]["3차매도가격"] = 999999999
+            div_stock_data[code]["4차매도가격"] = 999999999
+            div_stock_data[code]["state"] = "등록"
+            div_stock_data[code]["현재가"] = 0
+            logger.debug("하락매수 - 종목 등록")
+            logger.debug("name : {}, data : {}".format(kname_list[code], div_stock_data[code]))
+
 
     def update_con_table(self):  # 테이블 업데이트 함수
         global kname_list, code_list, stock_data, div_stock_data
@@ -2058,6 +2095,7 @@ class MyThread(QThread):
 
 class TimerThread(QThread):
     time_flag = pyqtSignal(str)
+    div_time_flag = pyqtSignal()
 
     def __init__(self):
         try:
@@ -2087,11 +2125,23 @@ class TimerThread(QThread):
                         if set_time == now_time:
                             # logger.debug("시간 같음")
                             self.time_flag.emit("")
-                            time.sleep(60)
+                            time.sleep(30)
                         else:
                             pass
                             # logger.debug('시간 다름')
 
+                    elif trade_method == FellDownMethod: #div data 3:19에 업데이트
+                        set_time = '10:31'
+                        now_time = time.strftime('%H:%M', time.localtime(time.time()))
+
+                        logger.debug("set_time = %s, now_time = %s, %s", set_time, now_time, set_time == now_time)
+                        if set_time == now_time:
+                            # logger.debug("시간 같음")
+                            self.div_time_flag.emit()
+                            time.sleep(30)
+                        else:
+                            pass
+                            # logger.debug('시간 다름')
                 # 30s 간격
                 time.sleep(30)
         except Exception as e:
@@ -2148,6 +2198,28 @@ def calc_per(cp, np):  # 손익률 계산
     res = round(float((cp / np) - 1) * 100, 2)
 
     return float(res)
+
+
+
+"""
+
+#todo : 매매 기법 핸들러 쓰레드
+
+# div_stock_data 받아오고 합치는 함수
+
+
+
+
+"""
+
+
+
+
+
+
+
+
+
 
 
 class RegisterDialog(QDialog, register_class):
@@ -2345,7 +2417,7 @@ if __name__ == "__main__":
 
     # test main
     global test
-    test = False
+    test = 1
     if test:
         logger.debug("test start")
         login_flag = True

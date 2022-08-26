@@ -5,7 +5,7 @@ from PyQt5.QtCore import QThread
 
 import socket
 
-HOST = "192.168.0.7"
+HOST = "118.37.147.48"
 PORT = 5000
 
 class socket_client_thread(QThread):
@@ -46,5 +46,4 @@ a = socket_client_thread()
 a.start()
 
 while True:
-    time.sleep(5)
-    a.send_msg("메세지 보냅니다1")
+    pass
