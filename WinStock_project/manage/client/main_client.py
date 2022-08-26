@@ -1272,7 +1272,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     global test
-    test = 1
+    test = 0
     if test:
         logger.debug("test start")
         login_flag = True

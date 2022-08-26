@@ -10,12 +10,13 @@ import threading
 import numpy as np
 import pythoncom
 import select
-from PyQt5.QtGui import QIcon, QMovie, QPixmap
+
 from const import *
 
 import traceback
 import time
 
+from PyQt5.QtGui import QIcon, QMovie, QPixmap
 from PyQt5 import uic, QtGui
 from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox, QLabel, QTableWidgetItem
 from PyQt5.QtWidgets import *
@@ -369,7 +370,7 @@ class socket_server_thread(QThread):
         global test
         if test:
             # 내 아이피
-            self.SERVER_HOST = '218.155.43.223'
+            self.SERVER_HOST = '192.168.0.7'
         else:
             # 고객사 아이피
             self.SERVER_HOST = "192.168.55.124"
@@ -515,7 +516,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             # cell 선택 시
             self.table_con.cellClicked.connect(self.con_cell_cliked_func)
             self.table_div.cellClicked.connect(self.div_cell_cliked_func)
-            self.table_holding.cellClicked.connect(self.holding_cell_cliked_func)
+            self.table_holding.cellClicked.connect(self.holding_cell_cliked_func)#todo : 홀딩테이블 편입 안되게
 
 
             # 쓰레드1
@@ -704,27 +705,24 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
                     fd = sub_dict[j]["fir_date"]
                     nd = datetime.now().strftime('%Y-%m-%d')
-
-
                     diff = np.busday_count(begindates = fd, enddates = nd)
-                    print(fd, nd,diff)
-
-                    if sub_dict[j]["state"] == "감시중":
-                        sub_dict[j]["state"] = "등록"
-
+                    #print(fd, nd,diff)
 
                     # 전일 종목 검색되어 아직 전일 종가를 모르는 상태
                     if diff > 0 and sub_dict[j]["state"] == "등록" :
 
                         self.is_positive_stock(j)
+                        logger.debug("%s 종목 등록 : %s", j, kname_list[j])
                         while self.is_positive_stock_flag == None:
                             pythoncom.PumpWaitingMessages()
 
                         if self.is_positive_stock_flag:
                             logger.debug('{}, 전일 등록 종목. "감시중5"으로 상태 변경'.format(sub_dict[j]["name"]))
+                            self.real_log_widget.addItem('{}, 전일 등록 종목. "감시중5"으로 상태 변경'.format(sub_dict[j]["name"]))
                             sub_dict[j]["state"] = "감시중5"
                         else:
                             logger.debug('{}, 전일 등록 종목. "감시중2"으로 상태 변경'.format(sub_dict[j]["name"]))
+                            self.real_log_widget.addItem('{}, 전일 등록 종목. "감시중2"으로 상태 변경'.format(sub_dict[j]["name"]))
                             sub_dict[j]["state"] = "감시중2"
 
                         sub_dict[j]["last_price"] = self.GetMasterLastPrice(j)  ## day 1부터? 0부터 ?
@@ -737,10 +735,12 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
                     elif diff > 5 and sub_dict[j]["state"] == "감시중5":  # 감시중인 종목 5일이 넘으면 삭제 #todo : 영업일 기준
                         logger.debug("{} 종목, 감시 이후 5일 경과, 파일 삭제".format(sub_dict[j]["name"]))
+                        self.real_log_widget.addItem("{} 종목, 감시 이후 5일 경과, 파일 삭제".format(sub_dict[j]["name"]))
                         del sub_dict[j]
 
                     elif diff > 2 and sub_dict[j]["state"] == "감시중2":  # 감시중인 종목 5일이 넘으면 삭제 #todo : 영업일 기준
                         logger.debug("{} 종목, 감시 이후 2일 경과, 파일 삭제".format(sub_dict[j]["name"]))
+                        self.real_log_widget.addItem("{} 종목, 감시 이후 2일 경과, 파일 삭제".format(sub_dict[j]["name"]))
                         del sub_dict[j]
 
                 div_stock_data = sub_dict
@@ -1214,25 +1214,15 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 logger.debug("one stock data = %s", self.one_stock_data)
                 pass
 
-            elif rcname == "OPT10015":
-                for i in range(self.GetTRCount("OPT10015", rcname)):
-                    print(i)
-                    if i > 5 :
-                        break;
-                    print(self.GetCommData(trcode, rcname, i, "일자"))
-                    print(self.GetCommData(trcode, rcname, i, "종가"))
-                    #print(self.GetCommData(trcode, rcname, i, "전일대비기호"))
-                    print(self.GetCommData(trcode, rcname, i, "전일대비"))
-                    print(self.GetCommData(trcode, rcname, i, "등락율"))
-                self.OPT10015_flag = True
-                pass
-
             elif rcname == 'is_positive_stock':
                 logger.debug(self.GetCommData(trcode, rcname, 1, "일자"))
-                logger.debug(self.GetCommData(trcode, rcname, 1, "전일대비"))
+                logger.debug(self.GetCommData(trcode, rcname, 1, "종가"))
+                logger.debug(self.GetCommData(trcode, rcname, 1, "등락율"))
 
-                tmp = self.GetCommData(trcode, rcname, 1, "전일대비")
-                if tmp[0] == "+":
+                tmp = self.GetCommData(trcode, rcname, 1, "등락율")
+                logger.debug(tmp)
+
+                if tmp[0] == "+" and float(tmp[1:]) >= 27.0:
                     self.is_positive_stock_flag = True
                 else:
                     self.is_positive_stock_flag = False
@@ -1292,10 +1282,6 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
         self.CommRqData("OPT10001", "OPT10001", 0, "0101")
 
         # return self.kiwoom.ret_data['OPT10001']
-    def OPT10015(self,code, yyyymmdd):
-        self.SetInputValue("종목코드", code)
-        self.SetInputValue("시작일자", yyyymmdd)
-        self.CommRqData("OPT10015", "OPT10015", 0, "0101")
 
     def is_positive_stock(self,code):
         self.is_positive_stock_flag = None
@@ -1854,6 +1840,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             if ret == 0:
                 logger.debug("매도 주문 요청 성공")
                 del div_stock_data[code]
+                self.SetRealRemove(code,"0103")
                 self.real_log_widget.addItem(txt)
             else:
                 txt = "매도 주문 요청 실패 오류코드 : " + str(ret)
@@ -1917,26 +1904,38 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
     def set_div_data_func(self):
         global div_stock_data
-        code = self.view_selec_coin_lbl.text()
-        if code not in div_stock_data:
-            self.set_div_data(self.view_selec_coin_lbl.text())
-            self.SetRealReg("0103", [code], "9001;10;", '1')
-            self.update_div_table()
-            logger.debug("분할매매 종목 편입 완료")
-            self.save_div_data_func()
-        else:
-            logger.debug("분할매매 중복 종목입니다.")
+        try:
+            code = self.view_selec_coin_lbl.text()
+            if code not in div_stock_data :
+                for i in self.jango["종목리스트"]:
+                    if code == i["종목코드"]:
+                        return 0
+                self.set_div_data(self.view_selec_coin_lbl.text())
+                self.SetRealReg("0103", [code], "9001;10;", '1')
+                self.update_div_table()
+                logger.debug("분할매매 종목 편입 완료")
+                self.save_div_data_func()
+            else:
+                logger.debug("분할매매 중복 종목입니다.")
+        except Exception as e:
+            logger.debug(e)
+            logger.debug(traceback.format_exc())
+
     def del_div_data(self):
-        code = self.view_selec_coin_lbl.text()
-        global div_stock_data, kname_list
-        if code in div_stock_data:
-            del div_stock_data[code]
-            self.SetRealRemove(code, "0103")
-            self.update_div_table()
-            logger.debug("분할매매 종목 삭제 완료")
-            self.save_div_data_func()
-        else:
-            logger.debug("분할매매 목록 안에서 삭제 바랍니다.")
+        try:
+            code = self.view_selec_coin_lbl.text()
+            global div_stock_data, kname_list
+            if code in div_stock_data:
+                del div_stock_data[code]
+                self.SetRealRemove(code, "0103")
+                self.update_div_table()
+                logger.debug("분할매매 종목 삭제 완료")
+                self.save_div_data_func()
+            else:
+                logger.debug("분할매매 목록 안에서 삭제 바랍니다.")
+        except Exception as e:
+            logger.debug(e)
+            logger.debug(traceback.format_exc())
 
 
 
@@ -1998,6 +1997,9 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                         self.table_div.item(i, 4).setForeground(QtGui.QColor(0, 0, 255))
                 else:
                     self.table_div.setItem(i, 3, QTableWidgetItem(format(int(div_stock_data[j]["현재가"]), ",")))
+                    self.table_div.setItem(i, 2, QTableWidgetItem('0'))
+                    self.table_div.setItem(i, 4, QTableWidgetItem('0'))
+                    self.table_div.setItem(i, 6, QTableWidgetItem('0'))
 
                 self.table_div.setItem(i, 5, QTableWidgetItem(format(int(div_stock_data[j]["avr_price"]), ",")))
                 self.table_div.setItem(i, 6, QTableWidgetItem(div_stock_data[j]["amt"]))
@@ -2242,7 +2244,7 @@ class TimerThread(QThread):
                         if set_time == now_time:
                             # logger.debug("시간 같음")
                             self.time_flag.emit("")
-                            time.sleep(30)
+                            time.sleep(60)
                         else:
                             pass
                             # logger.debug('시간 다름')
@@ -2255,7 +2257,7 @@ class TimerThread(QThread):
                         if set_time == now_time:
                             # logger.debug("시간 같음")
                             self.div_time_flag.emit()
-                            time.sleep(30)
+                            time.sleep(60)
                         else:
                             pass
                             # logger.debug('시간 다름')
