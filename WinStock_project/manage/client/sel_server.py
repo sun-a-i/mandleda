@@ -20,8 +20,8 @@ class socket_server_thread(QThread):
             if self.con :
                 for i in self.socks:
                     if i != self.s:#본인을 제외한 모든 소켓에 송신
-                        print(i)
-                        print("메세지 송신")
+                        #print(i)
+                        print("메세지 송신",data)
                         i.sendall(data.encode('utf-8'))
             else:
                 print("연결되지 않음 메세지 전송 실패")
@@ -82,16 +82,25 @@ while True:
     time.sleep(1)
     a.send_all("BUY;005930;4") #미보유
     time.sleep(1)
-    a.send_all("SEL;005030;1")
+    a.send_all("SEL;005930;1")  # 미보유
+    time.sleep(1)
+    a.send_all("SEL;005930;2")  # 미보유
+    time.sleep(1)
+    a.send_all("SEL;005930;3")  # 미보유
+    time.sleep(1)
+    a.send_all("SEL;005930;4")  # 미보유
     time.sleep(1)
 
+
+    a.send_all("SEL;005030;1")
+    time.sleep(1)
     a.send_all("SEL;005030;2")
     time.sleep(1)
     a.send_all("SEL;005030;3")
     time.sleep(1)
     a.send_all("SEL;005030;4")
-
     time.sleep(1)
+
     a.send_all("BUY;005030;1")
     time.sleep(1)
     a.send_all("BUY;005030;2")
@@ -99,4 +108,4 @@ while True:
     a.send_all("BUY;005030;3")
     time.sleep(1)
     a.send_all("BUY;005030;4")
-
+    time.sleep(1)

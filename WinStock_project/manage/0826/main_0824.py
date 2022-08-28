@@ -373,7 +373,8 @@ class socket_server_thread(QThread):
             self.SERVER_HOST = '192.168.0.7'
         else:
             # 고객사 아이피
-            self.SERVER_HOST = "192.168.55.124"
+           #self.SERVER_HOST = "192.168.55.124"#진짜고객
+            self.SERVER_HOST = "118.37.147.48"
 
 
     def send_all(self, data):
@@ -699,6 +700,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 with open(div_stock_data_path, 'rb') as g:
                     div_stock_data = pickle.load(g)
 
+                del_list = []
                 sub_dict = div_stock_data
                 for j in sub_dict:
                     #fd = datetime.strptime(sub_dict[j]["fir_date"], '%Y-%m-%d')
@@ -707,6 +709,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     nd = datetime.now().strftime('%Y-%m-%d')
                     diff = np.busday_count(begindates = fd, enddates = nd)
                     #print(fd, nd,diff)
+
 
                     # 전일 종목 검색되어 아직 전일 종가를 모르는 상태
                     if diff > 0 and sub_dict[j]["state"] == "등록" :
@@ -736,12 +739,16 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     elif diff > 5 and sub_dict[j]["state"] == "감시중5":  # 감시중인 종목 5일이 넘으면 삭제 #todo : 영업일 기준
                         logger.debug("{} 종목, 감시 이후 5일 경과, 파일 삭제".format(sub_dict[j]["name"]))
                         self.real_log_widget.addItem("{} 종목, 감시 이후 5일 경과, 파일 삭제".format(sub_dict[j]["name"]))
-                        del sub_dict[j]
+                        del_list.append(j)
 
                     elif diff > 2 and sub_dict[j]["state"] == "감시중2":  # 감시중인 종목 5일이 넘으면 삭제 #todo : 영업일 기준
                         logger.debug("{} 종목, 감시 이후 2일 경과, 파일 삭제".format(sub_dict[j]["name"]))
                         self.real_log_widget.addItem("{} 종목, 감시 이후 2일 경과, 파일 삭제".format(sub_dict[j]["name"]))
-                        del sub_dict[j]
+                        del_list.append(j)
+
+                for k in del_list:
+                    logger.debug("{} 종목 : 파일 삭제".format(sub_dict[k]["name"]))
+                    del sub_dict[k]
 
                 div_stock_data = sub_dict
                 self.save_div_data_func()
@@ -2536,7 +2543,7 @@ if __name__ == "__main__":
 
     # test main
     global test
-    test = 1
+    test = 0
     if test:
         logger.debug("test start")
         login_flag = True

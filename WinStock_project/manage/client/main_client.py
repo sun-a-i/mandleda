@@ -852,10 +852,13 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
                 logger.debug("미보유 참여 불가 매도")
             else:
                 logger.debug("보유 수량 에러")
-            if ret == 0:
-                logger.debug("매도 주문 요청 성공")
-            else:
-                logger.debug("매도 주문 요청 실패 오류코드 : " + str(ret))
+            try:
+                if ret == 0:
+                    logger.debug("매도 주문 요청 성공")
+                else:
+                    logger.debug("매도 주문 요청 실패 오류코드 : " + str(ret))
+            except:
+                pass
 
             print("보유수량 : ", amt, "종목코드 : ", code)
 
@@ -1272,7 +1275,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     global test
-    test = 0
+    test = 1
     if test:
         logger.debug("test start")
         login_flag = True
