@@ -56,7 +56,7 @@ logger.addHandler(streamHandler)
 
 logger.setLevel(level=10)
 
-main_class = uic.loadUiType('./ui/main.ui')[0]
+main_class = uic.loadUiType('./ui/main_client.ui')[0]
 start_class = uic.loadUiType('./ui/login.ui')[0]
 register_class = uic.loadUiType('./ui/register.ui')[0]
 
@@ -267,6 +267,9 @@ user_data = {}
 #보유 현금 저장 변수
 my_cash = 0
 
+# 자동매매 플래그
+auto_flag = False
+chk_img = 0
 class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
 
     def __init__(self):
@@ -298,6 +301,9 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
             self.initial()
 
             # ===================UI=====================
+
+            self.trading_start_btn.clicked.connect(lambda: self.trading_state_func('start'))
+            self.trading_stop_btn.clicked.connect(lambda: self.trading_state_func('stop'))
             self.account_list.currentIndexChanged.connect(self.accno_change_func)
             # 쓰레드1
             self.mythread1 = MyThread()
@@ -306,8 +312,14 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
 
             #쓰레드2 socket통신
             self.socket_thread = socket_client_thread()
-            self.socket_thread.finished.connect(self.buy_code_by_server)
+            self.socket_thread.finished.connect(self.msg_by_server)
             self.socket_thread.start()
+
+            self.connect_timer = QTimer()
+            self.connect_timer.timeout.connect(self.chk_connecting)
+            self.connect_timer.start()
+            self.connect_timer.setInterval(1000)
+
 
         except Exception as e:
             logger.debug(e)
@@ -318,6 +330,10 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
         self.set_info()
         self.update_holding_table()
         self.table_init()
+
+        #초기값
+        pixmap = QPixmap("./image/connection_0.png")
+        self.ing_lbl.setPixmap(pixmap)
 
     def table_init(self):
         try:
@@ -334,7 +350,51 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
             logger.debug(e)
             logger.debug(traceback.format_exc())
 
+    def trading_state_func(self, state):
+        try:
+            global auto_flag
+            if state == 'start':
+                auto_flag = True
+                self.trading_start_btn.setEnabled(False)
+                self.trading_start_btn.setStyleSheet("color:gray")
 
+                self.trading_stop_btn.setEnabled(True)
+                self.trading_stop_btn.setStyleSheet("color:blue")
+            else:
+                auto_flag = False
+                self.trading_start_btn.setEnabled(True)
+                self.trading_start_btn.setStyleSheet("color:red")
+
+                self.trading_stop_btn.setEnabled(False)
+                self.trading_stop_btn.setStyleSheet("color:gray")
+        except Exception as e:
+            logger.debug(e)
+            logger.debug(traceback.format_exc())
+
+    def chk_connecting(self):
+        try:
+            global auto_flag, chk_img
+
+            if auto_flag:
+                if chk_img == 0:
+                    chk_img = 1
+                    pixmap = QPixmap("./image/connection_1.png")
+                    self.ing_lbl.setPixmap(pixmap)
+                else:
+                    chk_img = 0
+                    pixmap = QPixmap("./image/connection_2.png")
+                    self.ing_lbl.setPixmap(pixmap)
+            else:
+                pixmap = QPixmap("./image/connection_0.png")
+                self.ing_lbl.setPixmap(pixmap)
+
+            #self.progressBar_Test.setValue(condition_Worker)
+
+
+        except Exception as e:  # 모든 예외의 에러 메시지를 출력할 때는 Exception을 사용
+            logger.debug("예외가 발생했습니다. %s", e)
+            logger.debug(traceback.format_exc())
+            QMessageBox.warning(self, '경고', '알 수 없는 에러 발생, 담당자에게 문의주세요.')
     # ===================================키움 api======================================
     # ==============================로그인 관련 함수 ========================
     def CommConnect(self):
@@ -504,6 +564,11 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
     def OPT10001(self, code):
         self.SetInputValue("종목코드", code)
         self.CommRqData("OPT10001", "OPT10001", 0, "0101")
+        while self.one_stock_flag is False:
+            pythoncom.PumpWaitingMessages()
+        self.one_stock_flag = False
+
+
 
         # return self.kiwoom.ret_data['OPT10001']
 
@@ -742,24 +807,41 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
             logger.debug(e)
             logger.debug(traceback.format_exc())
 
-
-    def update_jango(self):  # 잔고 데이터
+    def update_jango(self):  # 잔고 데이터, 분할매매 데이터 업데이트
         global div_stock_data, my_cash
         try:
-            my_cash = int(str(self.jango["출금가능금액"]).strip().lstrip('+').lstrip('-'))
-
-            self.table_jango.setItem(0, 0, QTableWidgetItem(format(int(self.jango["예수금"]), ",")))
-            self.table_jango.setItem(1, 0, QTableWidgetItem(
-                format(int(str(self.jango["출금가능금액"]).strip().lstrip('+').lstrip('-')), ",")))
-            self.table_jango.setItem(2, 0, QTableWidgetItem(format(int(self.jango["주식매수총액"]), ",")))
-            self.table_jango.setItem(3, 0, QTableWidgetItem(format(int(self.jango["평가금액합계"]), ",")))
-
-            tot_hab = self.jango["총손익합계"]
-            if tot_hab[0] == '-':
-                res = "-" + format(int(tot_hab[1:]), ",")
+            # logger.debug(self.jango)
+            if str(self.jango["출금가능금액"]).isdigit():
+                self.table_jango.setItem(1, 0, QTableWidgetItem(format(int(self.jango["출금가능금액"]), ",")))
             else:
-                res = format(int(tot_hab), ",")
-            self.table_jango.setItem(4, 0, QTableWidgetItem(res))
+                self.table_jango.setItem(1, 0, QTableWidgetItem("0"))
+
+            if str(self.jango["예수금"]).isdigit():
+                self.table_jango.setItem(0, 0, QTableWidgetItem(format(int(self.jango["예수금"]), ",")))
+                my_cash = int(str(self.jango["예수금"]).strip().lstrip('+').lstrip('-'))
+            else:
+                self.table_jango.setItem(0, 0, QTableWidgetItem("0"))
+                my_cash = 0
+
+            if str(self.jango["주식매수총액"]).isdigit():
+                self.table_jango.setItem(2, 0, QTableWidgetItem(format(int(self.jango["주식매수총액"]), ",")))
+            else:
+                self.table_jango.setItem(2, 0, QTableWidgetItem("0"))
+
+            if str(self.jango["평가금액합계"]).isdigit():
+                self.table_jango.setItem(3, 0, QTableWidgetItem(format(int(self.jango["평가금액합계"]), ",")))
+            else:
+                self.table_jango.setItem(3, 0, QTableWidgetItem("0"))
+
+            if str(self.jango["평가금액합계"]).isdigit():
+                tot_hab = self.jango["총손익합계"]
+                if tot_hab[0] == '-':
+                    res = "-" + format(int(tot_hab[1:]), ",")
+                else:
+                    res = format(int(tot_hab), ",")
+                self.table_jango.setItem(4, 0, QTableWidgetItem(res))
+            else:
+                self.table_jango.setItem(4, 0, QTableWidgetItem("0"))
 
             logger.debug("jango update suc")
 
@@ -767,31 +849,146 @@ class Main(QDialog, main_class):  # param1 = windows : 창,  param2 = ui path
             logger.debug(e)
             logger.debug(traceback.format_exc())
 
-        # logger.debug(self.jango)
+    def div_order_buy(self, state, code):
+        logger.debug(str(code) + "종목 " + str(state) + "차 매수 진행")
+        global my_cash, test
+        try:
+            self.OPT10001(str(code))
+            tmp_price = int_format(self.one_stock_data)
+            self.one_stock_data = ''
+
+            if state == '1':
+                amt_p = calc_next_price(int(my_cash), -93)  # 가진 금액의 7%
+                amt = int(amt_p / int(tmp_price))
+
+            elif state == '2':
+                amt_p = calc_next_price(int(my_cash), -93)  # 가진 금액의 7%
+                amt = int(amt_p / int(tmp_price))
+
+            elif state == '3' or state == '4':
+                for i in self.jango["종목리스트"]:
+                    if code == i["종목코드"]:
+                        tmp_m = int(i["매입단가"])
+                        tmp_a = int(i["보유수량"])
+                        amt_p = int(tmp_m * tmp_a * 2 / 3)  # 저장된 매입금액의 2/3
+                        amt = int(amt_p / int(tmp_price))
+                try:
+                    if amt > 0:
+                        pass
+                except:
+                    amt = -1
+            else:
+                logger.debug("알수없는 데이터")
+
+            #종목 개수 계산 후 1개 이상일 시 매수 진행
+
+            print("종목코드 : " ,code,"현재가격 : ",tmp_price,"보유 현금 : ", my_cash, " 수량 : ",amt,"state : ",state)
+
+            if amt > 0:
+                if not test:
+                    ret = self.SendOrder(self.account_list.currentText(), 1, code, amt, 0, '03')
+                else:
+                    ret = 0
+                if ret == 0:
+                    logger.debug("매수 주문 요청 성공")
+                    self.real_log_widget.addItem("{} 종목 매수 성공".format(code))
+                else:
+                    logger.debug("매수 주문 요청 실패 오류코드 : " + str(ret))
+                    self.real_log_widget.addItem("{} 매수실패 오류코드 : ".format(code) + str(ret))
+            elif amt == -1 :
+                logger.debug("참여할 수 없는 매수 진행")
+            else:
+                logger.debug("매수하려는 종목보다 보유 현금 부족")
+                self.real_log_widget.addItem("{} : 보유 현금 부족".format(code))
+
+        except Exception as e:
+            logger.debug(e)
+            logger.debug(traceback.format_exc())
+
+    def div_order_sell(self, state, code):
+        global test
+        logger.debug(str(code) + "종목 " + str(state) + "차 매도 진행")
+        try:
+            for i in self.jango["종목리스트"] :
+                if code == i["종목코드"]:
+                    amt = int(i["보유수량"])
+                    break;
+                try:
+                    if amt > 0:
+                        pass
+                except:
+                    amt = -1
+            if amt > 0 :
+                if not test :
+                    ret = self.SendOrder(self.account_list.currentText(), 2, code, amt, 0, '03')
+                else:
+                    ret = 0
+            elif amt == -1 :
+                logger.debug("미보유 참여 불가 매도")
+            else:
+                logger.debug("보유 수량 에러")
+            if ret == 0:
+                logger.debug("매도 주문 요청 성공")
+            else:
+                logger.debug("매도 주문 요청 실패 오류코드 : " + str(ret))
+
+            print("보유수량 : ", amt, "종목코드 : ", code)
+
+        except Exception as e:
+            logger.debug(e)
+            logger.debug(traceback.format_exc())
 
     @pyqtSlot(str)
-    def buy_code_by_server(self,data): #data form "SELL ; 123456; state : 0 " or "BUY ; 123456 ; state ; 3 "
-
-        logger.debug(str(data)+":까지 받았습니다 !")
-        self.socket_thread.send_msg("받은만큼 돌려볼게요 ! :" + str(data))
+    def msg_by_server(self,data):
         """
-        try:
-            tmp = data.split(":")
-            if tmp[0] == "SELL":
-                #self.SendOrder()
-                pass
+        data form : 마지막에 ';' 없음 ! , 빈 공간 없음 ! strip 해서 넘겨야함
+
+        SEL; 123456 ; 1      #매수 ; 종목코드; state
+        BUY; 123456 ; 3     #매도 ; 종목코드; state
+        MDU; 123434 ; 44600 # 매도 결과; 종목코드; 금액 ->보류
+        MSU; 123131 ; 54600 # 매수 결과; 종목코드; 금액 ->보류
+
+        """
+        logger.debug(str(data)+":까지 받았습니다 !")
+        main.real_log_widget.addItem("데이터 수신 : " + str(data))
+
+        #self.socket_thread.send_msg("받은만큼 돌려볼게요 ! :" + str(data))
+
+
+        if check_data_integrity(data):
+            tmp = data.split(';')
+            if tmp[0] == "SEL":
+                self.div_order_sell(tmp[2],tmp[1])
             elif tmp[0] == "BUY":
-                try :
-                    amt = int(tmp[3])
-                    #self.SendOrder()
-                except:
-                    print("data 형식 맞지않음", data)
-        except:
-            print("data 형식 맞지않음",data)"""
+                self.div_order_buy(tmp[2],tmp[1])
+            elif tmp[0] == "MDU":  # 매도결과 , 보류
+                pass
+            elif tmp[0] == "MSU":  # 매수결과 , 보류
+                pass
+
+        else :
+            print("데이터 형식 맞지 않음 " + str(data))
 
 
 
 
+def check_data_integrity(data):
+    tmp = data.split(';')
+    if len(tmp) == 3:
+        if tmp[0] == "SEL" or tmp[0] == "BUY" or tmp[0] == "MDU" or tmp[0] == "MSU":
+            pass
+            if len(tmp[1]) == 6:
+                pass
+                if tmp[2] == '1' or tmp[2] == '2' or tmp[2] == '3' or tmp[2] == '4': #매수매도 결과가 보류이니 tmp[2] 접근을 state로 가능
+                    return True
+                else:
+                    return False
+            else:
+                return False
+        else:
+            return False
+    else:
+       return False
 
 """
 @ 가격 정보 변동 체크 쓰레드
@@ -842,7 +1039,7 @@ class MyThread(QThread):
 """
 import socket
 
-HOST_socket = 'local host'
+HOST_socket = '192.168.0.7'
 PORT_socket = 5000
 
 class socket_client_thread(QThread):
@@ -872,6 +1069,7 @@ class socket_client_thread(QThread):
                         self.s.connect((HOST_socket, PORT_socket))
                         self.con = True
                         logger.debug("소켓 서버 접속 완료")
+                        main.real_log_widget.addItem("소켓 서버 접속 완료")
                         while True:
                             data = self.s.recv(1024).decode('utf-8')
                             #logger.debug(f'수신 데이터 :{data}')
@@ -883,6 +1081,7 @@ class socket_client_thread(QThread):
                 #logger.debug(traceback.format_exc())
                 self.con = False
                 logger.debug("소켓 서버 접속 불가 재접속중 ...")
+                main.real_log_widget.addItem("소켓 서버 접속 불가 재접속중 ...")
 
 
 
@@ -999,40 +1198,14 @@ class MyWindow(QMainWindow, start_class):
         try:
             super().__init__()
             self.setupUi(self)
-            self.setWindowTitle("WIN_STOCK AutoTrading System ver 1.01")
+            self.setWindowTitle("WIN_STOCK AutoTrading System Clinet ver 1.01")
             self.setWindowIcon(QIcon("./image/icon.ico"))
             logger.debug("login init_process close...")
 
             self.update_frame.setVisible(False)
 
-            self.movie = QMovie('./image/login_gif.gif', QByteArray(), self)
-            self.movie.setCacheMode(QMovie.CacheAll)
-            # QLabel에 동적 이미지 삽입
-            self.login_gif.setMovie(self.movie)
-            self.movie.start()
-
-            self.movie = QMovie('./image/faceman.gif', QByteArray(), self)
-            self.movie.setCacheMode(QMovie.CacheAll)
-            # QLabel에 동적 이미지 삽입
-            self.updating.setMovie(self.movie)
-            self.movie.start()
-
             self.login_btn.clicked.connect(self.login_btn_func)
-            self.login_btn.setStyleSheet(
-                '''
-                QPushButton{image:url(./image/login_2.png); border:0px;}
-                QPushButton:hover{image:url(./image/login_1.png); border:0px;}
-                ''')
-
             self.regi_lbl.clicked.connect(self.register_func)
-            self.regi_lbl.setStyleSheet(
-                '''
-                QPushButton{image:url(./image/register_1.png); border:0px;}
-                QPushButton:hover{image:url(./image/register_2.png); border:0px;}
-                ''')
-
-            # pixmap = QPixmap("./image/login_back_img.png")
-            # self.backImg_lbl.setPixmap(pixmap)
 
         except Exception as e:  # 모든 예외의 에러 메시지를 출력할 때는 Exception을 사용
             logger.debug("예외가 발생했습니다. %s", e)
@@ -1148,7 +1321,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     global test
-    test = 1
+    test = 0
     if test:
         logger.debug("test start")
         login_flag = True

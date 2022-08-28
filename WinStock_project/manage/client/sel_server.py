@@ -6,7 +6,7 @@ import time
 
 from PyQt5.QtCore import QThread
 
-HOST = '192.168.0.7'
+HOST = '118.37.147.48'
 PORT = 5000
 
 class socket_server_thread(QThread):

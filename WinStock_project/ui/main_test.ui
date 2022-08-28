@@ -593,7 +593,7 @@ background-color:blue;
   <widget class="QRadioButton" name="closeBuy_rdo_btn">
    <property name="geometry">
     <rect>
-     <x>470</x>
+     <x>480</x>
      <y>574</y>
      <width>71</width>
      <height>21</height>
@@ -605,7 +605,7 @@ background-color:blue;
     </font>
    </property>
    <property name="text">
-    <string>A Type</string>
+    <string>A 기법</string>
    </property>
    <property name="checked">
     <bool>true</bool>
@@ -614,7 +614,7 @@ background-color:blue;
   <widget class="QRadioButton" name="fellDown_rdo_btn">
    <property name="geometry">
     <rect>
-     <x>470</x>
+     <x>480</x>
      <y>604</y>
      <width>71</width>
      <height>21</height>
@@ -626,7 +626,7 @@ background-color:blue;
     </font>
    </property>
    <property name="text">
-    <string>B Type</string>
+    <string>B 기법</string>
    </property>
   </widget>
   <widget class="QFrame" name="method_a_frame">
@@ -843,6 +843,26 @@ background-color:blue;
    </property>
    <property name="text">
     <string>선택 종목 제거</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="send_test">
+   <property name="geometry">
+    <rect>
+     <x>450</x>
+     <y>750</y>
+     <width>131</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>맑은 고딕</family>
+     <weight>50</weight>
+     <bold>false</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>client_send_test</string>
    </property>
   </widget>
  </widget>

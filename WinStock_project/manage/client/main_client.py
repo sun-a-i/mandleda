@@ -998,6 +998,7 @@ class socket_client_thread(QThread):
                         self.con = True
                         logger.debug("소켓 서버 접속 완료")
                         main.real_log_widget.addItem("소켓 서버 접속 완료")
+                        self.send_msg(main.name.text()+str(" 접속"))
                         while True:
                             data = self.s.recv(1024).decode('utf-8')
                             #logger.debug(f'수신 데이터 :{data}')
