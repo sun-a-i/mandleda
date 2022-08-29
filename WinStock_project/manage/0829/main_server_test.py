@@ -131,7 +131,7 @@ fir_date : MM:dd (3:19시 업데이트)
 last_price : 전일종가 가격 (load시 업데이트)
 avr_price : 평단가 (calljango 시 업데이트)
 amt : 보유물량 (calljango 시 업데이트)
-state : 현재상태 (감시중, 등록?, 1차매수, 2차매수, 3차매수, 01차매수, 02차매수, 03차매수,04차매수)
+state : 현재상태 (감시중, 등록?, 1차매수, 2차매수, 3차매수)
 
 
 종가 기준(load, 3:19시 업데이트)
@@ -139,6 +139,12 @@ state : 현재상태 (감시중, 등록?, 1차매수, 2차매수, 3차매수, 01
 2차매수가격: -11% 보유금액의 7%
 3차매수가격: -20% (1차매수액+2차매수액) * 2/3
 4차매수가격: -40% (1차매수액+2차매수액+3차매수액) * 2/3
+
+익절
+1차매도가격 : 1차매수시 입력 3%
+2차매도가격 : 2차매수시 입력 5%
+3차매도가격 : 3차매수시 입력 10%
+4차매도가격 : 4차매수시 입력 10%
 
 }
 """
@@ -151,8 +157,6 @@ FIR_INCOME_PERCENT = 4
 SEC_INCOME_PERCENT = 5
 THIR_INCOME_PERCENT = 6
 FORTH_INCOME_PERCENT = 7
-
-DIV_TIME = "03:19" #"HH:MM"
 
 # 매매 데이터 저장 딕셔너리
 stock_data = {}
@@ -361,16 +365,18 @@ class socket_server_thread(QThread):
         self.socks = []
         self.con = False
         self.socket_try = 0
+        self.clients = {}
         logger.debug("socker_server_start")
 
         global test
+        #서버는 내부 IP, 클라이언트는 서버의 외부IP로 접속
         if test:
             # 내 아이피
-            self.SERVER_HOST = '175.212.249.174'
+            self.SERVER_HOST = "192.168.0.7"
         else:
             # 고객사 아이피
-           #self.SERVER_HOST = "192.168.55.124"#진짜고객
-            self.SERVER_HOST = "175.212.249.174"
+            #self.SERVER_HOST = "192.168.55.124"#진짜고객
+            self.SERVER_HOST = "192.168.0.7"
 
 
     def send_all(self, data):
@@ -724,7 +730,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     if diff > 0 and sub_dict[j]["state"] == "등록" :
 
                         self.is_positive_stock(j)
-                        logger.debug("%s 종목 등록 : %s", j, kname_list[j])
+                        #logger.debug("%s 종목 등록 : %s", j, kname_list[j])
                         while self.is_positive_stock_flag == None:
                             pythoncom.PumpWaitingMessages()
 
@@ -1201,8 +1207,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     # print(tmp)
                     if tmp["종목코드"] in div_stock_data: #update div data
                         div_stock_data[tmp["종목코드"]]["현재가"] = tmp["현재가"]
-                        if (div_stock_data[tmp["종목코드"]]['state'] != '등록') & (div_stock_data[tmp["종목코드"]]['state'][:3] != '감시중') \
-                                & (div_stock_data[tmp["종목코드"]]['state'][0] != '0'): #가라 데이터
+                        if (div_stock_data[tmp["종목코드"]]['state'] != '등록') & (div_stock_data[tmp["종목코드"]]['state'][:3] != '감시중'):
                             div_stock_data[tmp["종목코드"]]["amt"] = tmp["보유수량"]
                             div_stock_data[tmp["종목코드"]]["avr_price"] = tmp["매입단가"]
                             div_stock_data[tmp["종목코드"]]["매입금액"] = tmp["매입금액"]
@@ -1243,6 +1248,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     self.is_positive_stock_flag = True
                 else:
                     self.is_positive_stock_flag = False
+
             else:
                 logger.debug("이 수신 데이터는 ?")
                 logger.debug("%s %s %s %s %s", screen, rcname, trcode, record, next)
@@ -1430,37 +1436,57 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
             elif s_gubun == '4':  # 파생잔고변경
                 pass
-            try:
-                if (dummy[code]['매도수구분'] == 2) & (dummy[code]['주문상태'] == '체결'):  # 1:매도, 2:매수
-                    if code in stock_data.keys():
-                        stock_data[code].update({'code': code})  # 종목코드
-                        stock_data[code].update({'name': dummy[code]['종목명']})  # 종목명
 
-                        stock_data[code].update({'pur_p': dummy[code]['체결가']})
-                        stock_data[code].update({'buy_amt': dummy[code]['체결누계금액']})
-                        stock_data[code].update({'amount': dummy[code]['체결량']})
+            if (dummy[code]['매도수구분'] == 2) & (dummy[code]['주문상태'] == '체결'):  # 1:매도, 2:매수
+                if code in stock_data.keys():
+                    stock_data[code].update({'code': code})  # 종목코드
+                    stock_data[code].update({'name': dummy[code]['종목명']})  # 종목명
 
-                        stock_data[code].update({'high': dummy[code]['체결가']})  # 매수 당시 가격으로 최고가 지정
+                    stock_data[code].update({'pur_p': dummy[code]['체결가']})
+                    stock_data[code].update({'buy_amt': dummy[code]['체결누계금액']})
+                    stock_data[code].update({'amount': dummy[code]['체결량']})
 
-                        stock_data[code].update({'obs_per': OBS_PER})  # 감시 퍼센티지
-                        res = calc_next_price(dummy[code]['체결가'], OBS_PER)
-                        stock_data[code].update({'obs_p': res})  # 감시가 저장
-                        stock_data[code].update({'trail_per': TRAIL_PER})  # 트레일링 퍼센티지 설정
-                        stock_data[code].update({'trail_p': 0})  # 트레일링 도달가는 미지정
+                    stock_data[code].update({'high': dummy[code]['체결가']})  # 매수 당시 가격으로 최고가 지정
 
-                        stock_data[code].update({'loss_per': LOSS_PER})  # 트레일링 퍼센티지 설정
-                        res = calc_next_price(dummy[code]['체결가'], LOSS_PER)
-                        stock_data[code].update({'loss_p': res})  # 트레일링 도달가는 미지정
+                    stock_data[code].update({'obs_per': OBS_PER})  # 감시 퍼센티지
+                    res = calc_next_price(dummy[code]['체결가'], OBS_PER)
+                    stock_data[code].update({'obs_p': res})  # 감시가 저장
+                    stock_data[code].update({'trail_per': TRAIL_PER})  # 트레일링 퍼센티지 설정
+                    stock_data[code].update({'trail_p': 0})  # 트레일링 도달가는 미지정
 
-                        stock_data[code].update({'STATE': BUY})  # 현재 상태 [매수됨] 으로 변경
+                    stock_data[code].update({'loss_per': LOSS_PER})  # 트레일링 퍼센티지 설정
+                    res = calc_next_price(dummy[code]['체결가'], LOSS_PER)
+                    stock_data[code].update({'loss_p': res})  # 트레일링 도달가는 미지정
 
-                        self.save_data_func()  # 데이터 저장
-                        logger.debug("stock data : %s", stock_data)
-            except Exception as e:
-                logger.debug(e)
-                logger.debug(traceback.format_exc())
+                    stock_data[code].update({'STATE': BUY})  # 현재 상태 [매수됨] 으로 변경
 
+                    self.save_data_func()  # 데이터 저장
+                    logger.debug("stock data : %s", stock_data)
 
+                elif code in div_stock_data.keys():
+                    self.Calljango(self.account_list.currentText())  # Calljango update : amt, avr_price
+                    # todo - state가 1차매수 ~ 4차매수 변경되는 타이밍 ? onreceive 타이밍에 맞게 진행돼야함 ?
+                    if div_stock_data[code]["state"] == "등록":
+                        pass
+                    elif div_stock_data[code]["state"][:3] == "감시중":
+                        pass
+                    elif div_stock_data[code]["state"] == "1차매수":
+                        div_stock_data[code]["1차매도가격"] = calc_next_price(div_stock_data[code]['avr_price'],
+                                                                         FIR_INCOME_PERCENT)
+                    elif div_stock_data[code]["state"] == "2차매수":
+                        div_stock_data[code]["2차매도가격"] = calc_next_price(div_stock_data[code]['avr_price'],
+                                                                         SEC_INCOME_PERCENT)
+                    elif div_stock_data[code]["state"] == "3차매수":
+                        div_stock_data[code]["3차매도가격"] = calc_next_price(div_stock_data[code]['avr_price'],
+                                                                         THIR_INCOME_PERCENT)
+                    elif div_stock_data[code]["state"] == "4차매수":
+                        div_stock_data[code]["4차매도가격"] = calc_next_price(div_stock_data[code]['avr_price'],
+                                                                         FORTH_INCOME_PERCENT)
+                    else:
+                        logger.debug("체잔 데이터 분류 에러 div stock data : %s", div_stock_data)
+
+                    self.save_div_data_func()
+                    logger.debug("div stock data : %s", div_stock_data)
 
             # 매수매도되어 잔고 변경 -> 잔고요청하여 업데이트
             self.Calljango(self.account_list.currentText())
@@ -1749,10 +1775,14 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             # elif trade_method == FellDownMethod:
             if stock_code in div_stock_data:
                 if (len(stock_code) >= 1) & (len(div_stock_data) >= 1):  # 분할매매
-                    #price = self.recieved_dic[stock_code]
-                    price = div_stock_data[stock_code]["현재가"] #todo : test_ver
+                    #price = self.recieved_dic[stock_code] #test_ver
                     code = stock_code
                     div_stock_data_sub = div_stock_data
+
+
+                    #test_ver
+                    price = int(div_stock_data[code]['현재가'])
+
                     if code in div_stock_data_sub:
                         # logger.debug("분할 매매 종목 내 가격 변동 생성 : %s, %s", kname_list[code], price)
                         if div_stock_data_sub[code]["state"][:3] == "감시중":
@@ -1787,19 +1817,19 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug(traceback.format_exc())
 
     def div_order_buy(self, state, code):
+        #test_ver
+        self.socket_server.send_all("BUY;" + str(code) + ";" + str(state))
+        self.real_log_widget.addItem("BUY;" + str(code) + ";" + str(state) + "전송 완료")
+        ##
         logger.debug(str(code) + "종목 " + str(state) + "차 매수 진행")
         global div_stock_data, my_cash
         try:
-            if div_stock_data[code]["state"][0] == '0': #가라데이터 보내기
-                self.fake_div_order_buy(code, state)
-                return 0
-
             if state == 1:
                 amt_p = calc_next_price(int(my_cash), -93)  # 가진 금액의 7%
                 amt = int(amt_p / int(div_stock_data[code]["현재가"]))
 
             elif state == 2:
-                amt_p = div_stock_data[code]["매입금액"] #1차 매수와 같은 금액
+                amt_p = calc_next_price(int(my_cash), -93)  # 가진 금액의 7%
                 amt = int(amt_p / int(div_stock_data[code]["현재가"]))
 
             elif state == 3:
@@ -1821,30 +1851,35 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     self.real_log_widget.addItem("{} 종목 매수 성공".format(div_stock_data[code]["name"]))
                     self.socket_server.send_all("BUY;" + str(code) + ";" + str(state))
                     self.real_log_widget.addItem("BUY;" + str(code) + ";" + str(state) + "전송 완료")
-
                 else:
                     logger.debug("매수 주문 요청 실패 오류코드 : " + str(ret))
                     self.real_log_widget.addItem("{} 매수실패 오류코드 : ".format(div_stock_data[code]["name"]) + str(ret))
-                    #todo : 실제매수 실패시 어떻게 처리 ?
 
                 self.save_div_data_func()
             else:
-                logger.debug("매수하려는 종목보다 보유 현금 부족, 매수 감시 시작")
+                logger.debug("매수하려는 종목보다 보유 현금 부족")
                 self.real_log_widget.addItem("{} : 보유 현금 부족".format(div_stock_data[code]["name"]))
-                self.fake_div_order_buy(code, state) #가라 1차매수 진행
-
-
 
         except Exception as e:
             logger.debug(e)
             logger.debug(traceback.format_exc())
 
     def div_order_sell(self, state, code):
+        #test_ver
+        self.socket_server.send_all("SEL;" + str(code) + ";" + str(state))
+        self.real_log_widget.addItem("SEL;" + str(code) + ";" + str(state) + "전송 완료")
+        ##
+
         global div_stock_data
+
         txt = str(code) + "종목 " + str(state) + "차 매도 진행"
         logger.debug(txt)
         try:
             amt = div_stock_data[code]["amt"]
+
+            #test_ver
+            amt = 1
+
             ret = self.SendOrder(self.account_list.currentText(), 2, code, amt, 0, '03')
             if ret == 0:
                 logger.debug("매도 주문 요청 성공")
@@ -1852,8 +1887,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 self.SetRealRemove(code,"0103")
                 self.real_log_widget.addItem(txt)
                 self.socket_server.send_all("SEL;" + str(code) + ";" + str(state))
-                self.real_log_widget.addItem("SEL;" + str(code) + ";" + str(state) + "전송 완료")
-
+                self.real_log_widget.addItem("SEL;" + str(code) + ";" + str(state)+ "전송 완료")
             else:
                 txt = "매도 주문 요청 실패 오류코드 : " + str(ret)
                 logger.debug(txt)
@@ -1863,46 +1897,6 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
         except Exception as e:
             logger.debug(e)
             logger.debug(traceback.format_exc())
-
-    def fake_div_order_buy(self, code, state): #calljango에서 업데이트 안함 ! #가라 데이터 매수
-        global div_stock_data
-
-        logger.debug("임의로 매수 진행 : 실제 매수가 아닙니다 ! ")
-        self.socket_server.send_all("BUY;" + str(code) + ";" + str(state))
-        self.real_log_widget.addItem("BUY;" + str(code) + ";" + str(state) + "전송 완료")
-
-
-        # 가라데이터
-        div_stock_data[code]['state'] = "0" + str(state) + "차매수"
-        if state == 1:
-            div_stock_data[code]['avr_price'] = div_stock_data[code]["현재가"]  # 평단가 = 현재가
-            div_stock_data[code]['매입금액'] = int(div_stock_data[code]["현재가"]) * 5  # 매입금액 = 현재가 + amt
-            div_stock_data[code]['amt'] = 5  # amt = 5 #임의로 5개 샀다고 침
-        elif state == 2:
-            amt_p = div_stock_data[code]["매입금액"]  # 1차 매수와 같은 금액
-            amt = int(amt_p / int(div_stock_data[code]["현재가"]))
-
-            div_stock_data[code]['amt'] = int(div_stock_data[code]['amt']) + amt  # 원래 amt에 추가
-            div_stock_data[code]['매입금액'] = div_stock_data[code]['매입금액'] + amt * int(div_stock_data[code]["현재가"])  # 매입금액 = 원래 매입 금액 + 현재가 * amt
-            div_stock_data[code]['avr_price'] = div_stock_data[code]["매입금액"] / div_stock_data[code]['amt']  # 평단가 = 매입금액 / amt
-
-        else:
-            amt_p = int(div_stock_data[code]["매입금액"] * 2 / 3)  # 저장된 매입금액의 2/3
-            amt = int(amt_p / int(div_stock_data[code]["현재가"]))
-
-            div_stock_data[code]['amt'] = int(div_stock_data[code]['amt']) + amt  # 원래 amt에 추가
-            div_stock_data[code]['매입금액'] = div_stock_data[code]['매입금액'] + amt * int(div_stock_data[code]["현재가"])  # 매입금액 = 원래 매입 금액 + 현재가 * amt
-            div_stock_data[code]['avr_price'] = div_stock_data[code]["매입금액"] / div_stock_data[code]['amt']  # 평단가 = 매입금액 / amt
-
-        logger.debug("임의로 0" + str(state) + "차매수 진행 : 실제 매수가 아닙니다 ! 종목 코드 : " + str(code) + " 매입금액 : " +
-                     str( div_stock_data[code]['매입금액']) + " 보유수량 : " + str(div_stock_data[code]['amt']) +
-                     " 평단가 : " + str(div_stock_data[code]['avr_price']))
-
-        self.save_div_data_func()
-        self.update_div_table()
-
-    def fake_div_order_sell(self, code, state):
-        pass
 
     @pyqtSlot()
     def update_div_data_set(self):
@@ -1944,12 +1938,11 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             div_stock_data[code]["2차매수가격"] = 0
             div_stock_data[code]["3차매수가격"] = 0
             div_stock_data[code]["4차매수가격"] = 0
-            """
+
             div_stock_data[code]["1차매도가격"] = 999999999
             div_stock_data[code]["2차매도가격"] = 999999999
             div_stock_data[code]["3차매도가격"] = 999999999
-            div_stock_data[code]["4차매도가격"] = 999999999"""
-
+            div_stock_data[code]["4차매도가격"] = 999999999
             div_stock_data[code]["state"] = "등록"
             div_stock_data[code]["현재가"] = 0
             logger.debug("종목 등록 완료")
@@ -2206,22 +2199,19 @@ class MyThread(QThread):
             global stock_data, login_flag, auto_flag, test, kname_list, socket_flag
             heartBeat = 0
 
-            if test:
-                for i in range(4):
-                    time.sleep(1)
-                    print(i)
+            #test_ver===================================
+            for i in range(30):
+                time.sleep(1)
+                print(i)
 
-                while True:
-                    global div_stock_data
-                    if login_flag == True:
-                        for i in div_stock_data:
-                            logger.debug("코드 : " + str(i))
-                            self.finished.emit(str(i))
-                            time.sleep(1)
-                        break
-
-
-
+            while True:
+                global div_stock_data
+                if login_flag == True:
+                    for i in div_stock_data:
+                        self.finished.emit(str(i))
+                        time.sleep(3)
+                    break
+            # ===================================
 
             while True:
                 time.sleep(1.5)
@@ -2297,7 +2287,7 @@ class TimerThread(QThread):
 
     def run(self):  # 동작
         try:
-            global login_flag, auto_flag, trade_method, DIV_TIME
+            global login_flag, auto_flag, trade_method
             logger.debug("Timer Thread Run")
             TimerHeartBeat = 0
             while True:
@@ -2321,7 +2311,7 @@ class TimerThread(QThread):
                             # logger.debug('시간 다름')
 
                     elif trade_method == FellDownMethod: #div data 3:19에 업데이트
-                        set_time = DIV_TIME
+                        set_time = '10:31'
                         now_time = time.strftime('%H:%M', time.localtime(time.time()))
 
                         logger.debug("set_time = %s, now_time = %s, %s", set_time, now_time, set_time == now_time)
@@ -2607,7 +2597,7 @@ if __name__ == "__main__":
 
     # test main
     global test
-    test = 1
+    test = 0
     if test:
         logger.debug("test start")
         login_flag = True
