@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>771</width>
-    <height>295</height>
+    <width>713</width>
+    <height>290</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -29,7 +29,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Agency FB</family>
+     <family>맑은 고딕</family>
      <pointsize>16</pointsize>
      <weight>75</weight>
      <bold>true</bold>
@@ -50,7 +50,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Agency FB</family>
+     <family>맑은 고딕</family>
      <pointsize>14</pointsize>
      <weight>75</weight>
      <bold>true</bold>
@@ -75,7 +75,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Agency FB</family>
+     <family>맑은 고딕</family>
      <pointsize>14</pointsize>
      <weight>75</weight>
      <bold>true</bold>
@@ -100,7 +100,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Agency FB</family>
+     <family>맑은 고딕</family>
      <pointsize>14</pointsize>
      <weight>75</weight>
      <bold>true</bold>
@@ -125,14 +125,14 @@
    </property>
    <property name="font">
     <font>
-     <family>Agency FB</family>
+     <family>맑은 고딕</family>
      <pointsize>10</pointsize>
-     <weight>50</weight>
-     <bold>false</bold>
+     <weight>75</weight>
+     <bold>true</bold>
     </font>
    </property>
    <property name="text">
-    <string>액세스키값</string>
+    <string/>
    </property>
    <property name="alignment">
     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -149,14 +149,14 @@
    </property>
    <property name="font">
     <font>
-     <family>Agency FB</family>
+     <family>맑은 고딕</family>
      <pointsize>10</pointsize>
-     <weight>50</weight>
-     <bold>false</bold>
+     <weight>75</weight>
+     <bold>true</bold>
     </font>
    </property>
    <property name="text">
-    <string>시크릿키값</string>
+    <string/>
    </property>
    <property name="alignment">
     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -173,14 +173,14 @@
    </property>
    <property name="font">
     <font>
-     <family>Agency FB</family>
+     <family>맑은 고딕</family>
      <pointsize>12</pointsize>
      <weight>75</weight>
      <bold>true</bold>
     </font>
    </property>
    <property name="text">
-    <string>영문과 숫자만 가능 (ex) abc123</string>
+    <string/>
    </property>
    <property name="alignment">
     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -189,15 +189,15 @@
   <widget class="QPushButton" name="register_btn">
    <property name="geometry">
     <rect>
-     <x>540</x>
-     <y>120</y>
+     <x>520</x>
+     <y>110</y>
      <width>121</width>
-     <height>71</height>
+     <height>111</height>
     </rect>
    </property>
    <property name="font">
     <font>
-     <family>Agency FB</family>
+     <family>맑은 고딕</family>
      <pointsize>14</pointsize>
      <weight>75</weight>
      <bold>true</bold>
@@ -223,10 +223,10 @@
    </property>
    <property name="font">
     <font>
-     <family>Agency FB</family>
+     <family>맑은 고딕</family>
      <pointsize>9</pointsize>
-     <weight>50</weight>
-     <bold>false</bold>
+     <weight>75</weight>
+     <bold>true</bold>
     </font>
    </property>
    <property name="styleSheet">
@@ -234,7 +234,7 @@
 </string>
    </property>
    <property name="text">
-    <string>('-' 없이 작성)</string>
+    <string>('-' 없이 8자리)</string>
    </property>
   </widget>
  </widget>
