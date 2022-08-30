@@ -169,7 +169,7 @@
    </column>
    <column>
     <property name="text">
-     <string>매입금액</string>
+     <string>매입단가</string>
     </property>
    </column>
    <column>
@@ -324,7 +324,7 @@
    </property>
    <row>
     <property name="text">
-     <string>예수금</string>
+     <string>D+2예수금</string>
     </property>
    </row>
    <row>
@@ -550,7 +550,7 @@ background-color:blue;
    </column>
    <column>
     <property name="text">
-     <string>평단가</string>
+     <string>매입단가</string>
     </property>
    </column>
    <column>
