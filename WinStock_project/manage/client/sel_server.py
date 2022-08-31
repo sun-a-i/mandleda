@@ -7,7 +7,7 @@ import time
 from PyQt5.QtCore import QThread
 
 HOST = '192.168.0.7'
-PORT = 5000
+PORT = 5050
 
 class socket_server_thread(QThread):
     def __init__(self):
@@ -21,7 +21,7 @@ class socket_server_thread(QThread):
                 for i in self.socks:
                     if i != self.s:#본인을 제외한 모든 소켓에 송신
                         #print(i)
-                        print("메세지 송신",data)
+                        #print("메세지 송신",data)
                         i.sendall(data.encode('utf-8'))
             else:
                 print("연결되지 않음 메세지 전송 실패")
@@ -53,16 +53,15 @@ class socket_server_thread(QThread):
                                         data = conn.recv(1024).decode('utf-8')
                                         print(f'데이터 수신 : {data}')
 
-                                    except ConnectionResetError:
+                                    except Exception as e:
+                                        print(e)
+                                        print(traceback.format_exc())
                                         print("클라이언트 접속 해제 : 연결 삭제")
-                                        #print(ConnectionResetError)
+                                        print(sock.getpeername()[0])
                                         sock.close()
                                         self.socks.remove(sock)
-                                    except Exception as e:
-                                        print(traceback.format_exc())
-                                        print(e)
-                                        pass
-                                        #중요정보 로그 !!
+
+
                         except:
                             print(traceback.format_exc())
             except:

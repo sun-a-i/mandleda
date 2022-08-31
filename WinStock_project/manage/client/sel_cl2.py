@@ -5,8 +5,8 @@ from PyQt5.QtCore import QThread
 
 import socket
 
-HOST = '218.155.43.223'
-PORT = 5000
+HOST = '192.168.0.7'
+PORT = 5050
 
 class socket_thread(QThread):
     def __init__(self):

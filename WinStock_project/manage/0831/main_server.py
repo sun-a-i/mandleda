@@ -2266,7 +2266,7 @@ class MyThread(QThread):
                 main.real_log_widget.addItem("클라이언트 접속 대기 종료, 자동매매 시작")
                 tmp = list(div_stock_data.keys())
                 for i in tmp:
-                    self.finished.emit(str(i))
+                    main.finished.emit(str(i))
                 logger.debug("수동 매매 종목 업데이트 완료")
 
 
