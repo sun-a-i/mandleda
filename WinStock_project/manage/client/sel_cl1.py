@@ -6,7 +6,7 @@ from PyQt5.QtCore import QThread
 import socket
 
 HOST = '192.168.0.7'
-PORT = 5050
+PORT = 5000
 
 class socket_client_thread(QThread):
     def __init__(self):
@@ -29,6 +29,7 @@ class socket_client_thread(QThread):
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as self.s:
                     self.s.connect((HOST, PORT))
                     self.con = True
+                    self.send_msg("02김도훈")
                     while True:
                         data = self.s.recv(1024).decode('utf-8')
                         print(f'서버응답:{data}')

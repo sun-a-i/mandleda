@@ -381,7 +381,7 @@ class socket_server_thread(QThread):
                 for i in self.socks:
                     if i != self.s:#본인을 제외한 모든 소켓에 송신
                         try:
-                            name = self.clients[i.getpeername()]
+                            name = self.clients[i.getpeername()[0]]
                         except:
                             name = ''
 
@@ -1240,10 +1240,12 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             elif rcname == "OPT10001":
                 one_stock_price = int_format(self.GetCommData(trcode, record, 0, "현재가"))
                 one_stock_code = self.GetCommData(trcode, record, 0, "종목코드")
-
+                if not one_stock_price:
+                    return 0
                 self.one_stock_data = one_stock_price
                 self.one_stock_flag = True
-                logger.debug("one stock data = %s", self.one_stock_data)
+
+                logger.debug("one stock data%s  :  %s", one_stock_code, one_stock_price)
 
                 if one_stock_code in div_stock_data:
                     div_stock_data[one_stock_code]["현재가"] = one_stock_price
@@ -1477,7 +1479,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                         logger.debug("stock data : %s", stock_data)
             except Exception as e:
                 logger.debug(e)
-                logger.debug(traceback.format_exc())
+
 
 
 
@@ -1799,7 +1801,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     self.update_div_table()
 
             # 우선 emit 되면 무조건 update 되도록 임시조치
-            self.update_holding_table()
+            #self.update_holding_table()
 
         except Exception as e:
             logger.debug(e)
@@ -1809,6 +1811,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
     def div_refresh(self):
         global div_stock_data
         for i in div_stock_data :
+            logger.debug("opt10001 호출 : "+str(i))
             self.OPT10001(i)
             time.sleep(0.2)
 
@@ -2285,6 +2288,9 @@ class MyThread(QThread):
                     time.sleep(1)
                 logger.debug("클라이언트 접속 대기 종료, 자동매매 시작")
                 main.real_log_widget.addItem("클라이언트 접속 대기 종료, 자동매매 시작")
+                for code_key, price in main.recieved_dic.items():
+                    if code_key in div_stock_data:
+                        div_stock_data[code_key]["현재가"] = int_format(price)
                 tmp = list(div_stock_data.keys())
                 for i in tmp:
                     self.finished.emit(str(i))
@@ -2412,6 +2418,8 @@ class TimerThread(QThread):
 
 def int_format(val):  # "+12304" -> "12304"
     try:
+        if len(val) == 0 :
+            return False
         if val[0] == '+' or val[0] == '-':
             return val[1:]
         else:
