@@ -147,10 +147,14 @@ FIR_BUY_PERCENT = -3
 SEC_BUY_PERCENT = -11
 THIR_BUY_PERCENT = -20
 FORTH_BUY_PERCENT = -40
-FIR_INCOME_PERCENT = 4
-SEC_INCOME_PERCENT = 5
+FIR_INCOME_PERCENT = 7
+SEC_INCOME_PERCENT = 6
 THIR_INCOME_PERCENT = 6
-FORTH_INCOME_PERCENT = 7
+FORTH_INCOME_PERCENT = 5
+
+GAMSI_DATE1 = 3
+GAMSI_DATE2 = 5
+
 
 DIV_TIME = "15:19" #"HH:MM"
 CLIENT_WAIT_TIME = 60
@@ -353,6 +357,11 @@ class init_data(QThread):
             QMessageBox.warning(self, '경고', '알 수 없는 에러 발생, 담당자에게 문의주세요.')
 
 SERVER_PORT = 5000
+#외부아이피
+TY_IP = '192.168.123.100'
+DH_IP = '192.168.0.7'
+CUSTOM_IP = '1.242.216.122'
+
 class socket_server_thread(QThread):
     server_state = pyqtSignal(str)
 
@@ -370,23 +379,22 @@ class socket_server_thread(QThread):
             self.SERVER_HOST = "192.168.0.7"
         else:
             # 고객사 아이피
-           #self.SERVER_HOST = "192.168.55.124"#진짜고객
-            self.SERVER_HOST = "192.168.0.7"
+            self.SERVER_HOST = CUSTOM_IP
 
 
     def send_all(self, data):
         try:
-            logger.debug(data)
             if self.con :
                 for i in self.socks:
                     if i != self.s:#본인을 제외한 모든 소켓에 송신
                         try:
                             name = self.clients[i.getpeername()[0]]
                         except:
-                            name = ''
+                            name = '없음'
 
                         logger.debug(i)
-                        logger.debug("메세지 송신 : " + name)
+                        logger.debug("수신자 : " + name + "메세지 : " + data)
+                        self.real_log_widget.addItem("수신자 : " + name + ", 메세지 : " + data + "전송 완료")
                         i.sendall(data.encode('utf-8'))
             else:
                 logger.debug("연결되지 않음 메세지 전송 실패")
@@ -690,7 +698,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
     def data_load(self):
         try:
-            global stock_data, div_stock_data
+            global stock_data, div_stock_data, GAMSI_DATE1, GAMSI_DATE2
             if not os.path.exists(stock_data_path):
                 logger.debug("매매 데이터 없음")
             else:
@@ -753,12 +761,12 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                         sub_dict[j]["4차매수가격"] = calc_next_price(sub_dict[j]["last_price"], FORTH_BUY_PERCENT)
 
 
-                    elif diff > 5 and sub_dict[j]["state"] == "감시중5":  # 감시중인 종목 5일이 넘으면 삭제 #todo : 영업일 기준
+                    elif diff > GAMSI_DATE2 and sub_dict[j]["state"] == "감시중5":  # 감시중인 종목 5일이 넘으면 삭제 #todo : 영업일 기준
                         logger.debug("{} 종목, 감시 이후 5일 경과, 파일 삭제".format(sub_dict[j]["name"]))
                         self.real_log_widget.addItem("{} 종목, 감시 이후 5일 경과, 파일 삭제".format(sub_dict[j]["name"]))
                         del_list.append(j)
 
-                    elif diff > 2 and sub_dict[j]["state"] == "감시중2":  # 감시중인 종목 5일이 넘으면 삭제 #todo : 영업일 기준
+                    elif diff > GAMSI_DATE1 and sub_dict[j]["state"] == "감시중2":  # 감시중인 종목 5일이 넘으면 삭제 #todo : 영업일 기준
                         logger.debug("{} 종목, 감시 이후 2일 경과, 파일 삭제".format(sub_dict[j]["name"]))
                         self.real_log_widget.addItem("{} 종목, 감시 이후 2일 경과, 파일 삭제".format(sub_dict[j]["name"]))
                         del_list.append(j)
@@ -1238,14 +1246,15 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 pass
 
             elif rcname == "OPT10001":
-                one_stock_price = int_format(self.GetCommData(trcode, record, 0, "현재가"))
+                one_stock_price = self.GetCommData(trcode, record, 0, "현재가")
                 one_stock_code = self.GetCommData(trcode, record, 0, "종목코드")
-                if not one_stock_price:
+                if len(one_stock_price) == 0:
+                    logger.debug("one stock data error code : %s , price :  %s", one_stock_code, type(one_stock_price))
                     return 0
+                one_stock_price = int_format(one_stock_price)
                 self.one_stock_data = one_stock_price
                 self.one_stock_flag = True
-
-                logger.debug("one stock data%s  :  %s", one_stock_code, one_stock_price)
+                logger.debug("one stock data code : %s , price :  %s", one_stock_code, one_stock_price)
 
                 if one_stock_code in div_stock_data:
                     div_stock_data[one_stock_code]["현재가"] = one_stock_price
@@ -1452,34 +1461,35 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             elif s_gubun == '4':  # 파생잔고변경
                 pass
             try:
-                if (dummy[code]['매도수구분'] == 2) & (dummy[code]['주문상태'] == '체결'):  # 1:매도, 2:매수
-                    if code in stock_data.keys():
-                        stock_data[code].update({'code': code})  # 종목코드
-                        stock_data[code].update({'name': dummy[code]['종목명']})  # 종목명
+                if s_gubun == 0 :
+                    if (dummy[code]['매도수구분'] == 2) & (dummy[code]['주문상태'] == '체결') :  # 1:매도, 2:매수
+                        if code in stock_data.keys():
+                            stock_data[code].update({'code': code})  # 종목코드
+                            stock_data[code].update({'name': dummy[code]['종목명']})  # 종목명
 
-                        stock_data[code].update({'pur_p': dummy[code]['체결가']})
-                        stock_data[code].update({'buy_amt': dummy[code]['체결누계금액']})
-                        stock_data[code].update({'amount': dummy[code]['체결량']})
+                            stock_data[code].update({'pur_p': dummy[code]['체결가']})
+                            stock_data[code].update({'buy_amt': dummy[code]['체결누계금액']})
+                            stock_data[code].update({'amount': dummy[code]['체결량']})
 
-                        stock_data[code].update({'high': dummy[code]['체결가']})  # 매수 당시 가격으로 최고가 지정
+                            stock_data[code].update({'high': dummy[code]['체결가']})  # 매수 당시 가격으로 최고가 지정
 
-                        stock_data[code].update({'obs_per': OBS_PER})  # 감시 퍼센티지
-                        res = calc_next_price(dummy[code]['체결가'], OBS_PER)
-                        stock_data[code].update({'obs_p': res})  # 감시가 저장
-                        stock_data[code].update({'trail_per': TRAIL_PER})  # 트레일링 퍼센티지 설정
-                        stock_data[code].update({'trail_p': 0})  # 트레일링 도달가는 미지정
+                            stock_data[code].update({'obs_per': OBS_PER})  # 감시 퍼센티지
+                            res = calc_next_price(dummy[code]['체결가'], OBS_PER)
+                            stock_data[code].update({'obs_p': res})  # 감시가 저장
+                            stock_data[code].update({'trail_per': TRAIL_PER})  # 트레일링 퍼센티지 설정
+                            stock_data[code].update({'trail_p': 0})  # 트레일링 도달가는 미지정
 
-                        stock_data[code].update({'loss_per': LOSS_PER})  # 트레일링 퍼센티지 설정
-                        res = calc_next_price(dummy[code]['체결가'], LOSS_PER)
-                        stock_data[code].update({'loss_p': res})  # 트레일링 도달가는 미지정
+                            stock_data[code].update({'loss_per': LOSS_PER})  # 트레일링 퍼센티지 설정
+                            res = calc_next_price(dummy[code]['체결가'], LOSS_PER)
+                            stock_data[code].update({'loss_p': res})  # 트레일링 도달가는 미지정
 
-                        stock_data[code].update({'STATE': BUY})  # 현재 상태 [매수됨] 으로 변경
+                            stock_data[code].update({'STATE': BUY})  # 현재 상태 [매수됨] 으로 변경
 
-                        self.save_data_func()  # 데이터 저장
+                            self.save_data_func()  # 데이터 저장
                         logger.debug("stock data : %s", stock_data)
             except Exception as e:
                 logger.debug(e)
-
+                logger.debug(traceback.format_exc())
 
 
 
@@ -1801,7 +1811,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     self.update_div_table()
 
             # 우선 emit 되면 무조건 update 되도록 임시조치
-            #self.update_holding_table()
+            self.update_holding_table()
 
         except Exception as e:
             logger.debug(e)
@@ -1813,8 +1823,10 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
         for i in div_stock_data :
             logger.debug("opt10001 호출 : "+str(i))
             self.OPT10001(i)
-            time.sleep(0.2)
-
+            self.one_stock_flag = False
+            while self.one_stock_flag is False:
+                pythoncom.PumpWaitingMessages()
+                time.sleep(0.3)
 
 
 
@@ -1852,7 +1864,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     div_stock_data[code]["state"] = str(state) + "차매수"
                     self.real_log_widget.addItem("{} 종목 매수 주문 완료".format(div_stock_data[code]["name"]))
                     self.socket_server.send_all("BUY;" + str(code) + ";" + str(state))
-                    self.real_log_widget.addItem("BUY;" + str(code) + ";" + str(state) + "전송 완료")
+
 
                 else:
                     logger.debug("매수 주문 요청 실패 오류코드 : " + str(ret))
@@ -2121,7 +2133,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
     def update_holding_table(self):  # 테이블 업데이트 함수
         global kname_list, code_list, stock_data, div_stock_data
         try:
-            logger.debug("update holding table")
+            #logger.debug("update holding table")
             #logger.debug(self.jango)
             self.table_holding.setRowCount(len(self.jango["종목리스트"]))
             for i in range(len(self.jango["종목리스트"])):
@@ -2288,6 +2300,7 @@ class MyThread(QThread):
                     time.sleep(1)
                 logger.debug("클라이언트 접속 대기 종료, 자동매매 시작")
                 main.real_log_widget.addItem("클라이언트 접속 대기 종료, 자동매매 시작")
+                logger.debug(main.recieved_dic)
                 for code_key, price in main.recieved_dic.items():
                     if code_key in div_stock_data:
                         div_stock_data[code_key]["현재가"] = int_format(price)
@@ -2418,8 +2431,6 @@ class TimerThread(QThread):
 
 def int_format(val):  # "+12304" -> "12304"
     try:
-        if len(val) == 0 :
-            return False
         if val[0] == '+' or val[0] == '-':
             return val[1:]
         else:

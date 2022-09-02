@@ -156,8 +156,8 @@ GAMSI_DATE1 = 3
 GAMSI_DATE2 = 5
 
 
-DIV_TIME = "15:19" #"HH:MM"
-CLIENT_WAIT_TIME = 60
+DIV_TIME = "15:29" #"HH:MM"
+
 # 매매 데이터 저장 딕셔너리
 stock_data = {}
 div_stock_data = {}
@@ -379,22 +379,18 @@ class socket_server_thread(QThread):
             self.SERVER_HOST = "192.168.0.7"
         else:
             # 고객사 아이피
+           #self.SERVER_HOST = "192.168.55.124"#진짜고객
             self.SERVER_HOST = CUSTOM_IP
 
 
     def send_all(self, data):
         try:
+            logger.debug(data)
             if self.con :
                 for i in self.socks:
                     if i != self.s:#본인을 제외한 모든 소켓에 송신
-                        try:
-                            name = self.clients[i.getpeername()[0]]
-                        except:
-                            name = '없음'
-
                         logger.debug(i)
-                        logger.debug("수신자 : " + name + "메세지 : " + data)
-                        self.real_log_widget.addItem("수신자 : " + name + ", 메세지 : " + data + "전송 완료")
+                        logger.debug("메세지 송신")
                         i.sendall(data.encode('utf-8'))
             else:
                 logger.debug("연결되지 않음 메세지 전송 실패")
@@ -453,7 +449,6 @@ class socket_server_thread(QThread):
                                         del self.clients[client_ip]
                                         logger.debug("클라이언트 접속 해제 : " + name)
                                         main.real_log_widget.addItem("클라이언트 접속 해제 : " + name)
-
 
                                     except Exception as e:
                                         logger.debug(traceback.format_exc())
@@ -590,7 +585,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
         self.GetConditionLoad()  # 조건검색식 호출
         self.set_info()
         self.condition_refresh()
-        self.div_refresh()
+
         self.update_con_table()
         self.update_div_table()
         self.update_holding_table()
@@ -854,7 +849,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug("trading_state_func : %s", state)
 
             if state == 'start':
-                if self.cbox_con.currentText() == "000 1번조건식": #todo : test용 ?
+                if self.cbox_con.currentText() == "000 1": #todo : test용 ?
                     if self.closeBuy_rdo_btn.isChecked():
                         trade_method = CloseTradeMethod
                         txt = "[A type]"
@@ -1246,18 +1241,9 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 pass
 
             elif rcname == "OPT10001":
-                one_stock_price = self.GetCommData(trcode, record, 0, "현재가")
-                one_stock_code = self.GetCommData(trcode, record, 0, "종목코드")
-                if len(one_stock_price) == 0:
-                    logger.debug("one stock data error code : %s , price :  %s", one_stock_code, type(one_stock_price))
-                    return 0
-                one_stock_price = int_format(one_stock_price)
-                self.one_stock_data = one_stock_price
+                self.one_stock_data = self.GetCommData(trcode, record, 0, "현재가")
                 self.one_stock_flag = True
-                logger.debug("one stock data code : %s , price :  %s", one_stock_code, one_stock_price)
-
-                if one_stock_code in div_stock_data:
-                    div_stock_data[one_stock_code]["현재가"] = one_stock_price
+                logger.debug("one stock data = %s", self.one_stock_data)
                 pass
 
             elif rcname == 'is_positive_stock':
@@ -1461,31 +1447,30 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             elif s_gubun == '4':  # 파생잔고변경
                 pass
             try:
-                if s_gubun == 0 :
-                    if (dummy[code]['매도수구분'] == 2) & (dummy[code]['주문상태'] == '체결') :  # 1:매도, 2:매수
-                        if code in stock_data.keys():
-                            stock_data[code].update({'code': code})  # 종목코드
-                            stock_data[code].update({'name': dummy[code]['종목명']})  # 종목명
+                if (dummy[code]['매도수구분'] == 2) & (dummy[code]['주문상태'] == '체결'):  # 1:매도, 2:매수
+                    if code in stock_data.keys():
+                        stock_data[code].update({'code': code})  # 종목코드
+                        stock_data[code].update({'name': dummy[code]['종목명']})  # 종목명
 
-                            stock_data[code].update({'pur_p': dummy[code]['체결가']})
-                            stock_data[code].update({'buy_amt': dummy[code]['체결누계금액']})
-                            stock_data[code].update({'amount': dummy[code]['체결량']})
+                        stock_data[code].update({'pur_p': dummy[code]['체결가']})
+                        stock_data[code].update({'buy_amt': dummy[code]['체결누계금액']})
+                        stock_data[code].update({'amount': dummy[code]['체결량']})
 
-                            stock_data[code].update({'high': dummy[code]['체결가']})  # 매수 당시 가격으로 최고가 지정
+                        stock_data[code].update({'high': dummy[code]['체결가']})  # 매수 당시 가격으로 최고가 지정
 
-                            stock_data[code].update({'obs_per': OBS_PER})  # 감시 퍼센티지
-                            res = calc_next_price(dummy[code]['체결가'], OBS_PER)
-                            stock_data[code].update({'obs_p': res})  # 감시가 저장
-                            stock_data[code].update({'trail_per': TRAIL_PER})  # 트레일링 퍼센티지 설정
-                            stock_data[code].update({'trail_p': 0})  # 트레일링 도달가는 미지정
+                        stock_data[code].update({'obs_per': OBS_PER})  # 감시 퍼센티지
+                        res = calc_next_price(dummy[code]['체결가'], OBS_PER)
+                        stock_data[code].update({'obs_p': res})  # 감시가 저장
+                        stock_data[code].update({'trail_per': TRAIL_PER})  # 트레일링 퍼센티지 설정
+                        stock_data[code].update({'trail_p': 0})  # 트레일링 도달가는 미지정
 
-                            stock_data[code].update({'loss_per': LOSS_PER})  # 트레일링 퍼센티지 설정
-                            res = calc_next_price(dummy[code]['체결가'], LOSS_PER)
-                            stock_data[code].update({'loss_p': res})  # 트레일링 도달가는 미지정
+                        stock_data[code].update({'loss_per': LOSS_PER})  # 트레일링 퍼센티지 설정
+                        res = calc_next_price(dummy[code]['체결가'], LOSS_PER)
+                        stock_data[code].update({'loss_p': res})  # 트레일링 도달가는 미지정
 
-                            stock_data[code].update({'STATE': BUY})  # 현재 상태 [매수됨] 으로 변경
+                        stock_data[code].update({'STATE': BUY})  # 현재 상태 [매수됨] 으로 변경
 
-                            self.save_data_func()  # 데이터 저장
+                        self.save_data_func()  # 데이터 저장
                         logger.debug("stock data : %s", stock_data)
             except Exception as e:
                 logger.debug(e)
@@ -1817,19 +1802,6 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug(e)
             logger.debug(traceback.format_exc())
 
-
-    def div_refresh(self):
-        global div_stock_data
-        for i in div_stock_data :
-            logger.debug("opt10001 호출 : "+str(i))
-            self.OPT10001(i)
-            self.one_stock_flag = False
-            while self.one_stock_flag is False:
-                pythoncom.PumpWaitingMessages()
-                time.sleep(0.3)
-
-
-
     def div_order_buy(self, state, code):
         logger.debug(str(code) + "종목 " + str(state) + "차 매수 진행")
         global div_stock_data, my_cash
@@ -1864,7 +1836,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     div_stock_data[code]["state"] = str(state) + "차매수"
                     self.real_log_widget.addItem("{} 종목 매수 주문 완료".format(div_stock_data[code]["name"]))
                     self.socket_server.send_all("BUY;" + str(code) + ";" + str(state))
-
+                    self.real_log_widget.addItem("BUY;" + str(code) + ";" + str(state) + "전송 완료")
 
                 else:
                     logger.debug("매수 주문 요청 실패 오류코드 : " + str(ret))
@@ -2133,7 +2105,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
     def update_holding_table(self):  # 테이블 업데이트 함수
         global kname_list, code_list, stock_data, div_stock_data
         try:
-            #logger.debug("update holding table")
+            logger.debug("update holding table")
             #logger.debug(self.jango)
             self.table_holding.setRowCount(len(self.jango["종목리스트"]))
             for i in range(len(self.jango["종목리스트"])):
@@ -2274,7 +2246,7 @@ class MyThread(QThread):
 
     def run(self):  # 매초마다 받아온 데이터 집어넣기
         try:
-            global stock_data, login_flag, auto_flag, test, kname_list, socket_flag, CLIENT_WAIT_TIME, main
+            global stock_data, login_flag, auto_flag, test, kname_list, socket_flag
             heartBeat = 0
 
             if test:
@@ -2291,24 +2263,6 @@ class MyThread(QThread):
                             self.finished.emit(str(i))
                             time.sleep(1)
                         break
-            else:
-                sec = 0
-                main.real_log_widget.addItem("클라이언트 접속 대기중 ..")
-                while sec < CLIENT_WAIT_TIME:
-                    sec += 1
-                    logger.debug("클라이언트 접속 대기중 ..")
-                    time.sleep(1)
-                logger.debug("클라이언트 접속 대기 종료, 자동매매 시작")
-                main.real_log_widget.addItem("클라이언트 접속 대기 종료, 자동매매 시작")
-                logger.debug(main.recieved_dic)
-                for code_key, price in main.recieved_dic.items():
-                    if code_key in div_stock_data:
-                        div_stock_data[code_key]["현재가"] = int_format(price)
-                tmp = list(div_stock_data.keys())
-                for i in tmp:
-                    self.finished.emit(str(i))
-                logger.debug("수동 매매 종목 업데이트 완료")
-
 
             while True:
                 time.sleep(1.5)

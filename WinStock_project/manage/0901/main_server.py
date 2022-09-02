@@ -156,8 +156,8 @@ GAMSI_DATE1 = 3
 GAMSI_DATE2 = 5
 
 
-DIV_TIME = "15:29" #"HH:MM"
-
+DIV_TIME = "15:19" #"HH:MM"
+CLIENT_WAIT_TIME = 60
 # 매매 데이터 저장 딕셔너리
 stock_data = {}
 div_stock_data = {}
@@ -385,12 +385,16 @@ class socket_server_thread(QThread):
 
     def send_all(self, data):
         try:
-            logger.debug(data)
             if self.con :
                 for i in self.socks:
                     if i != self.s:#본인을 제외한 모든 소켓에 송신
+                        try:
+                            name = self.clients[i.getpeername()[0]]
+                        except:
+                            name = '없음'
+
                         logger.debug(i)
-                        logger.debug("메세지 송신")
+                        logger.debug("수신자 : " + name + "메세지 : " + data)
                         i.sendall(data.encode('utf-8'))
             else:
                 logger.debug("연결되지 않음 메세지 전송 실패")
@@ -449,6 +453,7 @@ class socket_server_thread(QThread):
                                         del self.clients[client_ip]
                                         logger.debug("클라이언트 접속 해제 : " + name)
                                         main.real_log_widget.addItem("클라이언트 접속 해제 : " + name)
+
 
                                     except Exception as e:
                                         logger.debug(traceback.format_exc())
@@ -585,7 +590,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
         self.GetConditionLoad()  # 조건검색식 호출
         self.set_info()
         self.condition_refresh()
-
+        self.div_refresh()
         self.update_con_table()
         self.update_div_table()
         self.update_holding_table()
@@ -849,7 +854,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug("trading_state_func : %s", state)
 
             if state == 'start':
-                if self.cbox_con.currentText() == "000 1": #todo : test용 ?
+                if self.cbox_con.currentText() == "000 1번조건식": #todo : test용 ?
                     if self.closeBuy_rdo_btn.isChecked():
                         trade_method = CloseTradeMethod
                         txt = "[A type]"
@@ -1241,9 +1246,16 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 pass
 
             elif rcname == "OPT10001":
-                self.one_stock_data = self.GetCommData(trcode, record, 0, "현재가")
+                one_stock_price = int_format(self.GetCommData(trcode, record, 0, "현재가"))
+                one_stock_code = self.GetCommData(trcode, record, 0, "종목코드")
+                if len(one_stock_price) == 0:
+                    return 0
+                self.one_stock_data = one_stock_price
                 self.one_stock_flag = True
-                logger.debug("one stock data = %s", self.one_stock_data)
+                logger.debug("one stock data%s  :  %s", one_stock_code, one_stock_price)
+
+                if one_stock_code in div_stock_data:
+                    div_stock_data[one_stock_code]["현재가"] = one_stock_price
                 pass
 
             elif rcname == 'is_positive_stock':
@@ -1802,6 +1814,17 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug(e)
             logger.debug(traceback.format_exc())
 
+
+    def div_refresh(self):
+        global div_stock_data
+        for i in div_stock_data :
+            logger.debug("opt10001 호출 : "+str(i))
+            self.OPT10001(i)
+            time.sleep(0.2)
+
+
+
+
     def div_order_buy(self, state, code):
         logger.debug(str(code) + "종목 " + str(state) + "차 매수 진행")
         global div_stock_data, my_cash
@@ -2246,7 +2269,7 @@ class MyThread(QThread):
 
     def run(self):  # 매초마다 받아온 데이터 집어넣기
         try:
-            global stock_data, login_flag, auto_flag, test, kname_list, socket_flag
+            global stock_data, login_flag, auto_flag, test, kname_list, socket_flag, CLIENT_WAIT_TIME, main
             heartBeat = 0
 
             if test:
@@ -2263,6 +2286,23 @@ class MyThread(QThread):
                             self.finished.emit(str(i))
                             time.sleep(1)
                         break
+            else:
+                sec = 0
+                main.real_log_widget.addItem("클라이언트 접속 대기중 ..")
+                while sec < CLIENT_WAIT_TIME:
+                    sec += 1
+                    logger.debug("클라이언트 접속 대기중 ..")
+                    time.sleep(1)
+                logger.debug("클라이언트 접속 대기 종료, 자동매매 시작")
+                main.real_log_widget.addItem("클라이언트 접속 대기 종료, 자동매매 시작")
+                for code_key, price in main.recieved_dic.items():
+                    if code_key in div_stock_data:
+                        div_stock_data[code_key]["현재가"] = int_format(price)
+                tmp = list(div_stock_data.keys())
+                for i in tmp:
+                    self.finished.emit(str(i))
+                logger.debug("수동 매매 종목 업데이트 완료")
+
 
             while True:
                 time.sleep(1.5)
