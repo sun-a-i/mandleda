@@ -1696,6 +1696,51 @@ background-color:gray;
      </property>
     </item>
    </widget>
+   <widget class="QLabel" name="label_38">
+    <property name="geometry">
+     <rect>
+      <x>390</x>
+      <y>100</y>
+      <width>81</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>10</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>익절 카운트</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="btc_count">
+    <property name="geometry">
+     <rect>
+      <x>430</x>
+      <y>100</y>
+      <width>201</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>14</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>-</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+    </property>
+   </widget>
    <zorder>groupBox</zorder>
    <zorder>label</zorder>
    <zorder>div_symbol</zorder>
@@ -1755,6 +1800,8 @@ background-color:gray;
    <zorder>btc_price</zorder>
    <zorder>groupBox_2</zorder>
    <zorder>setting_name</zorder>
+   <zorder>label_38</zorder>
+   <zorder>btc_count</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
