@@ -91,7 +91,7 @@ div_data = {
 
     'BTCUSDT_UMCBL' : {
         price_comp_func(),data_load 에서 업데이트
-        state : '대기' '완료', '재구매', '1차매수', '2차매수', ... 
+        state : '대기' '완료', 0차매수, '1차매수', '2차매수', ... 
         
         set_div_data() 에서 업데이트
         start_amt : float : 시작 구매량
@@ -169,6 +169,9 @@ my_cash = 0
 
 #보고있는 코인
 symbol = 'BTCUSDT_UMCBL'
+
+#사용자 설정 새로고침 주기
+CLIENT_REFRESH_RATE = 10
 
 class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui path
 
@@ -276,7 +279,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug(e)
             logger.debug(traceback.format_exc())
 
-    def set_login(self, api_key,secret_key, passphrase ): #todo : server time 테스트 ! 완료
+    def set_login(self, api_key,secret_key, passphrase ):
         try:
             logger.debug("initiating ...")
             ret = False
@@ -368,102 +371,104 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
     #매매 데이터 저장
     def save_div_data_func(self):
-        logger.debug("initiating ...")
-        with open(div_data_path, 'wb') as f:
-            pickle.dump(div_data, f)
-        self.real_log_widget.addItem("매매 데이터 저장 완료")
-        logger.debug("종료")
-
+        try:
+            logger.debug("initiating ...")
+            with open(div_data_path, 'wb') as f:
+                pickle.dump(div_data, f)
+            self.real_log_widget.addItem("매매 데이터 저장 완료")
+            logger.debug("종료")
+        except Exception as e:
+            logger.debug(e)
+            logger.debug(traceback.format_exc())
 
     #table의 width 조정 외 기타 init
     def table_init(self):
         try:
             logger.debug('table init..')
-            self.table_div.setEnabled(False)
+            #self.table_div.setEnabled(False)
         except Exception as e:
             logger.debug(e)
             logger.debug(traceback.format_exc())
 
 
-    def set_div_data(self):#todo : setting data div_data pickle에 의존적으로 할지 ? 완료
+    def set_div_data(self):
         global div_data, symbol, CLIENT_REFRESH_RATE
-        if div_data[symbol]['long']['state'] == '완료' and div_data[symbol]['short']['state'] == '완료':
-            div_data[symbol]['setting'] == False
+        try:
+            if (div_data[symbol]['long']['state'] == '대기' and
+                    div_data[symbol]['short']['state'] == '대기'):  # 둘 다 대기상태면 setting update
 
-        for position in ['long','short']:
-            if div_data[symbol][position]['state'] == '완료':  # 완료상태시 구매
-                if self.order_open(div_data[symbol]['start_amt'], div_data[symbol][position]['state'], position):
-                    div_data[symbol][position]['state'] = '0차매수'
+                div_symbol = self.div_symbol.currentText()  # combobox
+                start_amt = self.start_amt.text()
+                refresh_rate = self.refresh_rate.text()
 
-        if  div_data[symbol]['setting'] == True :
-            logger.debug("setting값 존재함 기존 setting값으로 진행")
-            return 0
-        elif div_data[symbol]['setting'] == False :
-            logger.debug("새로운 setting값으로 진행") #todo : 새로운 세팅값으로 진행하는 기준 ? 둘 다 완료 ? 완료
+                CLIENT_REFRESH_RATE = float(refresh_rate)
 
+                leverage_t = self.leverage.text()
+                try:
+                    self.accountApi.leverage(symbol, marginCoin='USDT', leverage=int(leverage_t), holdSide='long')
+                    self.accountApi.leverage(symbol, marginCoin='USDT', leverage=int(leverage_t), holdSide='short')
+                except:
+                    self.real_log_widget.addItem("레버리지 값 설정 오류")
+                    logger.debug("레버리지 값 설정 오류")
+                    self.view_control_func('stop')
 
+                div_step = self.div_step.currentText()  # combox
+                rebuy = self.rebuy.isChecked()  # checkbox
 
-        div_symbol = self.div_symbol.currentText()  # combobox
-        start_amt = self.start_amt.text()
-        refresh_rate = self.refresh_rate.text()
+                short_cut_rate = self.short_cut_rate.text()
+                short_cut_rate_b = self.short_cut_rate_b.text()
+                short_escape_rate = self.short_escape_rate.text()
+                short_mul_rate = self.short_mul_rate.text()
 
-        CLIENT_REFRESH_RATE = float(refresh_rate)
+                long_cut_rate = self.long_cut_rate.text()
+                long_cut_rate_b = self.long_cut_rate_b.text()
+                long_escape_rate = self.long_escape_rate.text()
+                long_mul_rate = self.long_mul_rate.text()
 
-        leverage_t = self.leverage.text()
+                div_setting_table = [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]
+                for i in range(6):
+                    for j in range(3):
+                        div_setting_table[i][j] = self.div_setting_table.item(i, j).text()
 
-        self.accountApi.leverage(symbol, marginCoin='USDT', leverage=int(leverage_t), holdSide='long') #todo : 레버리지 홈페이지 설정값 상호의존
-        self.accountApi.leverage(symbol, marginCoin='USDT', leverage=int(leverage_t), holdSide='short')
+                if symbol in div_data: #todo pyqt 입력값 제한 굿 ~
+                    div_data[symbol]['start_amt'] = abs(float(start_amt))
+                    div_data[symbol]['refresh_rate'] = abs(float(refresh_rate))
+                    div_data[symbol]['leverage'] = leverage_t
+                    div_data[symbol]['div_step'] = abs(int(div_step))
+                    div_data[symbol]['rebuy'] = rebuy
 
-        div_step = self.div_step.currentText()  # combox
-        rebuy = self.rebuy.isChecked()  # checkbox
+                    div_data[symbol]['short']['cut_rate'] = abs(float(short_cut_rate))
+                    div_data[symbol]['short']['cut_rate_b'] = abs(float(short_cut_rate_b))/100
+                    div_data[symbol]['short']['escape_rate'] = abs(float(short_escape_rate)) * -1
+                    div_data[symbol]['short']['mul_rate'] = abs(float(short_mul_rate)) * -1
 
-        short_cut_rate = self.short_cut_rate.text()
-        short_cut_rate_b = self.short_cut_rate_b.text()
-        short_escape_rate = self.short_escape_rate.text()
-        short_mul_rate = self.short_mul_rate.text()
+                    div_data[symbol]['long']['cut_rate'] = abs(float(long_cut_rate))
+                    div_data[symbol]['long']['cut_rate_b'] = abs(float(long_cut_rate_b))/100
+                    div_data[symbol]['long']['escape_rate'] = abs(float(long_escape_rate)) * -1
+                    div_data[symbol]['long']['mul_rate'] = abs(float(long_mul_rate)) * -1
 
-        long_cut_rate = self.long_cut_rate.text()
-        long_cut_rate_b = self.long_cut_rate_b.text()
-        long_escape_rate = self.long_escape_rate.text()
-        long_mul_rate = self.long_mul_rate.text()
+                    for i in range(len(div_setting_table)):
+                        if i <= int(div_step) :
+                            if div_setting_table[i][0] == '' or div_setting_table[i][1] == '' or div_setting_table[i][2] == '' :
+                                self.real_log_widget.addItem("빈값 발견, 빈값 없이 채우고 진행")
+                                self.view_control_func("stop")
+                                QMessageBox.information(self, '확인', '분할매수 설정 값에 빈칸이 없어야 합니다.\n재 설정 후 [시작]을 눌러주세요.')
+                            else:
+                                n_state = str(i+1) + "차매수"
+                                div_data[symbol][n_state] = {}
+                                div_data[symbol][n_state]["amt"] = abs(float(div_setting_table[i][0]))
+                                div_data[symbol][n_state]["mul"] = abs(float(div_setting_table[i][1])) * -1 #음수값으로 비교
+                                div_data[symbol][n_state]["mul_b"] = abs(float(div_setting_table[i][2]))/100
+                else:
+                    logger.debug("심볼 없음 !")
 
-        div_setting_table = [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]
-        for i in range(6):
-            for j in range(3):
-                div_setting_table[i][j] = self.div_setting_table.item(i, j).text()
-
-
-        if symbol in div_data: #todo pyqt 입력값 제한 굿 ~
-            div_data[symbol]['start_amt'] = abs(float(start_amt))
-            div_data[symbol]['refresh_rate'] = abs(float(refresh_rate))
-            div_data[symbol]['leverage'] = leverage_t
-            div_data[symbol]['div_step'] = abs(int(div_step))
-            div_data[symbol]['rebuy'] = rebuy
-
-            div_data[symbol]['short']['cut_rate'] = abs(float(short_cut_rate))
-            div_data[symbol]['short']['cut_rate_b'] = abs(float(short_cut_rate_b))/100
-            div_data[symbol]['short']['escape_rate'] = abs(float(short_escape_rate)) * -1
-            div_data[symbol]['short']['mul_rate'] = abs(float(short_mul_rate))
-
-            div_data[symbol]['long']['cut_rate'] = abs(float(long_cut_rate))
-            div_data[symbol]['long']['cut_rate_b'] = abs(float(long_cut_rate_b))/100
-            div_data[symbol]['long']['escape_rate'] = abs(float(long_escape_rate)) * -1
-            div_data[symbol]['long']['mul_rate'] = abs(float(long_mul_rate))
-
-            for i in range(len(div_setting_table)):
-                if i <= int(div_step) :
-                    if div_setting_table[i][0] == '' or div_setting_table[i][1] == '' or div_setting_table[i][2] == '' :
-                        self.real_log_widget.addItem("빈값 발견, 빈값 없이 채우고 진행")
-                        self.trading_state_func("stop")
-                    else:
-                        n_state = str(i+1) + "차매수"
-                        div_data[symbol][n_state] = {}
-                        div_data[symbol][n_state]["amt"] = abs(float(div_setting_table[i][0]))
-                        div_data[symbol][n_state]["mul"] = abs(float(div_setting_table[i][1])) * -1 #음수값으로 비교
-                        div_data[symbol][n_state]["mul_b"] = abs(float(div_setting_table[i][2]))/100
-
-        else:
-            logger.debug("심볼 없음 !")
+            for position in ['long', 'short']:
+                if div_data[symbol][position]['state'] == '대기': #대기상태면 매수
+                    if self.order_open(div_data[symbol]['start_amt'], div_data[symbol][position]['state'], position):
+                        div_data[symbol][position]['state'] = '0차매수'
+        except Exception as e:
+            logger.debug(e)
+            logger.debug(traceback.format_exc())
 
 #=============================bitget_api_func==========================
 
@@ -550,8 +555,12 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 div_data[tmp['symbol']][tmp['holdSide']]['price'] = float(tmp['marketPrice'])
                 #div_data[tmp['symbol']][tmp['holdSide']]['available'] = float(tmp['available'])
 
+                if div_data[tmp['symbol']][tmp['holdSide']]['total'] == 0.0 and div_data[tmp['symbol']][tmp['holdSide']]['state'] != '대기':
+                    div_data[tmp['symbol']][tmp['holdSide']]['state'] = '대기'
+                    logger.debug("상태값 이상")
 
-                self.update_div_table()
+
+            self.update_div_table()
 
             return ret
         except Exception as e:
@@ -568,13 +577,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             balance = self.get_usdt()
             #logger.debug(balance) #-> balance_example.txt
             self.usdt_amt.setText(balance) #가용 가능 usdt
-
-            """
-            self.table_holding.setRowCount(1)
-            self.table_holding.setItem(0, 0, QTableWidgetItem('1'))
-            self.table_holding.setItem(0, 1, QTableWidgetItem(str(balance['used'])))
-            self.table_holding.setItem(0, 2, QTableWidgetItem(str(balance['total'])))"""
-
+            self.btc_count.setText(str(div_data[symbol]['count']))
 
             logger.debug("종료")
         except Exception as e:
@@ -583,13 +586,8 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
         # logger.debug(self.jango)
 
-
-
-    def trading_state_func(self, state):
+    def view_control_func(self, state):
         try:
-            global auto_flag
-            logger.debug("trading_state_func : %s", state)
-
             if state == 'start':
                 auto_flag = True
                 self.trading_start_btn.setEnabled(False)
@@ -625,11 +623,8 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 self.set_div_data()
                 self.real_log_widget.addItem("자동매매 시작")
                 logger.debug("자동매매 시작")
-
-
             else:
                 auto_flag = False
-
                 self.trading_start_btn.setEnabled(True)
                 self.trading_start_btn.setStyleSheet("color:white")
                 self.trading_start_btn.setStyleSheet("background:red")
@@ -666,6 +661,18 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug(e)
             logger.debug(traceback.format_exc())
 
+    def trading_state_func(self, state):
+        try:
+            global auto_flag
+            logger.debug("trading_state_func : %s", state)
+            reply = QMessageBox.question(self, '확인', '매매를 {} 하시겠습니까?'.format(state))
+            if reply == QMessageBox.Yes:
+                self.view_control_func(state)
+
+        except Exception as e:
+            logger.debug(e)
+            logger.debug(traceback.format_exc())
+
     # ==========================================UI FUNCTION ====================================================
     # ==========================================================================================================
     # ==========================================================================================================
@@ -691,9 +698,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                         logger.debug("이 if문은 로직상 타면 안됨")
 
 
-                    if div_data[symbol][position]['state'] == '대기': #프로그램 구동 초기에 하나도 안샀으면
-                            if self.order_open(div_data[symbol]['start_amt'], div_data[symbol][position]['state'], position):
-                                div_data[symbol][position]['state'] = '0차매수'
+
 
                     if div_data[symbol][position]['MAX_ROE'] <= div_data[symbol][position]['ROE']: #최고수익률 갱신
                         div_data[symbol][position]['MAX_ROE'] = div_data[symbol][position]['ROE']
@@ -710,17 +715,17 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                             # 10 - 9 = 1 >= 1 = 10 * 10% 매도 !
                             # 10 - 9 = 2 > 1  10 * 0.1 매도 !
                             if self.order_close(div_data[symbol][position]['state'], position):
-                                pass
                                 div_data[symbol][position]['close_activate'] = False
                                 div_data[symbol][position]['MAX_ROE'] = 0
                                 if div_data[symbol]['rebuy'] :
-                                    div_data[symbol][position]['state'] = '0차매수'
+
                                     if self.order_open(div_data[symbol]['start_amt'],
                                                        div_data[symbol][position]['state'],
                                                        position):
-                                        div_data[symbol]['count'] += 1 #todo : 익절 카운트 완료
+                                        div_data[symbol][position]['state'] = '0차매수'
+                                        div_data[symbol]['count'] += 1
                                 else:
-                                    div_data[symbol][position]['state'] = '완료'
+                                    div_data[symbol][position]['state'] = '대기'
 
 
 
@@ -728,6 +733,13 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                         next_state = str(int(div_data[symbol][position]['state'][0]) + 1) + '차매수' #다음 차수
                         #logger.debug(type(div_data[symbol][position]['state'][0]) +" : "+type(div_data[symbol]['div_step']))
                         if int(div_data[symbol][position]['state'][0]) <= div_data[symbol]['div_step'] : #마지막 단계보다 작으면
+
+                            if div_data[symbol][position]['mul_rate'] < div_data[symbol][position]['ROE']:
+                                pass
+                            # todo : 물타기 로직
+
+
+
                             if div_data[symbol][position]['MIN_ROE'] > div_data[symbol][position]['ROE']:  # 최저수익률 갱신
                                 div_data[symbol][position]['MIN_ROE'] = div_data[symbol][position]['ROE']
 
@@ -744,7 +756,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                                     #-10 - -9.5 = -0.5  # -1보다 작아야됨
                                     #-20 - -19 = -1  # -2보다 작아야됨
                                     #-10 - -8 = -2 < -1
-                                    if self.order_open(div_data[symbol][next_state]['amt'], div_data[symbol][position]['state'], position) :
+                                    if self.order_open(div_data[symbol][next_state]['amt'], div_data[symbol][position]['state'], position) : #todo : if문 들여쓰기
                                         div_data[symbol][position]['open_activate'] = False
                                         div_data[symbol][position]['MIN_ROE'] = 9999.0
                                         div_data[symbol][position]['state'] = next_state  #state변경
@@ -755,15 +767,13 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                                             else:
                                                 idx = 1
 
-                                            self.table_div.item(idx, 6).setForeground(QtGui.QColor(255, 0, 0)) #todo : 마지막 단계시 색깔 완료
-                                            sd.Beep(400, 200)
-                                            sd.Beep(480, 300)
+                                            self.table_div.item(idx, 6).setForeground(QtGui.QColor(255, 0, 0))
 
                                             if div_data[symbol][position]['escape_rate'] >= div_data[symbol][position]['ROE']:  # 손절
                                                 # -40 > -41
                                                 if self.order_close(div_data[symbol][position]['state'], position):
                                                     logger.debug("손절 실행 ...")
-                                                    div_data[symbol][position]['state'] = '완료'
+                                                    div_data[symbol][position]['state'] = '대기'
 
         except Exception as e:
             logger.debug(e)
@@ -833,7 +843,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                         else:
                             idx = 1
                         self.table_div.item(idx, 6).setForeground(
-                            QtGui.QColor(0, 0, 0))  # todo : 마지막 단계시 색깔 풀어주기 완료
+                            QtGui.QColor(0, 0, 0))
                         return True  # 주문 성공일시 참 반환
                     time.sleep(0.5)
                 return False
@@ -847,12 +857,15 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
         global div_data, symbol
         try:
             #long
-            self.table_div.setItem(0, 0, QTableWidgetItem(symbol))
+            item_name = QTableWidgetItem(symbol)
+            self.table_div.setItem(0, 0, item_name)
             setting_txt = "수익률:{}\n수익보정:{}\n손절설정:{}\n최대물타기:{}".format(div_data[symbol]['long']['cut_rate'],
                                                                       div_data[symbol]['long']['cut_rate_b'],
                                                                       div_data[symbol]['long']['escape_rate'],
                                                                       div_data[symbol]['long']['mul_rate'])
-            QTableWidgetItem(symbol).setToolTip(setting_txt)
+            #logger.debug(setting_txt)
+            item_name.setToolTip(setting_txt)
+
             self.table_div.setItem(0, 1, QTableWidgetItem(str(div_data[symbol]['long']['price'])))
             self.table_div.setItem(0, 2, QTableWidgetItem(div_data[symbol]['long']['avr']))
 
@@ -868,13 +881,17 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             self.table_div.setItem(0, 4, QTableWidgetItem(str(div_data[symbol]['long']['total'])))
             self.table_div.setItem(0, 5, QTableWidgetItem(div_data[symbol]['long']['leverage']))
             self.table_div.setItem(0, 6, QTableWidgetItem(div_data[symbol]['long']['state']))
+
+
+
             #short
-            self.table_div.setItem(1, 0, QTableWidgetItem(symbol))
+            item_name = QTableWidgetItem(symbol)
+            self.table_div.setItem(1, 0, item_name)
             setting_txt = "수익률:{}\n수익보정:{}\n손절설정:{}\n최대물타기:{}".format(div_data[symbol]['short']['cut_rate'],
                                                                       div_data[symbol]['short']['cut_rate_b'],
                                                                       div_data[symbol]['short']['escape_rate'],
                                                                       div_data[symbol]['short']['mul_rate'])
-            QTableWidgetItem(symbol).setToolTip(setting_txt)
+            item_name.setToolTip(setting_txt)
             self.table_div.setItem(1, 1, QTableWidgetItem(str(div_data[symbol]['short']['price'])))
             self.table_div.setItem(1, 2, QTableWidgetItem(div_data[symbol]['short']['avr']))
 
@@ -1039,7 +1056,7 @@ class MyThread(QThread):
         try:
             global login_flag, auto_flag, test,main,symbol , CLIENT_REFRESH_RATE
             heartBeat = 0
-            CLIENT_REFRESH_RATE = 1
+
 
             while True:
                 time.sleep(CLIENT_REFRESH_RATE)
