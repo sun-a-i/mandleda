@@ -3,9 +3,6 @@ __pycache__/
 logFile/
 API.txt
 DATA/API.txt
-main.py
-업데이트목록.xlsx
 bitget_api/
-*.pyc
 
 
