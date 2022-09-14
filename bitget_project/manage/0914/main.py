@@ -473,9 +473,10 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
         try:
 
             #productType: umcbl(USDT专业合约) dmcbl(混合合约) sumcbl(USDT专业合约模拟盘)  sdmcbl(混合合约模拟盘)
-            result = self.positionApi.all_position(productType='umcbl', marginCoin = 'USDT')
+            #result = self.positionApi.all_position(productType='umcbl', marginCoin = 'USDT')
+            result = self.positionApi.single_position(symbol, marginCoin='USDT')
             ret = {}
-            logger.debug(result)
+            #logger.debug(result)
             for i in result["data"]: #long, short
                 tmp = {}
                 for j,k in i.items():
@@ -493,27 +494,27 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
 
                 #div_data[tmp['symbol']][tmp['holdSide']]['avr'] == div_data['USDT']['long']['avr']
-                if tmp['symbol'] == symbol:
+
                 
-                    div_data[tmp['symbol']][tmp['holdSide']]['avr'] = tmp['averageOpenPrice']
-                    div_data[tmp['symbol']][tmp['holdSide']]['leverage'] = str(tmp['leverage'])
-                    div_data[tmp['symbol']][tmp['holdSide']]['ROE'] = float(tmp['ROE'])
-                    div_data[tmp['symbol']][tmp['holdSide']]['total'] = float(tmp['total'])
-                    div_data[tmp['symbol']][tmp['holdSide']]['price'] = float(tmp['marketPrice'])
-                    #div_data[tmp['symbol']][tmp['holdSide']]['available'] = float(tmp['available'])
+                div_data[tmp['symbol']][tmp['holdSide']]['avr'] = tmp['averageOpenPrice']
+                div_data[tmp['symbol']][tmp['holdSide']]['leverage'] = str(tmp['leverage'])
+                div_data[tmp['symbol']][tmp['holdSide']]['ROE'] = float(tmp['ROE'])
+                div_data[tmp['symbol']][tmp['holdSide']]['total'] = float(tmp['total'])
+                div_data[tmp['symbol']][tmp['holdSide']]['price'] = float(tmp['marketPrice'])
+                #div_data[tmp['symbol']][tmp['holdSide']]['available'] = float(tmp['available'])
 
-                    #logger.debug(str(div_data[tmp['symbol']][tmp['holdSide']]['close_activate']))
-                    #logger.debug(str(div_data[tmp['symbol']][tmp['holdSide']]['open_activate']))
+                #logger.debug(str(div_data[tmp['symbol']][tmp['holdSide']]['close_activate']))
+                #logger.debug(str(div_data[tmp['symbol']][tmp['holdSide']]['open_activate']))
 
-                    if div_data[tmp['symbol']][tmp['holdSide']]['total'] == 0.0 and div_data[tmp['symbol']][tmp['holdSide']]['state'] != '대기':
-                        div_data[tmp['symbol']][tmp['holdSide']]['state'] = '대기'
-                        logger.debug("상태값 이상")
-                        div_data[tmp['symbol']][tmp['holdSide']]['close_activate'] = False
-                        div_data[tmp['symbol']][tmp['holdSide']]['open_activate'] = False
-                        div_data[tmp['symbol']][tmp['holdSide']]['MAX_ROE'] = 0
-                        div_data[tmp['symbol']][tmp['holdSide']]['MIN_ROE'] = 9999
-                        self.update_jango()
-                        self.save_div_data_func()
+                if div_data[tmp['symbol']][tmp['holdSide']]['total'] == 0.0 and div_data[tmp['symbol']][tmp['holdSide']]['state'] != '대기':
+                    div_data[tmp['symbol']][tmp['holdSide']]['state'] = '대기'
+                    logger.debug("상태값 이상")
+                    div_data[tmp['symbol']][tmp['holdSide']]['close_activate'] = False
+                    div_data[tmp['symbol']][tmp['holdSide']]['open_activate'] = False
+                    div_data[tmp['symbol']][tmp['holdSide']]['MAX_ROE'] = 0
+                    div_data[tmp['symbol']][tmp['holdSide']]['MIN_ROE'] = 9999
+                    self.update_jango()
+                    self.save_div_data_func()
 
             self.update_div_table()
             return ret

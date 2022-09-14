@@ -111,8 +111,10 @@ if __name__ == '__main__':
 
     positionApi = position.PositionApi(api_key, secret_key, passphrase, use_server_time=False, first=False)
 
-    # result = positionApi.single_position(symbol, marginCoin='USDT', holdSide='long')
-    # print(result)
+    symbol = 'BTCUSDT_UMCBL'
+    result = positionApi.single_position(symbol, marginCoin='USDT')
+    print(result)
+
     def get_position():
         #productType: umcbl(USDT专业合约) dmcbl(混合合约) sumcbl(USDT专业合约模拟盘)  sdmcbl(混合合约模拟盘)
         result = positionApi.all_position(productType='umcbl', marginCoin = 'USDT')
@@ -125,8 +127,8 @@ if __name__ == '__main__':
 
     orderApi = order.OrderApi(api_key, secret_key, passphrase, use_server_time=False, first=False)
     # 804554549183000576
-    result = orderApi.place_order(symbol, marginCoin='USDT', size=0.001 ,side='open_long', orderType='market', price='11', timeInForceValue='normal')
-    print(result)
+    #result = orderApi.place_order(symbol, marginCoin='USDT', size=0.001 ,side='open_long', orderType='market', price='11', timeInForceValue='normal')
+    #print(result)
 
     # order_data=[{"price":"38723","size":"1","side":"open_short","orderType":"limit","timeInForceValue":"normal"}, {"price":"25723","size":"1","side":"open_long","orderType":"limit","timeInForceValue":"normal"}]
     # result = orderApi.batch_orders(symbol, marginCoin='USDT', order_data=order_data)
