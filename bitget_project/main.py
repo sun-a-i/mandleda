@@ -240,7 +240,6 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
 
 #=============login_func===================
-    #todo : 로그인 성공 - 시작 중지 활성화 실패 - 비활성화
     def login(self):
         logger.debug("initiating ...")
         self.access_key.setEchoMode(self.access_key.Password)
@@ -471,15 +470,14 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
         global div_data
         #Limitrule: 5times / 2s(uid)
         try:
+
             #productType: umcbl(USDT专业合约) dmcbl(混合合约) sumcbl(USDT专业合约模拟盘)  sdmcbl(混合合约模拟盘)
             result = self.positionApi.all_position(productType='umcbl', marginCoin = 'USDT')
-            #print(result)
             ret = {}
+            #logger.debug(result)
             for i in result["data"]: #long, short
-                #print("###################################")
                 tmp = {}
-                for j,k in i.items(): # ma
-                    #print(j,k)
+                for j,k in i.items():
                     tmp[j] = k
                 if tmp['margin'] =='0' or tmp['unrealizedPL'] == '0': # zero division, anyway roe = 0
                     tmp['ROE'] = '0'
@@ -491,9 +489,9 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 elif tmp['holdSide'] =='short':
                     ret['short'] = tmp
 
-                """
-                div_data[tmp['symbol']][tmp['holdSide']]['avr'] == div_data['USDT']['long']['avr']
-                """
+
+                #div_data[tmp['symbol']][tmp['holdSide']]['avr'] == div_data['USDT']['long']['avr']
+                
                 div_data[tmp['symbol']][tmp['holdSide']]['avr'] = tmp['averageOpenPrice']
                 div_data[tmp['symbol']][tmp['holdSide']]['leverage'] = str(tmp['leverage'])
                 div_data[tmp['symbol']][tmp['holdSide']]['ROE'] = float(tmp['ROE'])
@@ -511,7 +509,6 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     self.update_jango()
 
             self.update_div_table()
-
             return ret
         except Exception as e:
             logger.debug(e)
@@ -657,7 +654,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     if 'state' not in div_data[symbol][position]:
                         div_data[symbol][position]['state'] = '대기'
                         logger.debug("이 if문은 로직상 타면 안됨")
-
+                    """
                     logger.debug("########################################")
                     logger.debug("position : " + str(position))
                     logger.debug("ROE : " + str(div_data[symbol][position]['ROE']))
@@ -669,7 +666,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     logger.debug("open_activate : " + str(div_data[symbol][position]['open_activate']))
                     logger.debug("div_step : " + str(div_data[symbol]['div_step']))
                     #logger.debug("refresh_rate : " + str(div_data[symbol]['refresh_rate']))
-                    #logger.debug("########################################" )
+                    #logger.debug("########################################" )"""
 
                     if div_data[symbol][position]['MAX_ROE'] < div_data[symbol][position]['ROE']: #최고수익률 갱신
                         div_data[symbol][position]['MAX_ROE'] = div_data[symbol][position]['ROE']
@@ -837,6 +834,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
     def update_div_table(self):  # 테이블 업데이트 함수
         global div_data, symbol
         try:
+
             #long
             item_name = QTableWidgetItem(symbol)
             self.table_div.setItem(0, 0, item_name)
@@ -888,20 +886,25 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             self.table_div.setItem(1, 4, QTableWidgetItem(str(div_data[symbol]['short']['total'])))
             self.table_div.setItem(1, 5, QTableWidgetItem(div_data[symbol]['short']['leverage']))
             self.table_div.setItem(1, 6, QTableWidgetItem(div_data[symbol]['short']['state']))
+
+
             #현재가 업데이트
             self.btc_price.setText(str(div_data[symbol]['long']['price']))
 
             for position in ['long','short']:
+                if position == 'long':
+                    idx = 0
+                else:
+                    idx = 1
+
                 if div_data[symbol][position]['state'][-2:] == '매수':  # 매수 상태일때
-                    if position == 'long':
-                        idx = 0
-                    else:
-                        idx = 1
                     if int(div_data[symbol][position]['state'][0]) == div_data[symbol]['div_step']:  # 마지막 단계면
                         self.table_div.item(idx, 6).setForeground(QtGui.QColor(255, 0, 0))  # 색깔 적용
                     else:
                         self.table_div.item(idx, 6).setForeground(QtGui.QColor(0, 0, 0))
 
+                if div_data[symbol][position]['close_activate']:
+                    self.table_div.setItem(idx, 6, QTableWidgetItem("매도대기"))
 
         except Exception as e:
             logger.debug(e)
@@ -1174,8 +1177,6 @@ class MyThread(QThread):
                     if price != False:
                         self.finished.emit()
                     self.finished2.emit()
-
-
 
         except Exception as e:
             logger.debug(e)
