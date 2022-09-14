@@ -468,6 +468,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
     @pyqtSlot()
     def get_position(self):
         global div_data
+        #logger.debug("get_position")
         #Limitrule: 5times / 2s(uid)
         try:
 
@@ -499,6 +500,9 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 div_data[tmp['symbol']][tmp['holdSide']]['price'] = float(tmp['marketPrice'])
                 #div_data[tmp['symbol']][tmp['holdSide']]['available'] = float(tmp['available'])
 
+                #logger.debug(str(div_data[tmp['symbol']][tmp['holdSide']]['close_activate']))
+                #logger.debug(str(div_data[tmp['symbol']][tmp['holdSide']]['open_activate']))
+
                 if div_data[tmp['symbol']][tmp['holdSide']]['total'] == 0.0 and div_data[tmp['symbol']][tmp['holdSide']]['state'] != '대기':
                     div_data[tmp['symbol']][tmp['holdSide']]['state'] = '대기'
                     logger.debug("상태값 이상")
@@ -507,6 +511,8 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     div_data[tmp['symbol']][tmp['holdSide']]['MAX_ROE'] = 0
                     div_data[tmp['symbol']][tmp['holdSide']]['MIN_ROE'] = 9999
                     self.update_jango()
+                    self.save_div_data_func()
+
 
             self.update_div_table()
             return ret
@@ -672,9 +678,10 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                         div_data[symbol][position]['MAX_ROE'] = div_data[symbol][position]['ROE']
                         logger.debug("MAX_ROE 갱신 : " + str(div_data[symbol][position]['MAX_ROE']))
 
+                    #if div_data[symbol][position]['close_activate'] == False:
                     if div_data[symbol][position]['ROE'] >= div_data[symbol][position]['cut_rate'] : #매도준비
-                        div_data[symbol][position]['close_activate'] = True
-                        logger.debug("cut_rate 넘어감 매도 대기중 ...")
+                            div_data[symbol][position]['close_activate'] = True
+                            #logger.debug("cut_rate 넘어감 익절 대기중 ...")
 
                     if div_data[symbol][position]["close_activate"] : #매도준비 상태면
                         if (div_data[symbol][position]['MAX_ROE'] - div_data[symbol][position]['ROE'] >=
@@ -683,6 +690,17 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                             # 22 - 20 = 2 >=  2.2 = 22 * 10% 대기
                             # 10 - 9 = 1 >= 1 = 10 * 10% 매도 !
                             # 10 - 9 = 2 > 1  10 * 0.1 매도 !
+
+                            #max ROE,현재 ROE, 수익보정%, 수익보정적용값
+
+                            logger.debug("MAX_ROE : " + str(div_data[symbol][position]['MAX_ROE'] ) )
+                            logger.debug("현재 ROE : " + str(div_data[symbol][position]['ROE']) )
+                            logger.debug("수익보정 : " + str(div_data[symbol][position]['cut_rate_b']))
+
+                            logger.debug("수익차 : " + str(div_data[symbol][position]['MAX_ROE'] - div_data[symbol][position]['ROE']))
+                            logger.debug("수익보정 적용값  : " + str(div_data[symbol][position]['MAX_ROE'] * div_data[symbol][position]['cut_rate_b'] ))
+
+
                             if self.order_close(div_data[symbol][position]['state'], position):
                                 logger.debug(div_data[symbol][position]['state'] + str(position))
                                 div_data[symbol][position]['close_activate'] = False
@@ -702,9 +720,6 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                             self.update_jango()
 
                     if div_data[symbol][position]['state'][-2:] == '매수': #매수 상태일때
-                        next_state = str(int(div_data[symbol][position]['state'][0]) + 1) + '차매수' #다음 차수
-                        #logger.debug(type(div_data[symbol][position]['state'][0]) +" : "+type(div_data[symbol]['div_step']))
-
                         if int(div_data[symbol][position]['state'][0]) == div_data[symbol]['div_step']:  # 마지막 단계면
                             if div_data[symbol][position]['escape_rate'] >= div_data[symbol][position]['ROE']:  # 손절
                                 # -40 > -41
@@ -713,7 +728,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                                     self.real_log_widget.addItem('손절 완료')
 
                         if int(div_data[symbol][position]['state'][0]) < div_data[symbol]['div_step'] : #마지막 단계보다 작으면
-
+                            next_state = str(int(div_data[symbol][position]['state'][0]) + 1) + '차매수'  # 다음 차수
                             if div_data[symbol][position]['mul_rate'] > div_data[symbol][position]['ROE']: #물타기 강제분할
                                 logger.debug("강제분할매수 실행 ...")
                                 if self.order_open(div_data[symbol][next_state]['amt'],
@@ -903,8 +918,9 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     else:
                         self.table_div.item(idx, 6).setForeground(QtGui.QColor(0, 0, 0))
 
-                if div_data[symbol][position]['close_activate']:
-                    self.table_div.setItem(idx, 6, QTableWidgetItem("매도대기"))
+                if div_data[symbol][position]['close_activate'] == True:
+                    self.table_div.setItem(idx, 6, QTableWidgetItem("익절대기"))
+                    logger.debug(str(position)+" : 익절대기상태")
 
         except Exception as e:
             logger.debug(e)
@@ -913,11 +929,8 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
 #######################################setting 값 관련 함수 ##################################
 
-
-
     def setting_save_func(self):
         try:
-
             if os.path.exists(setting_data_path):
                 with open(setting_data_path, 'rb') as f:
                     data = pickle.load(f)
@@ -1098,7 +1111,8 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                             div_data[symbol][n_state]["mul"] = abs(float(div_setting_table[i][1])) * -1  # 음수값으로 비교
                             div_data[symbol][n_state]["mul_b"] = abs(float(div_setting_table[i][2])) / 100
 
-                logger.debug("대기상태이므로 setting update 됨")
+                self.real_log_widget.addItem("새로운 설정값으로 수정 완료")
+                logger.debug("새로운 설정값으로 수정 완료")
             else:
                 logger.debug("심볼 없음 !")
 
@@ -1115,10 +1129,11 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             if (div_data[symbol]['long']['state'] == '대기' and
                     div_data[symbol]['short']['state'] == '대기'):  # 둘 다 대기상태면 setting update
                 self.apply_setting_data()
-                self.real_log_widget.addItem("새로운 설정값 적용 완료")
+                #logger.debug("대기상태이므로 setting update 됨")
+                #self.real_log_widget.addItem("대기상태이므로 setting update 됨")
             else:
                 logger.debug("매수상태이므로 setting update 무시")
-                self.real_log_widget.addItem("기존 설정값 적용")
+                #self.real_log_widget.addItem("기존 설정값 적용")
 
             for position in trade_state:
                 if div_data[symbol][position]['state'] == '대기': #대기상태면 매수
@@ -1134,11 +1149,11 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug(traceback.format_exc())
 
     def setting_apply_btn_func(self):
-        reply = QMessageBox.question(self, '확인', '진행중인 자동매매에 현재 설정값을 강제 적용 하시겠습니까? \n 예기치 못한 동작이 일어날 수 있습니다.')
+        reply = QMessageBox.question(self, '확인', '진행중인 자동매매에 현재 설정값으로 수정 하시겠습니까? \n현재 진입 상태에 유의하십시오.')
         if reply == QMessageBox.Yes:
             self.apply_setting_data()
-            self.real_log_widget.addItem("새로운 설정값 강제적용 완료")
-            logger.debug("새로운 설정값 강제적용 완료")
+            #self.real_log_widget.addItem("새로운 설정값으로 수정 완료")
+            #logger.debug("새로운 설정값으로 수정 완료")
 
 
 

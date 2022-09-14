@@ -408,7 +408,7 @@
      <rect>
       <x>420</x>
       <y>280</y>
-      <width>21</width>
+      <width>31</width>
       <height>31</height>
      </rect>
     </property>
@@ -838,7 +838,7 @@ background-color:blue;
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>470</y>
+      <y>461</y>
       <width>951</width>
       <height>91</height>
      </rect>
@@ -1419,12 +1419,33 @@ background-color:gray;
       <x>30</x>
       <y>170</y>
       <width>951</width>
-      <height>261</height>
+      <height>271</height>
      </rect>
     </property>
     <property name="title">
      <string>설정</string>
     </property>
+    <widget class="QLabel" name="label_39">
+     <property name="geometry">
+      <rect>
+       <x>270</x>
+       <y>230</y>
+       <width>281</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>맑은 고딕</family>
+       <pointsize>10</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>※ 설정된 값은 ROE 기준으로 계산됩니다.</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QListWidget" name="real_log_widget">
     <property name="geometry">
@@ -1820,11 +1841,11 @@ background-color:gray;
     <property name="styleSheet">
      <string notr="true">color:white;
 
-background-color:red;
+background-color:black;
 </string>
     </property>
     <property name="text">
-     <string>강제적용</string>
+     <string>수정</string>
     </property>
    </widget>
    <zorder>groupBox</zorder>
