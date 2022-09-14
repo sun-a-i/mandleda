@@ -1,8 +1,8 @@
 .idea/
 __pycache__/
 logFile/
-API.txt
-DATA/API.txt
 bitget_api/
-
+*.txt
+*.pyc
+/bitget_api/*
 
