@@ -1,0 +1,49 @@
+{
+'info': 
+    {'status': 'ok', 'ts': '1662362621207', 
+        'data': 
+	{'id': '3693589222', 'type': 'spot', 'state': 'working', 
+		'list': 
+[
+{'balance': '0.00004380', 'currency': 'BTC', 'type': 'trade'}, {'balance': '0.00000000', 'currency': 'BTC', 'type': 'frozen'}, {'balance': '0.00000000', 'currency': 'BTC', 'type': 'lock'}, 
+{'balance': '0.00000000', 'currency': 'BGB', 'type': 'trade'}, {'balance': '0.00000000', 'currency': 'BGB', 'type': 'frozen'}, {'balance': '0.00000000', 'currency': 'BGB', 'type': 'lock'},
+{'balance': '0.00000000', 'currency': 'USDT', 'type': 'trade'}, {'balance': '0.00000000', 'currency': 'USDT', 'type': 'frozen'}, {'balance': '0.00000000', 'currency': 'USDT', 'type': 'lock'},
+{'balance': '0.00000000', 'currency': 'ETH', 'type': 'trade'}, {'balance': '0.00000000', 'currency': 'ETH', 'type': 'frozen'}, {'balance': '0.00000000', 'currency': 'ETH', 'type': 'lock'}, 
+
+.....
+
+{'balance': '0.00000000', 'currency': 'MENGO', 'type': 'trade'}, {'balance': '0.00000000', 'currency': 'MENGO', 'type': 'frozen'}, {'balance': '0.00000000', 'currency': 'MENGO', 'type': 'lock'}, 
+{'balance': '0.00000000', 'currency': 'TRA', 'type': 'trade'}, {'balance': '0.00000000', 'currency': 'TRA', 'type': 'frozen'}, {'balance': '0.00000000', 'currency': 'TRA', 'type': 'lock'}, 
+{'balance': '0.00000000', 'currency': 'AFC', 'type': 'trade'}, {'balance': '0.00000000', 'currency': 'AFC', 'type': 'frozen'}, {'balance': '0.00000000', 'currency': 'AFC', 'type': 'lock'}, 
+{'balance': '0.00000000', 'currency': 'CRT', 'type': 'trade'}, {'balance': '0.00000000', 'currency': 'CRT', 'type': 'frozen'}, {'balance': '0.00000000', 'currency': 'CRT', 'type': 'lock'}, 
+{'balance': '0.00000000', 'currency': 'PLEX', 'type': 'trade'}, {'balance': '0.00000000', 'currency': 'PLEX', 'type': 'frozen'}, {'balance': '0.00000000', 'currency': 'PLEX', 'type': 'lock'}, 
+{'balance': '0.00000000', 'currency': 'XMON', 'type': 'trade'}, {'balance': '0.00000000', 'currency': 'XMON', 'type': 'frozen'}, {'balance': '0.00000000', 'currency': 'XMON', 'type': 'lock'}
+]
+}
+},
+
+
+ 'BTC': {'free': 4.38e-05, 'used': 0.0, 'total': 4.38e-05}, 
+'BGB': {'free': 0.0, 'used': 0.0, 'total': 0.0}, 
+'USDT': {'free': 0.0, 'used': 0.0, 'total': 0.0}, 
+'ETH': {'free': 0.0, 'used': 0.0, 'total': 0.0}, 
+
+....
+
+ 'MENGO': {'free': 0.0, 'used': 0.0, 'total': 0.0},
+ 'TRA': {'free': 0.0, 'used': 0.0, 'total': 0.0},
+ 'AFC': {'free': 0.0, 'used': 0.0, 'total': 0.0}, 
+'CRT': {'free': 0.0, 'used': 0.0, 'total': 0.0}, 
+'PLEX': {'free': 0.0, 'used': 0.0, 'total': 0.0}, 
+'XMON': {'free': 0.0, 'used': 0.0, 'total': 0.0}, 
+
+
+'free': 
+{'BTC': 4.38e-05, 'BGB': 0.0, 'USDT': 0.0, 'ETH': 0.0 ... 'MENGO': 0.0, 'TRA': 0.0, 'AFC': 0.0, 'CRT': 0.0, 'PLEX': 0.0, 'XMON': 0.0},
+
+ 'used': 
+{'BTC': 0.0, 'BGB': 0.0, 'USDT': 0.0, 'ETH': 0.0, ... 'MENGO': 0.0, 'TRA': 0.0, 'AFC': 0.0, 'CRT': 0.0, 'PLEX': 0.0, 'XMON': 0.0}, 
+
+'total': 
+{'BTC': 4.38e-05, 'BGB': 0.0, 'USDT': 0.0, 'ETH': 0.0, ... 'MENGO': 0.0, 'TRA': 0.0, 'AFC': 0.0, 'CRT': 0.0, 'PLEX': 0.0, 'XMON': 0.0}
+}
