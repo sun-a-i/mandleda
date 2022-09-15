@@ -171,10 +171,13 @@ my_cash = 0
 symbol = 'BTCUSDT_UMCBL'
 symbols = ['BTCUSDT_UMCBL',] # 여러 코인 등록시, for symbol in symbols : 로 symbol 있는 곳을 덮어줌
 #사용자 설정 새로고침 주기
-CLIENT_REFRESH_RATE = 3
+CLIENT_REFRESH_RATE = 40
 
 #매매 상태 저장 변수
 trade_state = []
+
+#서버 동작 확인 변수
+running = True
 
 class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui path
 
@@ -196,6 +199,10 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             self.mythread1.finished.connect(self.price_comp_func)
             self.mythread1.finished2.connect(self.get_position)
             self.mythread1.start()
+
+            #서버 동작 확인 쓰레드
+            self.is_running = IsRunning()
+            self.is_running.start()
 
             #==========UI=============
             self.login_btn.clicked.connect(self.login_btn_func)
@@ -467,11 +474,11 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
     @pyqtSlot()
     def get_position(self):
-        global div_data
+        global div_data, running
         #logger.debug("get_position")
         #Limitrule: 5times / 2s(uid)
         try:
-
+            running = not running
             #productType: umcbl(USDT专业合约) dmcbl(混合合约) sumcbl(USDT专业合约模拟盘)  sdmcbl(混合合约模拟盘)
             #result = self.positionApi.all_position(productType='umcbl', marginCoin = 'USDT')
             result = self.positionApi.single_position(symbol, marginCoin='USDT')
@@ -1190,22 +1197,90 @@ class MyThread(QThread):
         try:
             global login_flag, auto_flag, test,main,symbol , CLIENT_REFRESH_RATE
             heartBeat = 0
+            time.sleep(1)
             while True:
-                time.sleep(CLIENT_REFRESH_RATE)
-                #time.sleep(4)
                 heartBeat += 1
                 if heartBeat > 60:
                     logger.debug("myThread heartBeat...!")
                     heartBeat = 0
                 if main.login_success :
+                    #logger.debug(dt.datetime.now())
                     price = main.get_last_price(symbol)
                     if price != False:
                         self.finished.emit()
                     self.finished2.emit()
+                time.sleep(CLIENT_REFRESH_RATE)
 
         except Exception as e:
             logger.debug(e)
             logger.debug(traceback.format_exc())
+
+
+
+
+class IsRunning(QThread):
+    def __init__(self):
+        try:
+            super().__init__()
+            logger.debug("run 서버 확인 thread")
+
+        except Exception as e:
+            logger.debug(e)
+            logger.debug(traceback.format_exc())
+
+    def run(self):
+        try:
+            global running, CLIENT_REFRESH_RATE, main
+            #logger.debug("IsRunning heartBeat...!")
+            heartBeat = 0
+
+            last_running = running
+            last_time = dt.datetime.now()
+            time.sleep(1)
+
+            while True:
+                MARGIN = CLIENT_REFRESH_RATE * 0.3
+                REFRESH_RATE = CLIENT_REFRESH_RATE / 5
+                heartBeat += 1
+                if heartBeat > CLIENT_REFRESH_RATE * 300:
+                    logger.debug("IsRunning heartBeat...!")
+                    heartBeat = 0
+
+                if main.login_success:
+                    current_running = running
+                    current_time = dt.datetime.now()
+                    """
+                    logger.debug("##################################")
+                    logger.debug('CLIENT_REFRESH_RATE : ' + str(CLIENT_REFRESH_RATE))
+                    logger.debug('current_running : ' + str(current_running))
+                    logger.debug('current_time : ' + str(current_time))
+                    logger.debug('last_running : ' + str(last_running))
+                    logger.debug('last_time : ' + str(last_time))
+                    diff = (current_time - last_time)
+                    logger.debug('current_time - last_time: ' + str(diff))
+                    logger.debug('CLIENT_REFRESH_RATE: ' + str(dt.timedelta(seconds=CLIENT_REFRESH_RATE)))"""
+
+
+                    #logger.debug('current_time - last_time: ' + str(current_time - last_time))
+
+                    if current_running != last_running:
+                        last_running = current_running
+                        last_time = current_time
+                        current_running = running
+                    elif current_time - last_time > dt.timedelta( seconds = (CLIENT_REFRESH_RATE + MARGIN) ):
+                        #main.real_log_widget.addItem("서버 통신시간보다 지연되는중 ...")
+                        logger.debug("이상")
+                        main.server_status.setText("이상")
+                    else:
+                        #logger.debug('정상')
+                        main.server_status.setText("정상")
+                else:
+                    main.server_status.setText("이상")
+                time.sleep(REFRESH_RATE)
+        except Exception as e:
+            logger.debug(e)
+            logger.debug(traceback.format_exc())
+
 
 
 
