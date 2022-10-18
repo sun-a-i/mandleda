@@ -380,7 +380,6 @@ class Mythread(QThread):
 def tel_send_msg(txt):
     try:
         global tel_token, tel_id
-        #a = ['5543242975:AAG44hn-X8I8AjfK5orSkErkkVTb6gpRoqM', '5710516764']
         bot = telegram.Bot(token = tel_token)
         bot.sendMessage(chat_id = tel_id, text = txt)
 
