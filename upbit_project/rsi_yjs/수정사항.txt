@@ -1,0 +1,8 @@
+- 355 line, KRW-BTC 으로 되어있음 전종목
+- 361 line, update_balance() 363line에 있는데 왜 두번 보는지?
+- 362line, sleep 위치 들여쓰기 한번 더 해야하는거 아닌가?
+- print 되어있는거 찾아서 logger 로 변경
+- ui test btn 없애야함
+- 매수 안될때만 로그 남기지말고 매수될때도 로그 남기도록
+- api.txt 없이 login 버튼 누르면 프로그램 뻑남
+- 전체적으로 특이사항 다시 체크 오후에 리뷰
