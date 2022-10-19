@@ -339,6 +339,11 @@
     </property>
     <item>
      <property name="text">
+      <string>5</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
       <string>60</string>
      </property>
     </item>

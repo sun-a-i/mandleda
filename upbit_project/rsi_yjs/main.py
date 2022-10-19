@@ -139,7 +139,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
     def login_status_check(self):
         global main_upbit
-        balance = main_upbit.get_balance('KRW-ETH')
+        balance = main_upbit.get_balance(ticker="KRW")
         if type(balance) == float or type(balance) == int:
             self.login_flag = True
             return True
@@ -343,21 +343,26 @@ class Mythread(QThread):
                         ret = True
                     elif set_time == 'day' and now_time.minute == 0 and now_time.hour == 9:
                         ret = True
+                    elif set_time == '5' and now_time.minute % 5 == 0 :
+                        ret = True
 
                     if ret:
                         logger.debug("자동거래 시간 도달 자동매매 시작")
                         for coin in main.coin_list:
                             CC = Check_Condition(coin, set_time)
+
                             if CC and main.buy_ck.isChecked():
-                                buy = main_upbit.buy_market_order(coin, main.money.text())
-                                if type(buy) != dict:
-                                    main.real_log_print("[error] 구매 불가 오류")
-                                    tel_send_msg("구매 불가 오류")
-                                else:
-                                    txt = '[system] ' + coin + ' 구매 완료'
-                                    main.real_log_print(txt)
-                                    tel_send_msg(txt)
-                                main.update_balance()
+                                if int(self.money_label.text()) > int(main.money.text()):
+                                    buy = main_upbit.buy_market_order(coin, main.money.text())
+                                    if type(buy) != dict:
+                                        logger.debug(buy)
+                                        main.real_log_print("[error] 구매 불가 오류")
+                                        tel_send_msg("구매 불가 오류")
+                                    else:
+                                        txt = '[system] ' + coin + ' 구매 완료'
+                                        main.real_log_print(txt)
+                                        #tel_send_msg(txt)
+                                    main.update_balance()
                         time.sleep(60)
                     else:
                         main.update_balance()
@@ -382,6 +387,7 @@ def tel_send_msg(txt):
         global tel_token, tel_id
         bot = telegram.Bot(token = tel_token)
         bot.sendMessage(chat_id = tel_id, text = txt)
+        logger.debug("[telegram]" + txt)
 
     except Exception as e:
         logger.debug(e)
@@ -402,6 +408,7 @@ def Check_Condition(coin, bunbong):
             df = pyupbit.get_ohlcv(coin, interval="minutes" + str(bunbong), count=200)
         else:
             df = pyupbit.get_ohlcv(coin, interval="day", count=200)
+        time.sleep(1)
 
         #RSI calc - 1차 조건
         delta = df['close'].diff(1)
@@ -417,35 +424,39 @@ def Check_Condition(coin, bunbong):
         RSI = 100.0 - (100.0/(1.0 + RS))
         df['RSI'] = RSI
 
-        if df['RSI'][-1] < RSI_lower_val:
+        if df['RSI'][-2] < RSI_lower_val:
             if df['RSI'][-3] >= df['RSI'][-2]:
                 if df['RSI'][-2] < df['RSI'][-1]:
                     # 1차 부합 시 로그 & 텔레그램
                     con_fir = True
-                    txt = "1차부합, coin : {}, RSI[1봉전] : {}, RSI[종가] : {}".format(coin, df['RSI'][-2],df['RSI'][-1])
-                    logger.debug(txt)
-                    tel_send_msg(txt)
+                    txt = "1차부합, coin : {}, RSI[1봉전] : {}, RSI[종가] : {}".format(coin, round(df['RSI'][-2],2),round(df['RSI'][-1],2))
+                    #logger.debug(txt)
+                    main.real_log_print(txt)
+                    #tel_send_msg(txt)
 
+        if con_fir:
+            #stoch_RSI - 2차 조건
+            min_val  = df['RSI'].rolling(window=stock_RSI_strong_peoriod, center=False ).min()
+            max_val = df['RSI'].rolling(window=stock_RSI_strong_peoriod, center=False).max()
+            stoch = ( (df['RSI'] - min_val) / (max_val - min_val) ) * 100
+            K = stoch.rolling(window=SmoothK, center=False).mean()
+            D = K.rolling(window=SmoothD, center=False).mean()
+            df['K'], df['D'] = K, D
 
-        #stoch_RSI - 2차 조건
-        min_val  = df['RSI'].rolling(window=stock_RSI_strong_peoriod, center=False ).min()
-        max_val = df['RSI'].rolling(window=stock_RSI_strong_peoriod, center=False).max()
-        stoch = ( (df['RSI'] - min_val) / (max_val - min_val) ) * 100
-        K = stoch.rolling(window=SmoothK, center=False).mean()
-        D = K.rolling(window=SmoothD, center=False).mean()
-        df['K'], df['D'] = K, D
+            if df['K'][-1] < stock_RSI_lower_val and df['D'][-1] < stock_RSI_lower_val:
+                if df['K'][-2] < df['D'][-2]:
+                    if df['K'][-1] >= df['D'][-1]:
+                        # 2차 부합 시 로그 & 텔레그램
+                        con_sec = True
+                        txt = "2차부합, coin:{}, stock[K]:{}, stock[D]:{}".format(coin, round(df['K'][-1],2), round(df['D'][-1],2))
+                        main.real_log_print(txt)
+                        #logger.debug(txt)
 
-        if df['K'][-1] < stock_RSI_lower_val and df['D'][-1] < stock_RSI_lower_val:
-            if df['K'][-2] < df['D'][-2]:
-                if df['K'][-1] >= df['D'][-1]:
-                    # 2차 부합 시 로그 & 텔레그램
-                    con_sec = True
-                    txt = "매수포착 coin:{}, stock[K]:{}, stock[D]:{}".format(coin, df['K'][-1], df['D'][-1])
-                    logger.debug(txt)
-                    tel_send_msg(txt)
 
         #1,2차 부합 시
         if con_fir == True and con_sec == True:
+            txt = f'{coin} coin 매수 조건 성립'
+            tel_send_msg(txt)
             return True
         else:
             return False
