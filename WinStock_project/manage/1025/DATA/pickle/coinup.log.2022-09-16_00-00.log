@@ -1,0 +1,175 @@
+[2022-09-16 01:11:36,656][DEBUG|TYANT_2.14.py:4531] >> marty74 : 프로그램 작동 감시자 - 이상없음
+[2022-09-16 01:11:44,238][DEBUG|TYANT_2.14.py:3406] >> Heartbeat...ing
+[2022-09-16 01:22:49,671][DEBUG|TYANT_2.14.py:2775] >> KRW-ETC 감시가 도달 - 트레일링 값 계산 : 53376.57
+[2022-09-16 01:26:24,280][DEBUG|TYANT_2.14.py:2786] >> KRW-ETC 최고가 대비 -0.1 하락하여 익절 진행
+[2022-09-16 01:26:24,337][DEBUG|TYANT_2.14.py:2791] >> total_asset = 1405178.1717498 26.32898954 53370.0 KRW-ETC
+[2022-09-16 01:26:24,338][DEBUG|TYANT_2.14.py:2794] >> KRW-ETC 트레일링 익절 진행 c_p = 53370.0, balance = 26.32898954
+[2022-09-16 01:26:25,563][DEBUG|TYANT_2.14.py:1179] >> KRW-ETC 시장가 매도주문
+[2022-09-16 01:26:25,567][DEBUG|TYANT_2.14.py:2800] >> 익절 계산 52846.3121 53370.0 0.99
+[2022-09-16 01:26:25,575][DEBUG|TYANT_2.14.py:4531] >> marty74 : KRW-ETC 트레일링 판매 : 0.99%    청산금액 : 1,405,178       수익액 : 13,788
+[2022-09-16 01:26:26,689][DEBUG|TYANT_2.14.py:2814] >> 누적 : 504.23999999999995, 당일 : 16.73
+[2022-09-16 01:26:26,698][DEBUG|TYANT_2.14.py:2820] >> 재매수 상태 =True
+[2022-09-16 01:26:26,701][DEBUG|TYANT_2.14.py:2823] >> KRW-ETC 재매수 진행
+[2022-09-16 01:26:28,348][DEBUG|TYANT_2.14.py:4589] >> KRW-ETC 시장가 매수주문
+[2022-09-16 01:26:28,393][DEBUG|TYANT_2.14.py:4590] >> {'uuid': '1cd7c977-f15b-4955-8c6b-95ff09e9930f', 'side': 'bid', 'ord_type': 'price', 'price': '198770', 'state': 'wait', 'market': 'KRW-ETC', 'created_at': '2022-09-16T01:26:27.221458+09:00', 'reserved_fee': '99.385', 'remaining_fee': '99.385', 'paid_fee': '0', 'locked': '198869.385', 'executed_volume': '0', 'trades_count': 0, 'trades': []}
+[2022-09-16 01:26:29,341][DEBUG|TYANT_2.14.py:4615] >> balances match = {'currency': 'ETC', 'balance': '3.72647169', 'locked': '0', 'avg_buy_price': '53340', 'avg_buy_price_modified': False, 'unit_currency': 'KRW'}
+[2022-09-16 01:26:29,386][DEBUG|TYANT_2.14.py:3045] >> list_val {'currency': 'ETC', 'balance': '3.72647169', 'locked': '0', 'avg_buy_price': '53340', 'avg_buy_price_modified': False, 'unit_currency': 'KRW'}
+[2022-09-16 01:26:29,431][DEBUG|TYANT_2.14.py:3046] >> ETC
+[2022-09-16 01:26:29,476][DEBUG|TYANT_2.14.py:3048] >> 3.72647169
+[2022-09-16 01:26:29,521][DEBUG|TYANT_2.14.py:3049] >> 53340
+[2022-09-16 01:26:29,567][DEBUG|TYANT_2.14.py:3051] >> {'coin_name': 'KRW-ETC', 'fir_invest_money': 198770.0, 'fir_price': 54150.0, 'avr_price': '52846.3121', 'balance': '26.32898954', 'quintuple_batting': False, 'invest_cash': 795080.0, 'tot_invest_cash': '1391390.0', 'set_stage': '7', 'cur_stage': '3', 'div_per': '-1.7', 'in_per': 0, 'out_per': -20, 'next_buy_price': '51388.35', 'next_income_price': 0, 'next_out_price': 0, 'outcome_state': 'FALSE', 'rebuy_chkbox': True, 'state': 2, 'gubun': 2, 'high': '54150', 'gamsi_per': '1.1', 'gamsi_price': '53427.62', 'trailing_per': '-0.1', 'trailing_income_price': 53376.57, 'trailing_state': 1, 'last_trade_time': '2022_09_15_23_41', 'coin_code': 'KRW-ETC'}
+[2022-09-16 01:26:29,613][DEBUG|TYANT_2.14.py:3077] >> next_buy_price = 52433.22
+[2022-09-16 01:26:29,659][DEBUG|TYANT_2.14.py:3084] >> 감시 시작 가격 = 53926.74
+[2022-09-16 01:26:29,704][DEBUG|TYANT_2.14.py:3087] >> 트레일링 퍼세트 = -0.1
+[2022-09-16 01:26:29,750][DEBUG|TYANT_2.14.py:3092] >> self.btc_rebuy_chk_.isChecked() = True
+[2022-09-16 01:26:30,080][DEBUG|TYANT_2.14.py:4773] >> read file success...!
+[2022-09-16 01:26:30,125][DEBUG|TYANT_2.14.py:3102] >> {'coin_name': 'KRW-ETC', 'fir_invest_money': 198770.0, 'fir_price': 53340.0, 'avr_price': '53340', 'balance': '3.72647169', 'quintuple_batting': False, 'invest_cash': 198770.0, 'tot_invest_cash': 198770.0, 'set_stage': '7', 'cur_stage': '1', 'div_per': '-1.7', 'in_per': 0, 'out_per': -20, 'next_buy_price': '52433.22', 'next_income_price': 0, 'next_out_price': 0, 'outcome_state': 'FALSE', 'rebuy_chkbox': True, 'state': 2, 'gubun': 2, 'high': '53340', 'gamsi_per': '1.1', 'gamsi_price': '53926.74', 'trailing_per': '-0.1', 'trailing_income_price': 0, 'trailing_state': 0, 'last_trade_time': '2022_09_16_01_26', 'coin_code': 'KRW-ETC'}
+[2022-09-16 01:26:30,175][DEBUG|TYANT_2.14.py:4773] >> read file success...!
+[2022-09-16 02:27:27,361][DEBUG|TYANT_2.14.py:4531] >> marty74 : 프로그램 작동 감시자 - 이상없음
+[2022-09-16 02:27:36,395][DEBUG|TYANT_2.14.py:3406] >> Heartbeat...ing
+[2022-09-16 03:43:14,182][DEBUG|TYANT_2.14.py:4531] >> marty74 : 프로그램 작동 감시자 - 이상없음
+[2022-09-16 03:43:21,933][DEBUG|TYANT_2.14.py:3406] >> Heartbeat...ing
+[2022-09-16 04:59:00,043][DEBUG|TYANT_2.14.py:4531] >> marty74 : 프로그램 작동 감시자 - 이상없음
+[2022-09-16 04:59:07,674][DEBUG|TYANT_2.14.py:3406] >> Heartbeat...ing
+[2022-09-16 06:14:45,345][DEBUG|TYANT_2.14.py:4531] >> marty74 : 프로그램 작동 감시자 - 이상없음
+[2022-09-16 06:14:52,983][DEBUG|TYANT_2.14.py:3406] >> Heartbeat...ing
+[2022-09-16 06:59:09,653][DEBUG|TYANT_2.14.py:2667] >> KRW-ETC 분할매수 진행 c_p = 52410.0, n_p = 52433.22
+[2022-09-16 06:59:11,318][DEBUG|TYANT_2.14.py:4589] >> KRW-ETC 시장가 매수주문
+[2022-09-16 06:59:11,322][DEBUG|TYANT_2.14.py:4590] >> {'uuid': '0974e29d-2500-4bfa-9246-9443e489a1b7', 'side': 'bid', 'ord_type': 'price', 'price': '397540.0', 'state': 'wait', 'market': 'KRW-ETC', 'created_at': '2022-09-16T06:59:10+09:00', 'volume': None, 'remaining_volume': None, 'reserved_fee': '198.77', 'remaining_fee': '198.77', 'paid_fee': '0.0', 'locked': '397738.77', 'executed_volume': '0.0', 'trades_count': 0}
+[2022-09-16 06:59:11,931][DEBUG|TYANT_2.14.py:4615] >> balances match = {'currency': 'ETC', 'balance': '11.31108318', 'locked': '0', 'avg_buy_price': '52719.0889', 'avg_buy_price_modified': False, 'unit_currency': 'KRW'}
+[2022-09-16 06:59:11,935][DEBUG|TYANT_2.14.py:1115] >> list_val {'currency': 'ETC', 'balance': '11.31108318', 'locked': '0', 'avg_buy_price': '52719.0889', 'avg_buy_price_modified': False, 'unit_currency': 'KRW'}
+[2022-09-16 06:59:11,939][DEBUG|TYANT_2.14.py:1125] >> ETC
+[2022-09-16 06:59:11,943][DEBUG|TYANT_2.14.py:1127] >> 11.31108318
+[2022-09-16 06:59:11,946][DEBUG|TYANT_2.14.py:1128] >> 52719.0889
+[2022-09-16 06:59:11,949][DEBUG|TYANT_2.14.py:1133] >> KRW-ETC단계 상향 조정 1->2단계
+[2022-09-16 06:59:11,952][DEBUG|TYANT_2.14.py:1144] >> fir_price=53340.0, div_per=-1.7, stage=2, next_buy_price=51526.44
+[2022-09-16 06:59:11,955][DEBUG|TYANT_2.14.py:2678] >> val = 198770.0
+[2022-09-16 06:59:11,957][DEBUG|TYANT_2.14.py:2678] >> val = 596310.0
+[2022-09-16 06:59:11,965][DEBUG|TYANT_2.14.py:4773] >> read file success...!
+[2022-09-16 06:59:11,967][DEBUG|TYANT_2.14.py:4531] >> marty74 : KRW-ETC 매수, 현재단계 : 2단계 투자금 : 397,540 총 투자금 : 596,310
+[2022-09-16 07:30:31,328][DEBUG|TYANT_2.14.py:4531] >> marty74 : 프로그램 작동 감시자 - 이상없음
+[2022-09-16 07:30:39,081][DEBUG|TYANT_2.14.py:3406] >> Heartbeat...ing
+[2022-09-16 07:52:25,631][DEBUG|TYANT_2.14.py:2667] >> KRW-ETC 분할매수 진행 c_p = 51500.0, n_p = 51526.44
+[2022-09-16 07:52:27,283][DEBUG|TYANT_2.14.py:4589] >> KRW-ETC 시장가 매수주문
+[2022-09-16 07:52:27,287][DEBUG|TYANT_2.14.py:4590] >> {'uuid': 'c8670ba5-975f-46ea-8f1e-55b8fafd23a7', 'side': 'bid', 'ord_type': 'price', 'price': '795080.0', 'state': 'wait', 'market': 'KRW-ETC', 'created_at': '2022-09-16T07:52:26+09:00', 'volume': None, 'remaining_volume': None, 'reserved_fee': '397.54', 'remaining_fee': '397.54', 'paid_fee': '0.0', 'locked': '795477.54', 'executed_volume': '0.0', 'trades_count': 0}
+[2022-09-16 07:52:27,898][DEBUG|TYANT_2.14.py:4615] >> balances match = {'currency': 'ETC', 'balance': '26.74952978', 'locked': '0', 'avg_buy_price': '52015.4938', 'avg_buy_price_modified': False, 'unit_currency': 'KRW'}
+[2022-09-16 07:52:27,901][DEBUG|TYANT_2.14.py:1115] >> list_val {'currency': 'ETC', 'balance': '26.74952978', 'locked': '0', 'avg_buy_price': '52015.4938', 'avg_buy_price_modified': False, 'unit_currency': 'KRW'}
+[2022-09-16 07:52:27,904][DEBUG|TYANT_2.14.py:1125] >> ETC
+[2022-09-16 07:52:27,906][DEBUG|TYANT_2.14.py:1127] >> 26.74952978
+[2022-09-16 07:52:27,909][DEBUG|TYANT_2.14.py:1128] >> 52015.4938
+[2022-09-16 07:52:27,911][DEBUG|TYANT_2.14.py:1133] >> KRW-ETC단계 상향 조정 2->3단계
+[2022-09-16 07:52:27,914][DEBUG|TYANT_2.14.py:1144] >> fir_price=53340.0, div_per=-1.7, stage=3, next_buy_price=50619.66
+[2022-09-16 07:52:27,917][DEBUG|TYANT_2.14.py:2678] >> val = 198770.0
+[2022-09-16 07:52:27,920][DEBUG|TYANT_2.14.py:2678] >> val = 596310.0
+[2022-09-16 07:52:27,922][DEBUG|TYANT_2.14.py:2678] >> val = 1391390.0
+[2022-09-16 07:52:27,948][DEBUG|TYANT_2.14.py:4773] >> read file success...!
+[2022-09-16 07:52:27,953][DEBUG|TYANT_2.14.py:4531] >> marty74 : KRW-ETC 매수, 현재단계 : 3단계 투자금 : 795,080 총 투자금 : 1,391,390
+[2022-09-16 08:46:10,518][DEBUG|TYANT_2.14.py:4531] >> marty74 : 프로그램 작동 감시자 - 이상없음
+[2022-09-16 08:46:17,972][DEBUG|TYANT_2.14.py:3406] >> Heartbeat...ing
+[2022-09-16 09:00:03,009][DEBUG|TYANT_2.14.py:2163] >> 매일 오전 9시 로그 기록 클리어
+[2022-09-16 09:00:03,020][DEBUG|TYANT_2.14.py:1450] >> 로그 데이터 Clear
+[2022-09-16 09:00:09,520][DEBUG|TYANT_2.14.py:2163] >> 매일 오전 9시 로그 기록 클리어
+[2022-09-16 09:00:09,521][DEBUG|TYANT_2.14.py:1450] >> 로그 데이터 Clear
+[2022-09-16 09:10:03,266][DEBUG|TYANT_2.14.py:3387] >> 종목별 일봉 값 업데이트
+[2022-09-16 09:10:23,780][DEBUG|TYANT_2.14.py:3995] >> 9시 10 : 일봉 데이터 수집중........
+[2022-09-16 09:10:24,460][DEBUG|TYANT_2.14.py:4679] >> 한글 name 불러들이기 성공, 총 = 113
+[2022-09-16 09:11:09,801][DEBUG|TYANT_2.14.py:4039] >> 9시 10 : 일봉 데이터 수집 완료
+[2022-09-16 09:11:09,802][DEBUG|TYANT_2.14.py:3392] >> 2022-09-15 일일 수익률 = 16.73
+[2022-09-16 09:11:29,818][DEBUG|TYANT_2.14.py:3398] >> 일봉 값 업데이트 완료!!
+[2022-09-16 09:16:29,701][DEBUG|TYANT_2.14.py:3790] >> 프로그램 매수한 KRW-HIVE 코인이 업비트 서버에 존재하지 않음. 초기화 진행
+[2022-09-16 09:16:29,707][DEBUG|TYANT_2.14.py:1190] >> KRW-HIVE 종목 초기화
+[2022-09-16 09:20:19,381][DEBUG|TYANT_2.14.py:2667] >> KRW-ETC 분할매수 진행 c_p = 50600.0, n_p = 50619.66
+[2022-09-16 09:20:21,033][DEBUG|TYANT_2.14.py:4589] >> KRW-ETC 시장가 매수주문
+[2022-09-16 09:20:21,036][DEBUG|TYANT_2.14.py:4590] >> {'uuid': '65d257db-4771-43bc-8a0b-6d1d5c6f6a65', 'side': 'bid', 'ord_type': 'price', 'price': '1590160.0', 'state': 'wait', 'market': 'KRW-ETC', 'created_at': '2022-09-16T09:20:20+09:00', 'volume': None, 'remaining_volume': None, 'reserved_fee': '795.08', 'remaining_fee': '795.08', 'paid_fee': '0.0', 'locked': '1590955.08', 'executed_volume': '0.0', 'trades_count': 0}
+[2022-09-16 09:20:21,645][DEBUG|TYANT_2.14.py:4615] >> balances match = {'currency': 'ETC', 'balance': '58.18182865', 'locked': '0', 'avg_buy_price': '51245.3814', 'avg_buy_price_modified': False, 'unit_currency': 'KRW'}
+[2022-09-16 09:20:21,649][DEBUG|TYANT_2.14.py:1115] >> list_val {'currency': 'ETC', 'balance': '58.18182865', 'locked': '0', 'avg_buy_price': '51245.3814', 'avg_buy_price_modified': False, 'unit_currency': 'KRW'}
+[2022-09-16 09:20:21,651][DEBUG|TYANT_2.14.py:1125] >> ETC
+[2022-09-16 09:20:21,654][DEBUG|TYANT_2.14.py:1127] >> 58.18182865
+[2022-09-16 09:20:21,657][DEBUG|TYANT_2.14.py:1128] >> 51245.3814
+[2022-09-16 09:20:21,658][DEBUG|TYANT_2.14.py:1133] >> KRW-ETC단계 상향 조정 3->4단계
+[2022-09-16 09:20:21,659][DEBUG|TYANT_2.14.py:1144] >> fir_price=53340.0, div_per=-1.7, stage=4, next_buy_price=49712.88
+[2022-09-16 09:20:21,661][DEBUG|TYANT_2.14.py:2678] >> val = 198770.0
+[2022-09-16 09:20:21,662][DEBUG|TYANT_2.14.py:2678] >> val = 596310.0
+[2022-09-16 09:20:21,664][DEBUG|TYANT_2.14.py:2678] >> val = 1391390.0
+[2022-09-16 09:20:21,665][DEBUG|TYANT_2.14.py:2678] >> val = 2981550.0
+[2022-09-16 09:20:21,675][DEBUG|TYANT_2.14.py:4773] >> read file success...!
+[2022-09-16 09:20:21,677][DEBUG|TYANT_2.14.py:4531] >> marty74 : KRW-ETC 매수, 현재단계 : 4단계 투자금 : 1,590,160 총 투자금 : 2,981,550
+[2022-09-16 10:03:22,288][DEBUG|TYANT_2.14.py:4531] >> marty74 : 프로그램 작동 감시자 - 이상없음
+[2022-09-16 10:03:29,848][DEBUG|TYANT_2.14.py:3406] >> Heartbeat...ing
+[2022-09-16 11:14:54,336][DEBUG|TYANT_2.14.py:2667] >> KRW-ETC 분할매수 진행 c_p = 49660.0, n_p = 49712.88
+[2022-09-16 11:14:55,999][DEBUG|TYANT_2.14.py:4589] >> KRW-ETC 시장가 매수주문
+[2022-09-16 11:14:56,003][DEBUG|TYANT_2.14.py:4590] >> {'uuid': '6d344e68-9486-4aae-9f1a-7f46d14a617f', 'side': 'bid', 'ord_type': 'price', 'price': '3180320.0', 'state': 'wait', 'market': 'KRW-ETC', 'created_at': '2022-09-16T11:14:55+09:00', 'volume': None, 'remaining_volume': None, 'reserved_fee': '1590.16', 'remaining_fee': '1590.16', 'paid_fee': '0.0', 'locked': '3181910.16', 'executed_volume': '0.0', 'trades_count': 0}
+[2022-09-16 11:14:56,612][DEBUG|TYANT_2.14.py:4615] >> balances match = {'currency': 'ETC', 'balance': '122.23661213', 'locked': '0', 'avg_buy_price': '50409.365', 'avg_buy_price_modified': False, 'unit_currency': 'KRW'}
+[2022-09-16 11:14:56,615][DEBUG|TYANT_2.14.py:1115] >> list_val {'currency': 'ETC', 'balance': '122.23661213', 'locked': '0', 'avg_buy_price': '50409.365', 'avg_buy_price_modified': False, 'unit_currency': 'KRW'}
+[2022-09-16 11:14:56,618][DEBUG|TYANT_2.14.py:1125] >> ETC
+[2022-09-16 11:14:56,620][DEBUG|TYANT_2.14.py:1127] >> 122.23661213
+[2022-09-16 11:14:56,621][DEBUG|TYANT_2.14.py:1128] >> 50409.365
+[2022-09-16 11:14:56,622][DEBUG|TYANT_2.14.py:1133] >> KRW-ETC단계 상향 조정 4->5단계
+[2022-09-16 11:14:56,623][DEBUG|TYANT_2.14.py:1144] >> fir_price=53340.0, div_per=-1.7, stage=5, next_buy_price=48806.1
+[2022-09-16 11:14:56,625][DEBUG|TYANT_2.14.py:2678] >> val = 198770.0
+[2022-09-16 11:14:56,626][DEBUG|TYANT_2.14.py:2678] >> val = 596310.0
+[2022-09-16 11:14:56,627][DEBUG|TYANT_2.14.py:2678] >> val = 1391390.0
+[2022-09-16 11:14:56,629][DEBUG|TYANT_2.14.py:2678] >> val = 2981550.0
+[2022-09-16 11:14:56,630][DEBUG|TYANT_2.14.py:2678] >> val = 6161870.0
+[2022-09-16 11:14:56,638][DEBUG|TYANT_2.14.py:4773] >> read file success...!
+[2022-09-16 11:14:56,639][DEBUG|TYANT_2.14.py:4531] >> marty74 : KRW-ETC 매수, 현재단계 : 5단계 투자금 : 3,180,320 총 투자금 : 6,161,870
+[2022-09-16 11:19:05,575][DEBUG|TYANT_2.14.py:4531] >> marty74 : 프로그램 작동 감시자 - 이상없음
+[2022-09-16 11:19:13,124][DEBUG|TYANT_2.14.py:3406] >> Heartbeat...ing
+[2022-09-16 12:34:38,674][DEBUG|TYANT_2.14.py:4531] >> marty74 : 프로그램 작동 감시자 - 이상없음
+[2022-09-16 12:34:46,322][DEBUG|TYANT_2.14.py:3406] >> Heartbeat...ing
+[2022-09-16 13:50:14,270][DEBUG|TYANT_2.14.py:4531] >> marty74 : 프로그램 작동 감시자 - 이상없음
+[2022-09-16 13:50:21,954][DEBUG|TYANT_2.14.py:3406] >> Heartbeat...ing
+[2022-09-16 15:05:57,093][DEBUG|TYANT_2.14.py:4531] >> marty74 : 프로그램 작동 감시자 - 이상없음
+[2022-09-16 15:06:04,717][DEBUG|TYANT_2.14.py:3406] >> Heartbeat...ing
+[2022-09-16 16:21:26,381][DEBUG|TYANT_2.14.py:4531] >> marty74 : 프로그램 작동 감시자 - 이상없음
+[2022-09-16 16:21:33,957][DEBUG|TYANT_2.14.py:3406] >> Heartbeat...ing
+[2022-09-16 17:02:16,802][DEBUG|TYANT_2.14.py:2667] >> KRW-ETC 분할매수 진행 c_p = 48760.0, n_p = 48806.1
+[2022-09-16 17:02:18,469][DEBUG|TYANT_2.14.py:4589] >> KRW-ETC 시장가 매수주문
+[2022-09-16 17:02:18,470][DEBUG|TYANT_2.14.py:4590] >> {'uuid': '37375fca-cdea-4427-946f-606b5ec67bcf', 'side': 'bid', 'ord_type': 'price', 'price': '6360640.0', 'state': 'wait', 'market': 'KRW-ETC', 'created_at': '2022-09-16T17:02:18+09:00', 'volume': None, 'remaining_volume': None, 'reserved_fee': '3180.32', 'remaining_fee': '3180.32', 'paid_fee': '0.0', 'locked': '6363820.32', 'executed_volume': '0.0', 'trades_count': 0}
+[2022-09-16 17:02:19,075][DEBUG|TYANT_2.14.py:4615] >> balances match = {'currency': 'ETC', 'balance': '252.65777267', 'locked': '0', 'avg_buy_price': '49563.1299', 'avg_buy_price_modified': False, 'unit_currency': 'KRW'}
+[2022-09-16 17:02:19,082][DEBUG|TYANT_2.14.py:1115] >> list_val {'currency': 'ETC', 'balance': '252.65777267', 'locked': '0', 'avg_buy_price': '49563.1299', 'avg_buy_price_modified': False, 'unit_currency': 'KRW'}
+[2022-09-16 17:02:19,083][DEBUG|TYANT_2.14.py:1125] >> ETC
+[2022-09-16 17:02:19,083][DEBUG|TYANT_2.14.py:1127] >> 252.65777267
+[2022-09-16 17:02:19,084][DEBUG|TYANT_2.14.py:1128] >> 49563.1299
+[2022-09-16 17:02:19,085][DEBUG|TYANT_2.14.py:1133] >> KRW-ETC단계 상향 조정 5->6단계
+[2022-09-16 17:02:19,085][DEBUG|TYANT_2.14.py:1144] >> fir_price=53340.0, div_per=-1.7, stage=6, next_buy_price=47899.32
+[2022-09-16 17:02:19,086][DEBUG|TYANT_2.14.py:2678] >> val = 198770.0
+[2022-09-16 17:02:19,087][DEBUG|TYANT_2.14.py:2678] >> val = 596310.0
+[2022-09-16 17:02:19,087][DEBUG|TYANT_2.14.py:2678] >> val = 1391390.0
+[2022-09-16 17:02:19,088][DEBUG|TYANT_2.14.py:2678] >> val = 2981550.0
+[2022-09-16 17:02:19,089][DEBUG|TYANT_2.14.py:2678] >> val = 6161870.0
+[2022-09-16 17:02:19,089][DEBUG|TYANT_2.14.py:2678] >> val = 12522510.0
+[2022-09-16 17:02:19,097][DEBUG|TYANT_2.14.py:4773] >> read file success...!
+[2022-09-16 17:02:19,098][DEBUG|TYANT_2.14.py:4531] >> marty74 : KRW-ETC 매수, 현재단계 : 6단계 투자금 : 6,360,640 총 투자금 : 12,522,510
+[2022-09-16 17:36:45,773][DEBUG|TYANT_2.14.py:4531] >> marty74 : 프로그램 작동 감시자 - 이상없음
+[2022-09-16 17:36:53,373][DEBUG|TYANT_2.14.py:3406] >> Heartbeat...ing
+[2022-09-16 17:40:37,590][DEBUG|TYANT_2.14.py:1997] >> monitoring_btn_func clicked
+[2022-09-16 17:40:41,613][DEBUG|TYANT_2.14.py:424] >> clicked tot_invest_calc_btn
+[2022-09-16 17:40:42,974][DEBUG|TYANT_2.14.py:419] >> invest_calc btn clicked
+[2022-09-16 17:42:03,503][DEBUG|TYANT_2.14.py:2142] >> seeting btn clicked
+[2022-09-16 17:42:03,524][DEBUG|TYANT_2.14.py:1015] >> setting val read!
+[2022-09-16 17:42:03,525][DEBUG|TYANT_2.14.py:1018] >> setting_emergency = {'emergency_btn': '0', 'today_high_limit': '10', 'high_limit_used': '1', 'buy_stop': False}
+[2022-09-16 17:42:03,525][DEBUG|TYANT_2.14.py:1040] >> check set start btn state....
+[2022-09-16 17:42:31,585][DEBUG|TYANT_2.14.py:1997] >> monitoring_btn_func clicked
+[2022-09-16 17:42:32,858][DEBUG|TYANT_2.14.py:424] >> clicked tot_invest_calc_btn
+[2022-09-16 17:42:34,210][DEBUG|TYANT_2.14.py:419] >> invest_calc btn clicked
+[2022-09-16 18:52:26,195][DEBUG|TYANT_2.14.py:4531] >> marty74 : 프로그램 작동 감시자 - 이상없음
+[2022-09-16 18:52:33,877][DEBUG|TYANT_2.14.py:3406] >> Heartbeat...ing
+[2022-09-16 20:08:01,659][DEBUG|TYANT_2.14.py:4531] >> marty74 : 프로그램 작동 감시자 - 이상없음
+[2022-09-16 20:08:09,270][DEBUG|TYANT_2.14.py:3406] >> Heartbeat...ing
+[2022-09-16 21:23:40,459][DEBUG|TYANT_2.14.py:4531] >> marty74 : 프로그램 작동 감시자 - 이상없음
+[2022-09-16 21:23:48,023][DEBUG|TYANT_2.14.py:3406] >> Heartbeat...ing
+[2022-09-16 22:39:19,369][DEBUG|TYANT_2.14.py:4531] >> marty74 : 프로그램 작동 감시자 - 이상없음
+[2022-09-16 22:39:26,962][DEBUG|TYANT_2.14.py:3406] >> Heartbeat...ing
+[2022-09-16 22:58:21,871][DEBUG|TYANT_2.14.py:2142] >> seeting btn clicked
+[2022-09-16 22:58:21,927][DEBUG|TYANT_2.14.py:1015] >> setting val read!
+[2022-09-16 22:58:21,931][DEBUG|TYANT_2.14.py:1018] >> setting_emergency = {'emergency_btn': '0', 'today_high_limit': '10', 'high_limit_used': '1', 'buy_stop': False}
+[2022-09-16 22:58:21,933][DEBUG|TYANT_2.14.py:1040] >> check set start btn state....
+[2022-09-16 23:36:57,958][DEBUG|TYANT_2.14.py:2142] >> seeting btn clicked
+[2022-09-16 23:36:57,975][DEBUG|TYANT_2.14.py:1015] >> setting val read!
+[2022-09-16 23:36:57,976][DEBUG|TYANT_2.14.py:1018] >> setting_emergency = {'emergency_btn': '0', 'today_high_limit': '10', 'high_limit_used': '1', 'buy_stop': False}
+[2022-09-16 23:36:57,976][DEBUG|TYANT_2.14.py:1040] >> check set start btn state....
+[2022-09-16 23:37:06,798][DEBUG|TYANT_2.14.py:994] >> pumping_btn_func
+[2022-09-16 23:37:06,799][DEBUG|TYANT_2.14.py:1001] >> 펌핑 종목 매수제외 기능 미 사용
+[2022-09-16 23:54:44,564][DEBUG|TYANT_2.14.py:4531] >> marty74 : 프로그램 작동 감시자 - 이상없음
+[2022-09-16 23:54:52,096][DEBUG|TYANT_2.14.py:3406] >> Heartbeat...ing
