@@ -4,6 +4,6 @@ logFile/
 bitget_api/
 *.txt
 *.pyc
-/bitget_api/*
+bitget_api/
 /bitget_project/bitget_api/example_mix.py
 
