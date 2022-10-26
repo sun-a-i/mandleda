@@ -1639,6 +1639,9 @@ background-color:gray;
     <property name="editTriggers">
      <set>QAbstractItemView::AllEditTriggers</set>
     </property>
+    <property name="viewMode">
+     <enum>QListView::ListMode</enum>
+    </property>
    </widget>
    <widget class="QLabel" name="label_37">
     <property name="geometry">
