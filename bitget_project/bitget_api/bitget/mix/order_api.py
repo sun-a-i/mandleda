@@ -21,21 +21,24 @@ class OrderApi(Client):
     :return:
     '''
     def place_order(self, symbol, marginCoin, size, side, orderType, price='', clientOrderId='', timeInForceValue='normal', presetTakeProfitPrice='', presetStopLossPrice=''):
-        params = {}
-        if symbol and marginCoin and side and orderType and marginCoin:
-            params["symbol"] = symbol
-            params["marginCoin"] = marginCoin
-            params["price"] = price
-            params["size"] = size
-            params["side"] = side
-            params["orderType"] = orderType
-            params["timeInForceValue"] = timeInForceValue
-            params["clientOid"] = clientOrderId
-            params["presetTakeProfitPrice"] = presetTakeProfitPrice
-            params["presetStopLossPrice"] = presetStopLossPrice
-            return self._request_with_params(POST, MIX_ORDER_V1_URL + '/placeOrder', params)
-        else:
-            return "pls check args "
+        try:
+            params = {}
+            if symbol and marginCoin and side and orderType and marginCoin:
+                params["symbol"] = symbol
+                params["marginCoin"] = marginCoin
+                params["price"] = price
+                params["size"] = size
+                params["side"] = side
+                params["orderType"] = orderType
+                params["timeInForceValue"] = timeInForceValue
+                params["clientOid"] = clientOrderId
+                params["presetTakeProfitPrice"] = presetTakeProfitPrice
+                params["presetStopLossPrice"] = presetStopLossPrice
+                return self._request_with_params(POST, MIX_ORDER_V1_URL + '/placeOrder', params)
+            else:
+                return "pls check args "
+        except Exception as e:
+            print(e)
 
     '''
     批量下单
@@ -51,8 +54,11 @@ class OrderApi(Client):
     :return:
     '''
     def batch_orders(self, symbol, marginCoin, order_data):
-        params = {'symbol': symbol, 'marginCoin': marginCoin, 'orderDataList': order_data}
-        return self._request_with_params(POST, MIX_ORDER_V1_URL + '/batch-orders', params)
+        try:
+            params = {'symbol': symbol, 'marginCoin': marginCoin, 'orderDataList': order_data}
+            return self._request_with_params(POST, MIX_ORDER_V1_URL + '/batch-orders', params)
+        except Exception as e:
+            print(e)
 
     '''
     撤单

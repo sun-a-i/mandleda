@@ -14,71 +14,79 @@ class Client(object):
         self.first = first
 
     def _request(self, method, request_path, params, cursor=False):
-        if method == c.GET:
-            request_path = request_path + utils.parse_params_to_str(params)
-        # url
-        url = c.API_URL + request_path
-
-        # 获取本地时间
-        timestamp = utils.get_timestamp()
-
-        # sign & header
-        if self.use_server_time:
-            # 获取服务器时间接口
-            timestamp = self._get_timestamp()
-
-        body = json.dumps(params) if method == c.POST else ""
-        sign = utils.sign(utils.pre_hash(timestamp, method, request_path, str(body)), self.API_SECRET_KEY)
-        header = utils.get_header(self.API_KEY, sign, timestamp, self.PASSPHRASE)
-
-        if self.first:
-            print("url:", url)
-            print("method:", method)
-            print("body:", body)
-            print("headers:", header)
-            # print("sign:", sign)
-            self.first = False
-
-
-
-
-        # send request
-        response = None
-        if method == c.GET:
-            response = requests.get(url, headers=header)
-            #print("response : ",response.text)
-        elif method == c.POST:
-            response = requests.post(url, data=body, headers=header)
-            #print("response : ",response.text)
-            #response = requests.post(url, json=body, headers=header)
-        elif method == c.DELETE:
-            response = requests.delete(url, headers=header)
-
-        #print("status:", response.status_code)
-        # exception handle
-        if not str(response.status_code).startswith('2'):
-            raise exceptions.BitgetAPIException(response)
         try:
-            res_header = response.headers
-            if cursor:
-                r = dict()
-                try:
-                    r['before'] = res_header['OK-BEFORE']
-                    r['after'] = res_header['OK-AFTER']
-                except:
-                    pass
-                return response.json(), r
-            else:
-                return response.json()
+            if method == c.GET:
+                request_path = request_path + utils.parse_params_to_str(params)
+            # url
+            url = c.API_URL + request_path
 
-        except ValueError:
-            raise exceptions.BitgetRequestException('Invalid Response: %s' % response.text)
+            # 获取本地时间
+            timestamp = utils.get_timestamp()
+
+            # sign & header
+            if self.use_server_time:
+                # 获取服务器时间接口
+                timestamp = self._get_timestamp()
+
+            body = json.dumps(params) if method == c.POST else ""
+            sign = utils.sign(utils.pre_hash(timestamp, method, request_path, str(body)), self.API_SECRET_KEY)
+            header = utils.get_header(self.API_KEY, sign, timestamp, self.PASSPHRASE)
+
+            if self.first:
+                print("url:", url)
+                print("method:", method)
+                print("body:", body)
+                print("headers:", header)
+                # print("sign:", sign)
+                self.first = False
+
+
+
+
+
+            # send request
+            response = None
+            if method == c.GET:
+                response = requests.get(url, headers=header)
+                #print("response : ",response.text)
+            elif method == c.POST:
+                response = requests.post(url, data=body, headers=header)
+                #print("response : ",response.text)
+                #response = requests.post(url, json=body, headers=header)
+            elif method == c.DELETE:
+                response = requests.delete(url, headers=header)
+
+            #print("status:", response.status_code)
+            # exception handle
+            if not str(response.status_code).startswith('2'):
+                raise exceptions.BitgetAPIException(response)
+            try:
+                res_header = response.headers
+                if cursor:
+                    r = dict()
+                    try:
+                        r['before'] = res_header['OK-BEFORE']
+                        r['after'] = res_header['OK-AFTER']
+                    except:
+                        pass
+                    return response.json(), r
+                else:
+                    return response.json()
+
+            except ValueError:
+                raise exceptions.BitgetRequestException('Invalid Response: %s' % response.text)
+
+        except Exception as e:
+            print(e)
 
     def _request_without_params(self, method, request_path):
         return self._request(method, request_path, {})
 
     def _request_with_params(self, method, request_path, params, cursor=False):
-        return self._request(method, request_path, params, cursor)
+        try:
+            return self._request(method, request_path, params, cursor)
+        except Exception as e:
+            print(e)
 
     def _get_timestamp(self):
         url = c.API_URL + c.SERVER_TIMESTAMP_URL
