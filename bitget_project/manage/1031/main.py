@@ -652,7 +652,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug(self.usdt_amt.text())
             logger.debug(type(self.usdt_amt.text()))
 
-            if (float(BTC_PRICE) * float(amt)) < float(self.usdt_amt.text()):
+            if (float(BTC_PRICE) * float(amt) / float(self.leverage.text())) < float(self.usdt_amt.text()):
                 result = self.orderApi.place_order(symbol, marginCoin='USDT', size=amt, side=posi, orderType='market',
                                                price='11', timeInForceValue='normal')
             # logger.debug(result)
@@ -1016,7 +1016,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug(self.usdt_amt.text())
             logger.debug(type(self.usdt_amt.text()))
 
-            if (float(BTC_PRICE) * float(amt)) < float(self.usdt_amt.text()) :
+            if (float(BTC_PRICE) * float(amt) / float(self.leverage.text())) < float(self.usdt_amt.text()) :
                 logger.debug("수량 통과")
                 result = self.orderApi.place_order(symbol, marginCoin='USDT', size=amt, side=posi, orderType='market', price='11', timeInForceValue='normal')
                 logger.debug("api 통과")
