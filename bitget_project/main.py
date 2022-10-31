@@ -652,7 +652,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug(self.usdt_amt.text())
             logger.debug(type(self.usdt_amt.text()))
 
-            if (float(BTC_PRICE) * float(amt)) < float(self.usdt_amt.text()):
+            if (float(BTC_PRICE) * float(amt) / float(self.leverage.text())) < float(self.usdt_amt.text()):
                 result = self.orderApi.place_order(symbol, marginCoin='USDT', size=amt, side=posi, orderType='market',
                                                price='11', timeInForceValue='normal')
             # logger.debug(result)
@@ -881,7 +881,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
                     if div_data[symbol][position]['MAX_ROE'] < div_data[symbol][position]['ROE']: #최고수익률 갱신
                         div_data[symbol][position]['MAX_ROE'] = div_data[symbol][position]['ROE']
-                        logger.debug("MAX_ROE 갱신 : " + str(div_data[symbol][position]['MAX_ROE']))
+                        logger.debug(str(position) + " MAX_ROE 갱신 : " + str(div_data[symbol][position]['MAX_ROE']))
 
                     #if div_data[symbol][position]['close_activate'] == False:
                     if div_data[symbol][position]['ROE'] >= div_data[symbol][position]['cut_rate'] : #매도준비
@@ -964,7 +964,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
                             if div_data[symbol][position]['MIN_ROE'] > div_data[symbol][position]['ROE']:  # 최저수익률 갱신
                                 div_data[symbol][position]['MIN_ROE'] = div_data[symbol][position]['ROE']
-                                logger.debug("MIN_ROE 갱신 : " + str(div_data[symbol][position]['MIN_ROE']))
+                                logger.debug(str(position) + "MIN_ROE 갱신 : " + str(div_data[symbol][position]['MIN_ROE']))
 
                             if div_data[symbol][next_state]['mul'] > div_data[symbol][position]["ROE"] : #다음 차수 매수준비
                                 div_data[symbol][position]['open_activate'] = True
@@ -1016,7 +1016,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug(self.usdt_amt.text())
             logger.debug(type(self.usdt_amt.text()))
 
-            if (float(BTC_PRICE) * float(amt)) < float(self.usdt_amt.text()) :
+            if (float(BTC_PRICE) * float(amt) / float(self.leverage.text())) < float(self.usdt_amt.text()) :
                 logger.debug("수량 통과")
                 result = self.orderApi.place_order(symbol, marginCoin='USDT', size=amt, side=posi, orderType='market', price='11', timeInForceValue='normal')
                 logger.debug("api 통과")
@@ -1118,7 +1118,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 lv = float(self.leverage.text())
                 income_price = float(div_data[symbol]['long']['avr']) * (100 + (roe / lv)) / 100
                 income_price = str(round(income_price,2))
-                logger.debug("long 매도 기준값 : " + income_price)
+                #logger.debug("long 매도 기준값 : " + income_price)
 
             if div_data[symbol]['long']["open_activate"]:
                 next_state = str(int(div_data[symbol]['long']['state'][0]) + 1) + '차매수'  # 다음 차수
@@ -1126,7 +1126,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 lv = float(self.leverage.text())
                 next_div_price = float(div_data[symbol]['long']['avr']) * (100 + (roe / lv)) / 100
                 next_div_price = str(round(next_div_price, 2))
-                logger.debug("long 매수 기준값 : " + next_div_price)
+                #logger.debug("long 매수 기준값 : " + next_div_price)
 
 
             setting_txt = "수익률:{}\n수익보정:{}\n손절설정:{}\n최대물타기:{}\n수익실현가:{}\n분할매수가:{}".format(div_data[symbol]['long']['cut_rate'],
@@ -1167,7 +1167,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 lv = float(self.leverage.text())
                 income_price = float(div_data[symbol]['short']['avr']) * (100 - (roe / lv)) / 100
                 income_price = str(round(income_price, 2))
-                logger.debug(" short 매도 기준값 : " + income_price)
+                #logger.debug(" short 매도 기준값 : " + income_price)
 
             if div_data[symbol]['short']["open_activate"]:
                 next_state = str(int(div_data[symbol]['short']['state'][0]) + 1) + '차매수'  # 다음 차수
@@ -1175,7 +1175,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 lv = float(self.leverage.text())
                 next_div_price = float(div_data[symbol]['short']['avr']) * (100 - (roe / lv)) / 100
                 next_div_price = str(round(next_div_price, 2))
-                logger.debug(" short 매수 기준값 : " + next_div_price)
+                #logger.debug(" short 매수 기준값 : " + next_div_price)
 
 
             setting_txt = "수익률:{}\n수익보정:{}\n손절설정:{}\n최대물타기:{}\n수익실현가:{}\n분할매수가:{}".format(div_data[symbol]['short']['cut_rate'],
