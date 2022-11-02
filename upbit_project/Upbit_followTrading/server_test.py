@@ -202,7 +202,9 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug(traceback.format_exc())
 
     def after_login_initial(self):
-        #self.update_balance()
+        self.update_thread = Mythread()
+        self.update_thread.signal.connect(self.update_table)
+        self.update_thread.start()
         pass
 
     def login(self):
@@ -265,7 +267,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                        if tmp > 0 and tmp <= 100 : #100%보다 적게
                            amt = float(self.money_label.text()) * tmp / 100
                            self.real_log_prt("비율 금액 매수 symbol : " + str(symbol) + " amt : " + str(amt))
-                           #self.order(1,symbol,amt)
+                           self.order(1,symbol,amt)
                        else:
                            txt = "[error] 구매 금액 에러 : 0~100 사이의 값"
                            self.floating_msg(txt)
@@ -279,7 +281,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                        if tmp > 0 and tmp <= float(self.money_label.text()) : #가진돈보다 적게
                            amt = tmp
                            self.real_log_prt("지정 금액 매수 symbol : " + str(symbol) + " amt : " + str(amt))
-                           #self.order(1,symbol,amt)
+                           self.order(1,symbol,amt)
                        else:
                            txt = "[error] 구매 금액 에러 : 소지금액 이하의 값"
                            self.floating_msg(txt)
@@ -324,9 +326,9 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
     def get_coin_symbol(self, data):
         global coin_Kname, tickers, coin_Ename
         try:
-            logger.debug("get_coin_symbol 호출 data : " + data)
+            #logger.debug("get_coin_symbol 호출 data : " + data)
             if data in tickers: #무조건 여기에서 걸려야함 ! 재귀로 구현하엿음
-                logger.debug("get_coin_symbol 성공 data : " + data)
+                #logger.debug("get_coin_symbol 성공 data : " + data)
                 return data
             elif data in coin_Ename:
                 return self.get_coin_symbol(coin_Ename[data])
@@ -334,7 +336,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 for symbol, k_name in coin_Kname.items():
                     if data == k_name:
                         return self.get_coin_symbol(symbol)
-                logger.debug("get_coin_symbol 실패 data : " + data)
+                #logger.debug("get_coin_symbol 실패 data : " + data)
                 #self.real_log_prt("[system] 코인명 에러")
                 return False
 
@@ -343,32 +345,39 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug(traceback.format_exc())
 
 
+    @pyqtSlot()
+    def update_table(self):
+        global coin_list
+        try:
+            self.table_coin.setRowCount(len(coin_list))
 
-    def add_coin_to_table(self,coin = 'btc'):
-        #self.table_coin.
+            #가지고 있는 것과 없는 것 비교
 
-        coin_list = {"btc" :
-                         { "avr" : 123
-                           },
-                     "eth" : {
-                         "avr" : 456
-                     }}
+            idx = 0
+            for coin_name in coin_list:
+                stop_btn = QPushButton("중지")
+                start_btn = QPushButton("시작")
+                stop_btn.clicked.connect(lambda: self.handleButtonClicked(0))
+                start_btn.clicked.connect(lambda: self.handleButtonClicked(1))
 
-        self.table_coin.setRowCount(len(coin_list))
+                #logger.debug(coin_name)
 
+                self.table_coin.setItem(idx, 0, QTableWidgetItem(coin_list[coin_name]["currency"]))
+                self.table_coin.setItem(idx, 1, QTableWidgetItem(coin_list[coin_name]["current_price"]))
+                self.table_coin.setItem(idx, 3, QTableWidgetItem(coin_list[coin_name]["avg_buy_price"]))
+                self.table_coin.setItem(idx, 4, QTableWidgetItem(coin_list[coin_name]["balance"]))
+                self.table_coin.setItem(idx, 5, QTableWidgetItem(coin_list[coin_name]["total_price"]))
+                #self.table_coin.setItem(idx, 0, QTableWidgetItem(i))
 
+                #self.table_coin.setItem(idx, 3, QTableWidgetItem(str(coin_list[coin_name]["avr"])))
 
-        idx = 0
-        for i in coin_list:
-            stop_btn = QPushButton("중지")
-            start_btn = QPushButton("시작")
-            stop_btn.clicked.connect(lambda: self.handleButtonClicked(0))
-            start_btn.clicked.connect(lambda: self.handleButtonClicked(1))
-            self.table_coin.setItem(idx, 0, QTableWidgetItem(i))
-            self.table_coin.setItem(idx, 3, QTableWidgetItem(str(coin_list[i]["avr"])))
-            self.table_coin.setCellWidget(idx, 6, stop_btn)
-            self.table_coin.setCellWidget(idx, 7, start_btn)
-            idx =+ 1
+                self.table_coin.setCellWidget(idx, 6, stop_btn)
+                self.table_coin.setCellWidget(idx, 7, start_btn)
+                idx =+ 1
+
+        except Exception as e:
+            logger.debug("예외가 발생했습니다. %s", e)
+            logger.debug(traceback.format_exc())
 
 
     def handleButtonClicked(self,state):
@@ -379,18 +388,38 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             print(index.row(), index.column())
 
 class Mythread(QThread):
-    #signal = pyqtSignal()
+    signal = pyqtSignal()
 
     def __init__(self):
         super().__init__()
 
 
     def run(self):
-        #global auto_flag, main_upbit
+        global auto_flag, main_upbit, coin_list
         while True:
             try:
-                if auto_flag:
-                    pass
+                tmp = main_upbit.get_balances()
+                #logger.debug(tmp)
+                tmp_list = {}
+                for i in tmp:
+                    tmp = {}
+                    for j,k in i.items():
+                        tmp[j] = k
+                    if tmp["currency"] == 'KRW':
+                        main.money_label.setText(str(int(float(tmp["balance"])))) #update krw balance
+                    else:
+                        symbol = main.get_coin_symbol(tmp["currency"])
+                        if symbol: #ETHF 등 제외
+                            tmp_list[symbol] = {}
+                            tmp_list[symbol] = tmp
+                            tmp_list[symbol]["total_price"] = str(float(tmp_list[symbol]['avg_buy_price']) * float(tmp_list[symbol]['balance']))
+                            tmp_list[symbol]["current_price"] = str(pyupbit.get_current_price(symbol))
+                logger.debug(tmp_list)
+                coin_list = tmp_list
+                self.signal.emit()
+                time.sleep(5)
+
+
             except Exception as e:
                 logger.debug(e)
                 logger.debug(traceback.format_exc())

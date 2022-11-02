@@ -1,10 +1,10 @@
 import pyupbit
 import time
 #
-# #현재가 가져오기
-# a = pyupbit.get_current_price('KRW-BTC')
-# print(a)
-#
+#현재가 가져오기
+a = pyupbit.get_current_price('KRW-BTC')
+print(a)
+
 # #ohlcv 가져오기 - 200개까지 제한적으로 가져올 수 있음
 # #두번째 파라미터 : mintue5, 10, 15, 30, 60, 120, 240, day, week
 # b = pyupbit.get_ohlcv('KRW-BTC', 'mintue5', 200)
