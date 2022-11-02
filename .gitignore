@@ -1,3 +1,6 @@
 
 *.pyc
 .idea/
+upbit_project/Upbit_followTrading/client_test.py
+upbit_project/Upbit_followTrading/DATA/API.txt
+upbit_project/Upbit_followTrading/DATA/API_ㅠ.txt
