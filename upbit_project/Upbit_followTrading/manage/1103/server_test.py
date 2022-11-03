@@ -368,7 +368,9 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
     def update_table(self):
         global coin_list
         try:
-            if self.table_coin.setRowCount(len(coin_list)) != self.table_coin.rowCount():
+            #logger.debug(len(coin_list))
+            if len(coin_list) != self.table_coin.rowCount():
+                self.table_coin.setRowCount(len(coin_list))
                 idx = 0
                 for coin_name in coin_list:
                     stop_btn = QPushButton("중지")
@@ -377,14 +379,24 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     start_btn.clicked.connect(lambda: self.handleButtonClicked(1))
                     self.table_coin.setCellWidget(idx, 7, stop_btn)
                     self.table_coin.setCellWidget(idx, 8, start_btn)
-                    idx = + 1
+                    idx += 1
 
+        
             idx = 0
+
             for coin_name in coin_list:
+                #logger.debug(coin_name)
+                #logger.debug(idx)
                 #format(num, ',')
                 self.table_coin.setItem(idx, 0, QTableWidgetItem(coin_list[coin_name]["currency"]))
-                self.table_coin.setItem(idx, 1, QTableWidgetItem(format(int(coin_list[coin_name]["current_price"]),',')))#
-                self.table_coin.setItem(idx, 2, QTableWidgetItem())
+                if float(coin_list[coin_name]["current_price"]) < 10 :
+                    self.table_coin.setItem(idx, 1, QTableWidgetItem(format(round(float(coin_list[coin_name]["current_price"]),2),',')))#
+                elif float(coin_list[coin_name]["current_price"]) < 100 :
+                    self.table_coin.setItem(idx, 1, QTableWidgetItem(format(round(float(coin_list[coin_name]["current_price"]),1),',')))#
+                else:
+                    self.table_coin.setItem(idx, 1, QTableWidgetItem(format(round(float(coin_list[coin_name]["current_price"])),',')))#
+
+                #self.table_coin.setItem(idx, 2, QTableWidgetItem())
 
                 txt = str(round(float(coin_list[coin_name]["earing_rate"]),2))
                 if coin_list[coin_name]["earing_rate"][0] != '-':
@@ -400,7 +412,8 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 self.table_coin.setItem(idx, 4, QTableWidgetItem(coin_list[coin_name]["balance"]))
                 self.table_coin.setItem(idx, 5, QTableWidgetItem(format(round(float(coin_list[coin_name]["total_price"])),',')))#
                 self.table_coin.setItem(idx, 6, QTableWidgetItem(format(round(float(coin_list[coin_name]["total_now_price"])),',')))#
-                idx = + 1
+                #logger.debug(coin_name)
+                idx += 1
 
 
         except Exception as e:
@@ -439,7 +452,7 @@ class Mythread(QThread):
                 #update_current_price()
                 #todo : 자동매매 플래그, 자동매매 로직
                 self.signal.emit()
-                time.sleep(1)
+                time.sleep(5)
             except Exception as e:
                 logger.debug(e)
                 logger.debug(traceback.format_exc())
@@ -473,21 +486,33 @@ def update_coin_list():
                     tmp_list[symbol] = tmp
                     tmp_list[symbol]["total_price"] = str(
                         float(tmp_list[symbol]['avg_buy_price']) * float(tmp_list[symbol]['balance']))
-                    tmp_list[symbol]["current_price"] = str(pyupbit.get_current_price(symbol))
-
-                    tmp_list[symbol]["total_now_price"] = str(
-                        float(tmp_list[symbol]['current_price']) * float(tmp_list[symbol]['balance']))
-
-                    tmp_list[symbol]["earing_rate"] = str(((float(tmp_list[symbol]["current_price"]) - float(tmp_list[symbol]['avg_buy_price']))/float(tmp_list[symbol]['avg_buy_price']) )* 100 )
 
         # logger.debug(tmp_list)
+        current_list = pyupbit.get_current_price(tmp_list.keys())
+
+        #logger.debug(tmp_list.keys())
+        #logger.debug(current_list)
+
+        total_buy = 0
+        for symbol in tmp_list:
+
+            tmp_list[symbol]["current_price"] = str(current_list[symbol])
+
+            tmp_list[symbol]["total_now_price"] = str(
+                float(tmp_list[symbol]['current_price']) * float(tmp_list[symbol]['balance']))
+
+            tmp_list[symbol]["earing_rate"] = str(((float(tmp_list[symbol]["current_price"]) - float(
+                tmp_list[symbol]['avg_buy_price'])) / float(tmp_list[symbol]['avg_buy_price'])) * 100)
+
+            total_buy += float(tmp_list[symbol]["total_price"])
+
+
+        main.money_label_2.setText(format(round(total_buy), ','))
+
         coin_list = tmp_list
 
-        tmp = 0
-        for coin in coin_list:
-            tmp += float(coin_list[coin]["total_price"])
+        #logger.debug(coin_list)
 
-        main.money_label_2.setText(format(round(tmp), ','))
 
     except Exception as e:
         logger.debug(e)
