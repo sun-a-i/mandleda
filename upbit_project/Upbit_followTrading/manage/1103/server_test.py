@@ -87,6 +87,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             self.t3.clicked.connect(self.test_func3)
             self.table_coin.cellClicked.connect(self.table_cell_clicked_func)
 
+            self.initial()
             self.login()
             self.get_tickers()
             #한글, 영어 코인명 가져오기
@@ -132,6 +133,25 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
         try:
             #logger.debug(self.socket_server.clients)
             self.add_coin_to_table()
+
+        except Exception as e:
+            logger.debug(e)
+            logger.debug(traceback.format_exc())
+
+    def initial(self):
+        try:
+            logger.debug('table init..')
+            table = self.table_coin
+            table.setColumnWidth(0, 40)
+            table.setColumnWidth(2, 50)
+            table.setColumnWidth(1, 70)
+            table.setColumnWidth(3, 70)
+            table.setColumnWidth(4, 80)
+            table.setColumnWidth(5, 70)
+            table.setColumnWidth(6, 70)
+            table.setColumnWidth(7, 50)
+            table.setColumnWidth(8, 50)
+            #table.setAlignment(QtCore.Qt.AlignCenter)
 
         except Exception as e:
             logger.debug(e)
@@ -269,8 +289,11 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                        if tmp > 0 and tmp <= 100 : #100%보다 적게
                            amt = float(self.money_label.text().replace(',','')) * tmp / 100
                            if amt >= 5000:
-                               self.real_log_prt("비율 금액 매수 symbol : " + str(symbol) + " amt : " + str(amt))
-                               self.order(1,symbol,amt)
+                               txt = str(symbol) + " : " + str(amt)
+                               reply = QMessageBox.question(self, '확인', txt + '원 매수 하시겠습니까?')
+                               if reply == QMessageBox.Yes:
+                                   self.real_log_prt("비율 금액 매수 " + str(symbol) + " : " + str(amt))
+                                   self.order(1,symbol,amt)
                            else:
                                txt = "[error] 구매 금액 에러 : 최소주문 5000원 이상"
                                self.floating_msg(txt)
@@ -287,8 +310,11 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                        if tmp > 0 and tmp <= float(self.money_label.text().replace(',','')) : #가진돈보다 적게
                            amt = tmp
                            if amt >= 5000:
-                               self.real_log_prt("지정 금액 매수 symbol : " + str(symbol) + " amt : " + str(amt))
-                               self.order(1,symbol,amt)
+                               txt = str(symbol) + " : " + str(amt)
+                               reply = QMessageBox.question(self, '확인', txt + '원 매수 하시겠습니까?')
+                               if reply == QMessageBox.Yes:
+                                   self.real_log_prt("지정 금액 매수 " + str(symbol) + " : " + str(amt))
+                                   self.order(1,symbol,amt)
                            else:
                                txt = "[error] 구매 금액 에러 : 최소주문 5000원 이상"
                                self.floating_msg(txt)
@@ -321,8 +347,11 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             symbol = self.get_coin_symbol(data)
             if symbol:
                 amt = coin_list[symbol]["balance"]
-                self.real_log_prt("전량 매도  : " + str(symbol) )
-                self.order(0,symbol,amt)
+                txt = str(symbol) + " : " + str(amt)
+                reply = QMessageBox.question(self, '확인', txt + '개 매도 하시겠습니까?')
+                if reply == QMessageBox.Yes:
+                    self.real_log_prt("전량 매도 " + str(symbol) + " : " + str(amt))
+                    self.order(0,symbol,amt)
                 pass
             else:
                 txt = "[error] 코인 이름 에러 : 정확하지 않은 코인명."
@@ -374,7 +403,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 idx = 0
                 for coin_name in coin_list:
                     stop_btn = QPushButton("중지")
-                    start_btn = QPushButton("시작")
+                    start_btn = QPushButton("활성화")
                     stop_btn.clicked.connect(lambda: self.handleButtonClicked(0))
                     start_btn.clicked.connect(lambda: self.handleButtonClicked(1))
                     self.table_coin.setCellWidget(idx, 7, stop_btn)
@@ -412,6 +441,20 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 self.table_coin.setItem(idx, 4, QTableWidgetItem(coin_list[coin_name]["balance"]))
                 self.table_coin.setItem(idx, 5, QTableWidgetItem(format(round(float(coin_list[coin_name]["total_price"])),',')))#
                 self.table_coin.setItem(idx, 6, QTableWidgetItem(format(round(float(coin_list[coin_name]["total_now_price"])),',')))#
+
+
+
+
+                self.table_coin.item(idx, 0).setTextAlignment(Qt.AlignVCenter | Qt.AlignCenter)
+                self.table_coin.item(idx, 1).setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
+                self.table_coin.item(idx, 2).setTextAlignment(Qt.AlignVCenter | Qt.AlignCenter)
+                self.table_coin.item(idx, 3).setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
+                self.table_coin.item(idx, 4).setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
+                self.table_coin.item(idx, 5).setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
+                self.table_coin.item(idx, 6).setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
+
+
+
                 #logger.debug(coin_name)
                 idx += 1
 
@@ -452,7 +495,7 @@ class Mythread(QThread):
                 #update_current_price()
                 #todo : 자동매매 플래그, 자동매매 로직
                 self.signal.emit()
-                time.sleep(5)
+                time.sleep(1)
             except Exception as e:
                 logger.debug(e)
                 logger.debug(traceback.format_exc())
@@ -488,12 +531,15 @@ def update_coin_list():
                         float(tmp_list[symbol]['avg_buy_price']) * float(tmp_list[symbol]['balance']))
 
         # logger.debug(tmp_list)
-        current_list = pyupbit.get_current_price(tmp_list.keys())
+        current_list = {}
+        if len(tmp_list.keys()) :
+            current_list = pyupbit.get_current_price(tmp_list.keys())
 
         #logger.debug(tmp_list.keys())
         #logger.debug(current_list)
 
         total_buy = 0
+        total_now_buy = 0
         for symbol in tmp_list:
 
             tmp_list[symbol]["current_price"] = str(current_list[symbol])
@@ -505,9 +551,16 @@ def update_coin_list():
                 tmp_list[symbol]['avg_buy_price'])) / float(tmp_list[symbol]['avg_buy_price'])) * 100)
 
             total_buy += float(tmp_list[symbol]["total_price"])
+            total_now_buy += float(tmp_list[symbol]["total_now_price"])
 
 
         main.money_label_2.setText(format(round(total_buy), ','))
+        main.money_label_3.setText(format(round(total_now_buy), ','))
+        if total_buy != 0:
+            total_rate = ((float(total_now_buy) - float(total_buy)) / float(total_buy)) * 100
+        else:
+            total_rate = 0
+        main.money_label_4.setText(str(round(total_rate,2)))
 
         coin_list = tmp_list
 

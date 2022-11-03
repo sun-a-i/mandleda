@@ -87,15 +87,15 @@
    <widget class="QTableWidget" name="table_coin">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>110</y>
-      <width>921</width>
+      <x>270</x>
+      <y>120</y>
+      <width>671</width>
       <height>211</height>
      </rect>
     </property>
     <column>
      <property name="text">
-      <string>코인이름</string>
+      <string>이름</string>
      </property>
     </column>
     <column>
@@ -130,12 +130,12 @@
     </column>
     <column>
      <property name="text">
-      <string>매수중지</string>
+      <string>중지</string>
      </property>
     </column>
     <column>
      <property name="text">
-      <string>매수활성화</string>
+      <string>활성화</string>
      </property>
     </column>
    </widget>
@@ -373,9 +373,9 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>10</y>
-      <width>211</width>
-      <height>91</height>
+      <y>11</y>
+      <width>221</width>
+      <height>211</height>
      </rect>
     </property>
     <property name="title">
@@ -458,6 +458,122 @@
        <x>70</x>
        <y>10</y>
        <width>101</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Agency FB</family>
+       <pointsize>14</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>-</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_7">
+     <property name="geometry">
+      <rect>
+       <x>180</x>
+       <y>89</y>
+       <width>21</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>원</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_19">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>89</y>
+       <width>51</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Agency FB</family>
+       <pointsize>10</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>총평가금</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="money_label_3">
+     <property name="geometry">
+      <rect>
+       <x>100</x>
+       <y>89</y>
+       <width>71</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Agency FB</family>
+       <pointsize>14</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>-</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_8">
+     <property name="geometry">
+      <rect>
+       <x>180</x>
+       <y>128</y>
+       <width>21</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>%</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_20">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>128</y>
+       <width>51</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Agency FB</family>
+       <pointsize>10</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>총수익률</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="money_label_4">
+     <property name="geometry">
+      <rect>
+       <x>100</x>
+       <y>128</y>
+       <width>71</width>
        <height>31</height>
       </rect>
      </property>
