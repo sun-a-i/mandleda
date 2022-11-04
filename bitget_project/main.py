@@ -1583,9 +1583,6 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             safe_roe_2 = self.safe_roe_2.text()
             safe_part_2 = self.safe_part_2.text()
 
-            add_amt = self.add_amt.text()
-            div_data[symbol]['add_amt'] = abs(float(add_amt))
-
             if self.safe_part_ck.isChecked():
                 div_data[symbol]['short']['safe_roe'] = (float(safe_roe))
                 div_data[symbol]['short']['safe_part'] = abs(float(safe_part)/100)
