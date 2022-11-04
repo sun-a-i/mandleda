@@ -1308,7 +1308,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
 
             #현재가 업데이트
-            self.btc_price.setText(str(div_data[symbol]['long']['price']))
+            self.btc_price.setText(str(BTC_PRICE))
 
             for position in ['long','short']:
                 if position == 'long':
@@ -1654,7 +1654,6 @@ class MyThread(QThread):
                     price = main.get_last_price(symbol)
                     #logger.debug(price)
                     BTC_PRICE = float(price)
-                    main.btc_price.setText(str(BTC_PRICE))
                     if price != False:
                         self.finished.emit()
                     self.finished2.emit()
