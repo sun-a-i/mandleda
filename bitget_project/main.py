@@ -275,7 +275,10 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             reply = QMessageBox.question(self, '확인', '{} 즉시매수 하시겠습니까?'.format(state))
             if reply == QMessageBox.Yes:
                 logger.debug(f'open now {state}')
-                res = self.open_position(float(self.book_amt_long.text()), state)
+                if state == 'open_long':
+                    res = self.open_position(float(self.book_amt_long.text()), state)
+                else:
+                    res = self.open_position(float(self.book_amt_short.text()), state)
 
         except Exception as e:
             logger.debug(e)
