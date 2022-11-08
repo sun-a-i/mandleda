@@ -62,7 +62,7 @@ setting_data_path = './DATA/settings.pickle'
 api_data_path = './DATA/API.txt'
 telegram_data_path = './DATA/telegram.txt'
 
-main_class = uic.loadUiType('./ui_data/client_main.ui')[0]
+main_class = uic.loadUiType('./ui_data/main.ui')[0]
 
 auto_flag = False
 
