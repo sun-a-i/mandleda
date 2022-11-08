@@ -621,7 +621,7 @@ background-color:red;
     <property name="geometry">
      <rect>
       <x>150</x>
-      <y>526</y>
+      <y>520</y>
       <width>170</width>
       <height>31</height>
      </rect>
@@ -725,9 +725,9 @@ background-color:red;
     <property name="geometry">
      <rect>
       <x>490</x>
-      <y>580</y>
+      <y>560</y>
       <width>791</width>
-      <height>271</height>
+      <height>291</height>
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout"/>
@@ -813,9 +813,9 @@ background-color:red;
    <widget class="QWidget" name="gridLayoutWidget_2">
     <property name="geometry">
      <rect>
-      <x>150</x>
+      <x>140</x>
       <y>570</y>
-      <width>311</width>
+      <width>331</width>
       <height>271</height>
      </rect>
     </property>
