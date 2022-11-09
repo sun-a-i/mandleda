@@ -611,6 +611,12 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     stop_btn = QPushButton("중지")
                     start_btn = QPushButton("활성화")
 
+
+                    start_btn.setStyleSheet("color:white;background-color:red")
+                    stop_btn.setStyleSheet("color:white;background-color:blue")
+
+                    #button.setStyleSheet("color:(33,33,00)")
+
                     stop_btn.clicked.connect(lambda: self.handleButtonClicked(0))
                     start_btn.clicked.connect(lambda: self.handleButtonClicked(1))
                     self.table_coin.setCellWidget(idx, 7, stop_btn)
@@ -655,6 +661,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 self.table_coin.item(idx, 6).setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
                 self.table_coin.setRowHeight(idx, 60)
                 #logger.debug(coin_name)
+
                 idx += 1
 
         except Exception as e:
@@ -680,6 +687,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
     def handleButtonClicked(self,state):
         try:
+            global coin_list
             #button = QtGui.qApp.focusWidget()
             button = self.sender()
             index = self.table_coin.indexAt(button.pos())
@@ -690,9 +698,22 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 if state :
                     txt = "매수 활성화"
                     button.setEnabled(False)
+                    button.setStyleSheet("color:gray;background-color:#FFCCCC")
+                    #coin_list[self.get_coin_symbol(item)]["activate"] = True
+
+                    other_button = self.table_coin.cellWidget(index.row(), index.column()-1)
+                    other_button.setEnabled(True)
+                    other_button.setStyleSheet("color:white;background-color:blue")
+
                 else:
                     txt = "매수 중지"
                     button.setEnabled(False)
+                    button.setStyleSheet("color:gray;background-color:#333300")
+                    #coin_list[self.get_coin_symbol(item)]["activate"] = False
+
+                    other_button = self.table_coin.cellWidget(index.row(), index.column()+1)
+                    other_button.setEnabled(True)
+                    other_button.setStyleSheet("color:white;background-color:red")
                 label_string = txt + ' Clicked , Value: ' + str(value)
 
                 logger.debug(label_string)
@@ -773,7 +794,12 @@ def update_coin_list():
 
             total_buy += float(tmp_list[symbol]["total_price"])
             total_now_buy += float(tmp_list[symbol]["total_now_price"])
-
+            """
+            if "activate"  in coin_list[symbol] :
+                tmp_list[symbol]["activate"] = coin_list[symbol]["activate"]
+            else:
+                tmp_list[symbol]["activate"] = 0
+            """
 
         #main.money_label_2.setText(format(round(total_buy), ','))
         #main.money_label_3.setText(format(round(total_now_buy), ','))
