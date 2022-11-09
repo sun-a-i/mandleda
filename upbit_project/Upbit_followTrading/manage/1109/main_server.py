@@ -12,6 +12,8 @@ from PyQt5.QtCore import *
 from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtCore import QThread
 import traceback
+from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 import datetime as dt
 from datetime import datetime
@@ -24,12 +26,19 @@ import socket
 import select
 import requests
 #import request
+
+import finplot as fplt
+from qroundprogressbar import QRoundProgressBar
+import datetime
+from datetime import datetime
+
 #====================logger=========================
 import os
 from logging.handlers import TimedRotatingFileHandler
 import logging
 from datetime import datetime
 import traceback
+
 
 
 if not os.path.exists('logFile'):
@@ -73,6 +82,7 @@ auto_flag = False
 coin_Kname = {}
 coin_Ename = {}
 tickers = []
+import datetime
 
 class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui path
     def __init__(self):
@@ -82,9 +92,9 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             self.setWindowTitle("upbit auto system")
 
 
-            self.t1.clicked.connect(self.test_func)
-            self.t2.clicked.connect(self.test_func2)
-            self.t3.clicked.connect(self.test_func3)
+            #self.t1.clicked.connect(self.test_func)
+            #self.t2.clicked.connect(self.test_func2)
+            #self.t3.clicked.connect(self.test_func3)
             self.table_coin.cellClicked.connect(self.table_cell_clicked_func)
 
             self.initial()
@@ -96,6 +106,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             #자동완성 검색
             self.init_nameList()
 
+            self.chart_bun.currentIndexChanged.connect(lambda: self.coin_chart(self.coin_search.text()))
             self.buy_btn.clicked.connect(self.buy_btn_func)
             self.sell_btn.clicked.connect(self.sell_btn_func)
 
@@ -145,17 +156,96 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
         try:
             logger.debug('table init..')
             table = self.table_coin
-            table.setColumnWidth(0, 40)
-            table.setColumnWidth(2, 50)
-            table.setColumnWidth(1, 70)
-            table.setColumnWidth(3, 70)
-            table.setColumnWidth(4, 80)
-            table.setColumnWidth(5, 70)
-            table.setColumnWidth(6, 70)
-            table.setColumnWidth(7, 50)
-            table.setColumnWidth(8, 50)
-            #table.setAlignment(QtCore.Qt.AlignCenter)
+            table.setColumnWidth(0, 80)
+            table.setColumnWidth(2, 90)
+            table.setColumnWidth(1, 110)
+            table.setColumnWidth(3, 110)
+            table.setColumnWidth(4, 120)
+            table.setColumnWidth(5, 110)
+            table.setColumnWidth(6, 110)
+            table.setColumnWidth(7, 90)
+            table.setColumnWidth(8, 90)
 
+
+            #table.setAlignment(QtCore.Qt.AlignCenter)
+            self.real_log.setFont(QtGui.QFont('맑은 고딕', 9))
+            self.rpb = QRoundProgressBar()
+            # self.rpb.setStyleSheet('QRoundProgressBar{background-color:#123;}')
+            # self.rpb.setValue(15)
+            self.gridLayout_2.addWidget(self.rpb)
+            global ax, axs, axo
+            ax = fplt.create_plot(init_zoom_periods=0)  # pygtgraph.graphicsItems.PlotItem
+            axo = ax.overlay()  # pygtgraph.graphicsItems.PlotItem
+            axs = [ax]  # finplot requres this property
+
+            fplt.candle_bull_color = "#FF0000"
+            fplt.candle_bull_body_color = "#FF0000"
+            fplt.candle_bear_color = "#0000FF"
+            fplt.display_timezone = datetime.timezone.utc
+            fplt.show(qt_exec=False)
+            self.gridLayout.addWidget(ax.vb.win, 0, 0)  # ax.vb     (finplot.FinViewBox)
+
+            self.table_coin.setFocusPolicy(QtCore.Qt.NoFocus)
+            # self.table_coin.setSelectionBehavior(QAbstractItemView.SelectRows)
+            # self.table_coin.setSelectionMode(QAbstractItemView.SingleSelection)
+            self.table_coin.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+            self.table_coin.setEditTriggers(QAbstractItemView.NoEditTriggers)
+            # self.table_coin.verticalHeader().setVisible(False)
+            self.table_coin.horizontalHeader().setFocusPolicy(QtCore.Qt.NoFocus)
+            self.table_coin.horizontalHeader().setFixedHeight(60)
+
+            self.table_coin.horizontalHeader().setStyleSheet('''
+                        QHeaderView {
+                            /* set the bottom border of the header, in order to set a single 
+                               border you must declare a generic border first or set all other 
+                               borders */
+                            border: none;
+                            border-bottom: 0px ;
+                            background-color:white;
+                        }
+
+                        QHeaderView::section:horizontal {
+                            /* set the right border (as before, the overall border must be 
+                               declared), and a minimum height, otherwise it will default to 
+                               the minimum required height based on the contents (font and 
+                               decoration sizes) */
+                            border: none;
+                            border-right: 0px ;
+                            background-color:white;
+                        }
+                    ''')
+            self.table_coin.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+
+            self.table_coin.setShowGrid(False)
+            self.trading_start_btn.setStyleSheet("""
+                    QPushButton {
+                        color: white ; 
+                        background-color: gray
+                    }
+                    QPushButton:hover {
+                        color: yellow;
+                        background-color: red
+                    }
+                    QPushButton:pressed {
+                        color: yellow;
+                        background-color: gray
+                    }
+                    """)
+            self.trading_stop_btn.setStyleSheet("""
+                        QPushButton {
+                            color: white ; 
+                            background-color: gray
+                        }
+                        QPushButton:hover {
+                            color: yellow;
+                            background-color: blue
+                        }
+                        QPushButton:pressed {
+                            color: yellow;
+                            background-color: gray
+                        }
+                    """)
+            self.coin_chart("KRW-BTC")
         except Exception as e:
             logger.debug(e)
             logger.debug(traceback.format_exc())
@@ -436,15 +526,64 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug("예외가 발생했습니다. %s", e)
             logger.debug(traceback.format_exc())
 
-    def table_cell_clicked_func(self,row, column):
+    def table_cell_clicked_func(self, row, column):
         try:
+            global coin_list
             item = self.table_coin.item(row, 0)
             value = item.text()
-            label_string = 'Cell Clicked Row: ' + str(row + 1) + ', Column: ' + str(column + 1) + ', Value: ' + str(value)
-            self.coin_search.setText(value)
+            label_string = 'Cell Clicked Row: ' + str(row + 1) + ', Column: ' + str(column + 1) + ', Value: ' + str(
+                value)
+            self.focus_coin_update(self.get_coin_symbol(value))
             logger.debug(label_string)
+            #self.coin_chart(value)
         except Exception as e:
             logger.debug("예외가 발생했습니다. %s", e)
+            logger.debug(traceback.format_exc())
+
+    def focus_coin_update(self, symbol):
+        try:
+            symbol = self.get_coin_symbol(symbol)
+            if symbol:
+                self.coin_search.setText(symbol)
+                self.coin_search_1.setText(symbol)
+                self.coin_search_2.setText(format(round(float(coin_list[symbol]["current_price"])), ','))
+
+                txt = round(float(coin_list[symbol]["earing_rate"]), 2)
+                if coin_list[symbol]["earing_rate"][0] != '-':
+                    txt = "▲" + str(txt)
+                    self.coin_search_3.setText(txt)
+                    self.coin_search_2.setStyleSheet('QLabel{color:red;background-color:gray;}')
+                    self.coin_search_3.setStyleSheet('QLabel{color:red;background-color:gray;}')
+                else:
+                    txt = "▼" + str(txt)
+                    self.coin_search_3.setText(txt)
+                    self.coin_search_2.setStyleSheet('QLabel{color:blue;background-color:gray;}')
+                    self.coin_search_3.setStyleSheet('QLabel{color:blue;background-color:gray;}')
+
+
+        except Exception as e:
+            logger.debug("예외가 발생했습니다. %s", e)
+            logger.debug(traceback.format_exc())
+    def coin_chart(self, coin):
+        try:
+            symbol = self.get_coin_symbol(coin)
+            if symbol:
+                if self.bun_to_min():
+                    global ax, axs, axo
+
+                    ax = fplt.create_plot()  # pygtgraph.graphicsItems.PlotItem
+                    axo = ax.overlay()  # pygtgraph.graphicsItems.PlotItem
+                    axs = [ax]  # finplot requres this property
+                    self.gridLayout.addWidget(ax.vb.win, 0, 0)  # ax.vb     (finplot.FinViewBox)
+
+                    df = pyupbit.get_ohlcv(symbol, self.bun_to_min(), 200)
+                    self.plot = fplt.candlestick_ochl(df[['open', 'close', 'high', 'low']])
+
+                    #fplt.set_x_pos(0, 200, ax) #시작위치 줌
+                    fplt.refresh()
+
+        except Exception as e:
+            logger.debug(e)
             logger.debug(traceback.format_exc())
 
     @pyqtSlot(dict,dict)
@@ -458,6 +597,12 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             self.money_label_2.setText(format(round(jango_list["total_buy"]), ','))
             self.money_label_3.setText(format(round(jango_list["total_now_buy"]), ','))
             self.money_label_4.setText(str(round(jango_list["total_rate"],2)))
+            self.rpb.setValue(
+                (jango_list["total_buy"] / (float(jango_list["balance"]) + float(jango_list["total_buy"]))) * 100)
+
+            #self.table_coin.setRowCount(len(coin_list))
+            self.focus_coin_update(self.coin_search.text())
+
 
             if len(coin_list) != self.table_coin.rowCount():
                 self.table_coin.setRowCount(len(coin_list))
@@ -465,10 +610,12 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 for coin_name in coin_list:
                     stop_btn = QPushButton("중지")
                     start_btn = QPushButton("활성화")
+
                     stop_btn.clicked.connect(lambda: self.handleButtonClicked(0))
                     start_btn.clicked.connect(lambda: self.handleButtonClicked(1))
                     self.table_coin.setCellWidget(idx, 7, stop_btn)
                     self.table_coin.setCellWidget(idx, 8, start_btn)
+                    stop_btn.resize(50, 50)
                     idx += 1
 
         
@@ -506,6 +653,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 self.table_coin.item(idx, 4).setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
                 self.table_coin.item(idx, 5).setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
                 self.table_coin.item(idx, 6).setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
+                self.table_coin.setRowHeight(idx, 60)
                 #logger.debug(coin_name)
                 idx += 1
 
@@ -513,6 +661,22 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug("예외가 발생했습니다. %s", e)
             logger.debug(traceback.format_exc())
 
+    def bun_to_min(self):
+        nbun = self.chart_bun.currentText()
+        if nbun == '5분':
+            return 'minute5'
+        elif nbun == '15분':
+            return 'minute15'
+        elif nbun == '30분':
+            return 'minute30'
+        elif nbun == '1시간':
+            return 'minute60'
+        elif nbun == '4시간':
+            return 'minute240'
+        elif nbun == '1일':
+            return 'day'
+        else:
+            return False
 
     def handleButtonClicked(self,state):
         try:
@@ -525,10 +689,12 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 value = item.text()
                 if state :
                     txt = "매수 활성화"
+                    button.setEnabled(False)
                 else:
                     txt = "매수 중지"
+                    button.setEnabled(False)
                 label_string = txt + ' Clicked , Value: ' + str(value)
-                #self.coin_search.setText(value)
+
                 logger.debug(label_string)
         except Exception as e:
             logger.debug("예외가 발생했습니다. %s", e)
@@ -774,11 +940,26 @@ def send_to_clients(is_buy, coin): #
         logger.debug(traceback.format_exc())
 
 
+stylesheet = """
+    QTableWidget {
+        background-color: white; 
+    }
+
+    QTableWidget::item {
+        color: gray;                    
+        background-color: gray;
+    }
+
+"""
+
+
 if __name__ == "__main__":
     try:
         global test
         test = True
         app = QApplication(sys.argv)
+        app.setStyleSheet(stylesheet)
+        app.setStyleSheet('QTableView::item {border-top: 1px solid #d6d9dc;}')
         main = Main()
         main.show()
         app.exec_()

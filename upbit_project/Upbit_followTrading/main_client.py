@@ -79,25 +79,13 @@ coin_Kname = {}
 coin_Ename = {}
 tickers = []
 
-stylesheet = """
-    QTableWidget {
-        background-color: white; 
-    }
 
-    QTableWidget::item {
-        color: gray;                    
-        background-color: gray;
-    }
-
-"""
 from dateutil.tz import gettz
 # fplt.display_timezone = gettz('Asia/Jakarta')
 
 # ... or in UTC = "display same as timezone-unaware data"
 import datetime
-import pandas as pd
 
-pd.options.display.float_format = '{:.5f}'.format
 # todo : pandas 아닌가 ?
 
 """
@@ -127,6 +115,8 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             # 자동완성 검색
             self.table_coin.cellClicked.connect(self.table_cell_clicked_func)
             self.chart_bun.currentIndexChanged.connect(lambda: self.coin_chart(self.coin_search.text()))
+
+
             self.socket_thread = socket_client_thread()
             self.socket_thread.sock_msg.connect(self.msg_by_server)
             self.socket_thread.start()
@@ -154,7 +144,8 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
         table.setColumnWidth(6, 110)
         table.setColumnWidth(7, 90)
         table.setColumnWidth(8, 90)
-
+        table.setFont(QtGui.QFont('맑은 고딕', 9))
+        self.real_log.setFont(QtGui.QFont('맑은 고딕', 9))
         self.rpb = QRoundProgressBar()
         # self.rpb.setStyleSheet('QRoundProgressBar{background-color:#123;}')
         # self.rpb.setValue(15)
@@ -746,6 +737,21 @@ class socket_client_thread(QThread):
                 time.sleep(1)
 
 
+stylesheet = """
+    QTableWidget {
+        background-color: white; 
+    }
+
+    QTableWidget::item {
+        color: gray;                    
+        background-color: gray;
+    }
+
+"""
+
+
+from PyQt5.QtGui import QFontDatabase
+from PyQt5.QtGui import QFont
 if __name__ == "__main__":
     global test
     test = True
@@ -755,6 +761,10 @@ if __name__ == "__main__":
         app = QApplication(sys.argv)
         app.setStyleSheet(stylesheet)
         app.setStyleSheet('QTableView::item {border-top: 1px solid #d6d9dc;}')
+
+        font = QFontDatabase()
+        font.addApplicationFont('.DATA/AGENCYB.TTF')
+        app.setFont(QFont('AGENCYB'))
         main = Main()
         main.show()
         app.exec_()
