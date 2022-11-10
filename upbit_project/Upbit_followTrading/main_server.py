@@ -83,7 +83,9 @@ coin_Kname = {}
 coin_Ename = {}
 coin_list = {}
 tickers = []
+current_price_dic = {}
 ax = object
+coin_dic = {}
 
 import datetime
 
@@ -95,7 +97,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             self.setWindowTitle("upbit auto system")
 
 
-            #self.t1.clicked.connect(self.test_func)
+            self.t1.clicked.connect(self.test_func)
             #self.t2.clicked.connect(self.test_func2)
             #self.t3.clicked.connect(self.test_func3)
             self.table_coin.cellClicked.connect(self.table_cell_clicked_func)
@@ -109,7 +111,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             #자동완성 검색
             self.init_nameList()
 
-            self.chart_bun.currentIndexChanged.connect(lambda: self.coin_chart(self.coin_search.text()))
+            self.chart_bun.currentIndexChanged.connect(lambda: self.coin_chart(self.coin_search_1.text()))
             self.buy_btn.clicked.connect(self.buy_btn_func)
             self.sell_btn.clicked.connect(self.sell_btn_func)
 
@@ -125,11 +127,27 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
     def test_func(self):
         logger.debug("testbtn clicked")
         try:
-            global main_upbit
-            logger.debug(main_upbit.get_order("KRW-BTC", state="done"))
-            logger.debug(main_upbit.get_order("KRW-BTC"))
-            #logger.debug(main_upbit.get_order("KRW-BTC"))
-
+            # global coin_dic
+            # logger.debug(current_price_dic)
+            # #logger.debug(main_upbit.get_order("KRW-BTC"))
+            #
+            # #logger.debug()
+            # coin_dic = {}
+            # idx = 0
+            # for coin in tickers:
+            #     df = pyupbit.get_ohlcv(coin, 'minute5', 3)
+            #     price_list = df['close'].to_list() #제일 뒤에가 최근
+            #     #logger.debug(df['close'])
+            #     #logger.debug(price_list)
+            #
+            #     coin_dic[coin] = price_list
+            #     if idx == 3:
+            #
+            #         break;
+            #     idx += 1
+            #
+            # logger.debug(coin_dic)
+            init_coin_dic()
 
         except Exception as e:
             logger.debug(e)
@@ -255,7 +273,8 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                             background-color: gray
                         }
                     """)
-            self.coin_chart("KRW-BTC")
+            #self.coin_chart(self.coin_search_1.text())
+
         except Exception as e:
             logger.debug(e)
             logger.debug(traceback.format_exc())
@@ -328,6 +347,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
         try:
             self.update_thread = Mythread()
             self.update_thread.update_table_signal.connect(self.update_table)
+            self.update_thread.update_coin_chart_signal.connect(lambda: self.coin_chart(self.coin_search_1.text()))
             self.update_thread.start()
             pass
         except Exception as e:
@@ -585,44 +605,34 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug("예외가 발생했습니다. %s", e)
             logger.debug(traceback.format_exc())
 
+    def auto_order(self,is_buy,coin):
+        pass
+
+
+
+    @pyqtSlot()
     def coin_chart(self, coin):
         try:
             global coin_list
             symbol = self.get_coin_symbol(coin)
             if symbol:
                 if self.bun_to_min():
-                    #global ax, axs, axo
-
-                    #fplt.close()
-
                     global ax, df, plot
-
+                    self.gridLayout.removeWidget(self.gridLayout.itemAtPosition(0,0).widget())
                     ax.clear()
-
-                    ax = fplt.create_plot()  # pygtgraph.graphicsItems.PlotItem
-
-                    #axo = ax.overlay()  # pygtgraph.graphicsItems.PlotItem
-                    #axs = [ax]  # finplot requres this property
-
-                    #add_legend
+                    fplt.close()
+                    ax = fplt.create_plot()
 
                     # if 'df' in coin_list[symbol]:
                     #     pass
                     # else:
                     #     coin_list[symbol]['df'] = pyupbit.get_ohlcv(symbol, self.bun_to_min(), 200)
 
-
                     df = pyupbit.get_ohlcv(symbol, self.bun_to_min(), 200)
                     plot = fplt.candlestick_ochl(df[['open', 'close', 'high', 'low']])
 
                     #fplt.set_x_pos(0, 200, ax) #시작위치 줌
                     fplt.refresh()
-
-                    #fplt.update_gfx()
-                    #self.gridLayout.update()
-
-                    #a = QGridLayout()
-                    #a.
                     self.gridLayout.addWidget(ax.vb.win, 0, 0)  # ax.vb     (finplot.FinViewBox)
 
 
@@ -631,7 +641,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug(traceback.format_exc())
 
     @pyqtSlot(dict,dict)
-    def update_table(self,coin_dict,jango_dict):
+    def update_table(self, coin_dict, jango_dict):
         try:
             global coin_list
             coin_list = coin_dict
@@ -820,19 +830,45 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
 class Mythread(QThread):
     update_table_signal = pyqtSignal(dict,dict)
+    update_coin_chart_signal = pyqtSignal()
     def __init__(self):
         super().__init__()
 
     def run(self):
+        time.sleep(1)
         while True:
             try:
-                time.sleep(1)
                 coin_dict,jango_dict = update_coin_list()
                 #todo : 자동매매 플래그, 자동매매 로직
-                self.update_table_signal.emit(coin_dict,jango_dict)
-                #logger.debug("?")
+                self.update_table_signal.emit(coin_dict, jango_dict)
+
+                if update_coin_chart():
+                    time.sleep(5)
+                    logger.debug("차트 업데이트")
+                    self.update_coin_chart_signal.emit()
+
                 time.sleep(1)
-                #logger.debug("!")
+
+            except Exception as e:
+                logger.debug(e)
+                logger.debug(traceback.format_exc())
+
+
+class condition_search_thread(QThread):
+    condition_search_signal = pyqtSignal(dict)
+
+
+    def __init__(self):
+        super().__init__()
+
+    def run(self):
+        time.sleep(1)
+        while True:
+            try:
+
+                if condition_func():
+                    time.sleep(1)
+
             except Exception as e:
                 logger.debug(e)
                 logger.debug(traceback.format_exc())
@@ -840,10 +876,66 @@ class Mythread(QThread):
 
 
 
+def condition_func(self,coin_dict):
+    return True
+
+
+def update_coin_dic():
+    pass
+
+
+
+def init_coin_dic():
+    logger.debug("init_coin_dic start")
+    try:
+        global coin_dic
+        coin_dic = {}
+        idx = 0
+        for coin in tickers:
+            df = pyupbit.get_ohlcv(coin, 'minute5', 200)
+            price_list = df['close'].to_list() #제일 뒤에가 최근
+            #logger.debug(df['close'])
+            #logger.debug(price_list)
+            coin_dic[coin] = price_list
+            time.sleep(0.5)
+            idx += 1
+            logger.debug("init_coin_dic : " + str(idx)+'/' +str(len(tickers)))
+
+       #logger.debug(coin_dic)
+        logger.debug(len(coin_dic))
+
+    except Exception as e:
+        logger.debug(e)
+        logger.debug(traceback.format_exc())
+
+
+
+def update_coin_chart():
+    ret = False
+    now_time = dt.datetime.now()
+    nbun = main.chart_bun.currentText()
+
+    if nbun == '5분' and now_time.minute % 5 == 0 and now_time.second < 5:
+        return True
+    elif nbun == '15분' and now_time.minute % 15 == 0 and now_time.second < 5:
+        return True
+    elif nbun == '30분' and now_time.minute % 30 == 0 and now_time.second < 5:
+        return True
+    elif nbun == '1시간' and now_time.minute == 0 and now_time.second < 5:
+        return True
+    elif nbun == '4시간' and now_time.hour % 4 == 0 and now_time.second < 5:
+        return True
+    elif nbun == '1일' and now_time.hour == 9 and now_time.minute == 0 and now_time.second < 5:
+        return True
+    else:
+        return False
+
+
+
 # coin list update func
 def update_coin_list():
     try:
-        global auto_flag, main_upbit
+        global auto_flag, main_upbit, tickers, current_price_dic
         tmp = main_upbit.get_balances()
         #logger.debug(tmp)
         tmp_list = {}
@@ -866,8 +958,12 @@ def update_coin_list():
                         float(tmp_list[symbol]['avg_buy_price']) * float(tmp_list[symbol]['balance']))
         #logger.debug(tmp_list)
         current_list = {}
-        if len(tmp_list.keys()) :
-            current_list = pyupbit.get_current_price(tmp_list.keys())
+
+        current_price_dic = pyupbit.get_current_price(tickers)
+
+        for coin in tmp_list.keys() :
+            current_list[coin] = current_price_dic[coin]
+
         #logger.debug(tmp_list.keys())
         #logger.debug(current_list)
 

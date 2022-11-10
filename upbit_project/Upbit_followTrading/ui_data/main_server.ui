@@ -598,7 +598,7 @@ background-color:blue;
      <string notr="true">color : white; background-color:gray;</string>
     </property>
     <property name="text">
-     <string>Coinname</string>
+     <string>BTC</string>
     </property>
    </widget>
    <widget class="QLabel" name="coin_search_3">
@@ -1032,6 +1032,19 @@ background-color:blue;
      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
     </property>
    </widget>
+   <widget class="QPushButton" name="t1">
+    <property name="geometry">
+     <rect>
+      <x>950</x>
+      <y>40</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>test</string>
+    </property>
+   </widget>
    <zorder>label_10</zorder>
    <zorder>label_9</zorder>
    <zorder>groupBox</zorder>
@@ -1065,6 +1078,7 @@ background-color:blue;
    <zorder>label_6</zorder>
    <zorder>money_label_4</zorder>
    <zorder>money_label_3</zorder>
+   <zorder>t1</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
