@@ -96,7 +96,8 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             super().__init__()
             self.setupUi(self)
             self.setWindowTitle("upbit auto system")
-
+            global run_program
+            run_program = False
 
             self.t1.clicked.connect(self.test_func)
             #self.t2.clicked.connect(self.test_func2)
@@ -112,6 +113,9 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             #자동완성 검색
             self.init_nameList()
 
+            self.start_btn.clicked.connect(lambda: self.state_func('start'))
+            self.stop_btn.clicked.connect(lambda: self.state_func('stop'))
+
             self.chart_bun.currentIndexChanged.connect(lambda: self.coin_chart(self.coin_search_1.text()))
             self.buy_btn.clicked.connect(self.buy_btn_func)
             self.sell_btn.clicked.connect(self.sell_btn_func)
@@ -119,6 +123,10 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             #=========소켓 서버 스레드
             self.socket_server = socket_server_thread()
             self.socket_server.start()
+
+            init_coin_dic()  # 우선 여기에 #todo : 다른 함수에서 부를 수 있는 전역함수, 모든 코인값가져옴
+            self.state_func('stop')
+            run_program = True
             logger.debug("main init 완료")
 
         except Exception as e:
@@ -176,6 +184,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
     def initial(self):
         try:
+
             logger.debug('table init..')
             table = self.table_coin
             table.setColumnWidth(0, 80)
@@ -246,7 +255,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
             self.table_coin.setShowGrid(False)
             #self.table_coin.setStyleSheet('background-color : red;')
-            self.trading_start_btn.setStyleSheet("""
+            self.start_btn.setStyleSheet("""
                     QPushButton {
                         color: white ; 
                         background-color: gray
@@ -260,7 +269,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                         background-color: gray
                     }
                     """)
-            self.trading_stop_btn.setStyleSheet("""
+            self.stop_btn.setStyleSheet("""
                         QPushButton {
                             color: white ; 
                             background-color: gray
@@ -350,6 +359,12 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             self.update_thread.update_table_signal.connect(self.update_table)
             self.update_thread.update_coin_chart_signal.connect(lambda: self.coin_chart(self.coin_search_1.text()))
             self.update_thread.start()
+
+            # todo : thread
+            #self.condition_thread = condition_search_thread()
+            #self.condition_thread.condition_func_signal.connect(self.auto_order)
+            #self.condition_thread.start()
+
             pass
         except Exception as e:
             logger.debug("예외가 발생했습니다. %s", e)
@@ -408,8 +423,6 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 logger.debug(ret)
 
             return self.ckeck_order_state(ret)
-
-
 
         except Exception as e:
             logger.debug(e)
@@ -606,19 +619,10 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug("예외가 발생했습니다. %s", e)
             logger.debug(traceback.format_exc())
 
-    def auto_order(self,is_buy,coin, amt = 0): #todo : del
+    #@pyqtSlot()#list,list,list? or dict oly? or for문? str, str, str?#todo : thread
+    def auto_order(self,is_buy,coin, amt = 0):
         try:
-            global main_upbit
-            send_to_clients(is_buy, coin)
-
-            if is_buy:
-                ret = main_upbit.buy_market_order(coin, price=amt)
-
-            else:
-                ret = main_upbit.sell_market_order(coin, volume=amt)
-                logger.debug(ret)
-            # if ret = self.ckeck_order_state(ret): send_ ~ else: return ret
-            return self.ckeck_order_state(ret)
+            return 0
 
         except Exception as e:
             logger.debug("예외가 발생했습니다. %s", e)
@@ -840,6 +844,36 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
         label_string = txt + ' Clicked , Value: ' + str(value)
         logger.debug(label_string)
 
+    def state_func(self, state):
+        global auto_flag
+        try:
+            if state == 'start':
+
+                auto_flag = True
+                self.start_btn.setEnabled(False)
+                self.start_btn.setStyleSheet("color:gray")
+                self.stop_btn.setEnabled(True)
+                self.stop_btn.setStyleSheet("color:white")
+                self.stop_btn.setStyleSheet("background:blue")
+
+                # 자동매매 시작 버튼 클릭시 옵션값 변경 못하도록 변경
+
+                self.real_log_prt("[system] 자동매매 시작")
+            else:
+                auto_flag = False
+                self.start_btn.setEnabled(True)
+                self.start_btn.setStyleSheet("color:white")
+                self.start_btn.setStyleSheet("background:red")
+                self.stop_btn.setEnabled(False)
+                self.stop_btn.setStyleSheet("color:gray")
+
+                # 자동매매 중지 버튼 클릭시 옵션값 변경 가능하도록 변경
+
+                self.real_log_prt("[system] 자동매매 종료")
+        except Exception as e:
+            logger.debug(e)
+            logger.debug(traceback.format_exc())
+
 
 
 class Mythread(QThread):
@@ -852,13 +886,18 @@ class Mythread(QThread):
         time.sleep(1)
         while True:
             try:
-                coin_dict,jango_dict = update_coin_list()
-                self.update_table_signal.emit(coin_dict, jango_dict)
+                if run_program:
+                    coin_dict,jango_dict = update_coin_list()
+                    self.update_table_signal.emit(coin_dict, jango_dict)
 
-                if update_coin_chart():
-                    time.sleep(5)
-                    logger.debug("차트 업데이트")
-                    self.update_coin_chart_signal.emit()
+                    if update_coin_dic():
+                        logger.debug("coin_dic 업데이트")
+                        if update_coin_chart():
+                            logger.debug("차트 업데이트")
+                            self.update_coin_chart_signal.emit()
+
+                        time.sleep(5)
+
 
                 time.sleep(1)
 
@@ -868,17 +907,27 @@ class Mythread(QThread):
 
 
 class condition_search_thread(QThread):
+    #condition_func_signal = pyqtSignal() #list,list,list?  #todo : thread
 
     def __init__(self):
         super().__init__()
 
     def run(self):
-        init_coin_dic()
+
         while True:
             try:
                 global coin_dic
-                if update_coin_dic():
-                    condition_func(coin_dic)
+
+                #
+                time.sleep(1)
+
+                """
+                condition_list = condition_func()
+                if condition_list:
+                    self.condition_func_signal.emit(condition_list)
+                
+                
+                """
 
             except Exception as e:
                 logger.debug(e)
@@ -893,21 +942,21 @@ def condition_func(coin_dict): #조건검색하는 함수
 
 def update_coin_dic():
     try:
-        global coin_dic, coin_dic_available, current_price_dic
+        global coin_dic
         now_time = dt.datetime.now()
         if now_time.minute % 5 == 0 and now_time.second < 5:
-            if coin_dic_available:
-                if coin_dic.keys() == current_price_dic.keys():
-                    logger.debug('coin dic update 시작')
-                    for coin in coin_dic:
-                        coin_dic[coin].append(current_price_dic[coin])
-                        if len(coin_dic[coin]) > 500:
-                            del coin_dic[coin][0]
-                    logger.debug('coin dic update 완료됨')
-                    return True
-                else:
-                    logger.debug('coin_dic update 중 current_price_dic와 coin_dic의 키가 맞지 않음 !')
-                    return False
+            if coin_dic.keys() == current_price_dic.keys():
+                #logger.debug('coin dic update 시작')
+                for coin in coin_dic:
+                    coin_dic[coin].append(current_price_dic[coin])
+                    if len(coin_dic[coin]) > 500:
+                        del coin_dic[coin][0]
+                    #logger.debug(coin_dic[coin])
+                logger.debug('coin dic update 완료됨')
+                return True
+            else:
+                logger.debug('coin_dic update 중 current_price_dic와 coin_dic의 키가 맞지 않음 !')
+                return False
 
         return False
 
@@ -919,12 +968,11 @@ def update_coin_dic():
 def init_coin_dic():
     logger.debug("init_coin_dic start")
     try:
-        global coin_dic, coin_dic_available
-        coin_dic_available = False
+        global coin_dic
         tmp_dic = {}
         idx = 0
         for coin in tickers:
-            df = pyupbit.get_ohlcv(coin, 'minute5', 200)
+            df = pyupbit.get_ohlcv(coin, 'minute5', 3)
             price_list = df['close'].to_list() #제일 뒤에가 최근
             #logger.debug(df['close'])
             #logger.debug(price_list)
@@ -934,7 +982,6 @@ def init_coin_dic():
             logger.debug("init_coin_dic : " + str(idx)+'/' +str(len(tickers)))
 
         coin_dic = tmp_dic
-        coin_dic_available = True
        #logger.debug(coin_dic)
         logger.debug(len(coin_dic))
 
@@ -945,26 +992,29 @@ def init_coin_dic():
 
 
 def update_coin_chart():
-    ret = False
-    now_time = dt.datetime.now()
-    nbun = main.chart_bun.currentText()
+    try:
+        ret = False
+        now_time = dt.datetime.now()
+        nbun = main.chart_bun.currentText()
 
-    if nbun == '5분' and now_time.minute % 5 == 0 and now_time.second < 5:
-        return True
-    elif nbun == '15분' and now_time.minute % 15 == 0 and now_time.second < 5:
-        return True
-    elif nbun == '30분' and now_time.minute % 30 == 0 and now_time.second < 5:
-        return True
-    elif nbun == '1시간' and now_time.minute == 0 and now_time.second < 5:
-        return True
-    elif nbun == '4시간' and now_time.hour % 4 == 0 and now_time.second < 5:
-        return True
-    elif nbun == '1일' and now_time.hour == 9 and now_time.minute == 0 and now_time.second < 5:
-        return True
-    else:
-        return False
+        if nbun == '5분' and now_time.minute % 5 == 0 and now_time.second < 5:
+            return True
+        elif nbun == '15분' and now_time.minute % 15 == 0 and now_time.second < 5:
+            return True
+        elif nbun == '30분' and now_time.minute % 30 == 0 and now_time.second < 5:
+            return True
+        elif nbun == '1시간' and now_time.minute == 0 and now_time.second < 5:
+            return True
+        elif nbun == '4시간' and now_time.hour % 4 == 0 and now_time.second < 5:
+            return True
+        elif nbun == '1일' and now_time.hour == 9 and now_time.minute == 0 and now_time.second < 5:
+            return True
+        else:
+            return False
 
-
+    except Exception as e:
+        logger.debug(e)
+        logger.debug(traceback.format_exc())
 
 # coin list update func
 def update_coin_list():
@@ -1072,7 +1122,7 @@ class socket_server_thread(QThread):
             global test
             if test:
                 # 내 아이피
-                self.SERVER_HOST = DH_OFFICE_IP
+                self.SERVER_HOST = DH_IP
             else:
                 # 고객사 아이피
                 self.SERVER_HOST = CUSTOM_IP
@@ -1176,7 +1226,7 @@ class socket_server_thread(QThread):
 
 def send_to_clients(is_buy, coin): #
     try:
-        logger.debug(str(is_buy)+str( coin))
+        logger.debug(str(is_buy)+str(coin))
         if main.per_radio.isChecked():
             p_amt = "per;" + str(float(main.price_per.text())/100)
         else:
