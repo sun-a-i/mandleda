@@ -111,12 +111,9 @@ coin_list = {'KRW-ETH':
                   'activate': None #활성화, 자동매매 중지, 활성화 플래그 변수
                   } 
              'KRW-BTC' : {...} , ... }
+
+coin_dic = 5분봉 가격 500개 
 '''
-
-
-
-
-
 
 class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui path
     def __init__(self):
