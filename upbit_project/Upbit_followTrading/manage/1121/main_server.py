@@ -1110,7 +1110,7 @@ class socket_server_thread(QThread):
             global test
             if test:
                 # 내 아이피
-                self.SERVER_HOST = TY_IP
+                self.SERVER_HOST = DH_IP
             else:
                 # 고객사 아이피
                 self.SERVER_HOST = CUSTOM_IP
