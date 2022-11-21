@@ -90,6 +90,34 @@ coin_dic_available = False #모든 코인 로딩 완료
 current_price_dic = {} #모든 현재가 코인
 import datetime
 
+
+
+'''
+coin_list = {'KRW-ETH': 
+                 {'currency': 'ETH', #이름
+                  'balance': '0.00696422',  #개수
+                  'locked': '0', 
+                  'avg_buy_price': '1579500', #평단가
+                  'avg_buy_price_modified': False, 
+                  'unit_currency': 'KRW', #화폐기준
+                  
+                  위까지 main_upbit.get_balances() 한 결과 전부 받아옴 
+                  이하는 계산한 값
+                  
+                  'total_price': '10999.985490000001', #매수금액 balance * avg_buy_price 
+                  'current_price': '1583000', #현재가, 매초 업데이트됨
+                  'total_now_price': '11024.36026', #평가금액 현재가 * balance
+                  'earing_rate': '0.22158911047799934', #손익률
+                  'activate': None #활성화, 자동매매 중지, 활성화 플래그 변수
+                  } 
+             'KRW-BTC' : {...} , ... }
+'''
+
+
+
+
+
+
 class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui path
     def __init__(self):
         try:
@@ -121,7 +149,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             self.sell_btn.clicked.connect(self.sell_btn_func)
 
             # 우선 여기에 #todo : 다른 함수에서 부를 수 있는 전역함수, 모든 코인값가져옴
-            init_coin_dic()
+            #init_coin_dic()
 
             #=========소켓 서버 스레드
             self.socket_server = socket_server_thread()
@@ -139,11 +167,11 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
     def test_func(self):
         logger.debug("testbtn clicked")
         try:
-            logger.debug(coin_dic)
-            for i in coin_dic:
+            logger.debug(coin_list)
+            for i in coin_list:
                 logger.debug(i)
-                logger.debug(len(coin_dic[i]))
-                logger.debug(coin_dic[i])
+                logger.debug(len(coin_list[i]))
+                logger.debug(coin_list[i])
 
 
         except Exception as e:
@@ -523,16 +551,19 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug(data)
             symbol = self.get_coin_symbol(data)
             if symbol:
-                amt = coin_list[symbol]["balance"]
-                txt = str(symbol) + " : " + str(amt)
-                reply = QMessageBox.question(self, '확인', txt + '개 매도 하시겠습니까?')
-                if reply == QMessageBox.Yes:
-                    if self.order(0,symbol,amt):
-                        self.real_log_prt("전량 매도 " + str(symbol) + " : " + str(amt))
-                    else:
-                        txt = "[error] 매도 에러"
-                        self.floating_msg(txt)
-                pass
+                if symbol in coin_list:
+                    amt = coin_list[symbol]["balance"]
+                    txt = str(symbol) + " : " + str(amt)
+                    reply = QMessageBox.question(self, '확인', txt + '개 매도 하시겠습니까?')
+                    if reply == QMessageBox.Yes:
+                        if self.order(0,symbol,amt):
+                            self.real_log_prt("전량 매도 " + str(symbol) + " : " + str(amt))
+                        else:
+                            txt = "[error] 매도 에러"
+                            self.floating_msg(txt)
+                else:
+                    txt = "[error] 코인 에러 : 소지하지 않은 코인명."
+                    self.floating_msg(txt)
             else:
                 txt = "[error] 코인 이름 에러 : 정확하지 않은 코인명."
                 self.floating_msg(txt)
