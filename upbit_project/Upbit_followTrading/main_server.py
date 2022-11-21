@@ -300,6 +300,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                         }
                     """)
             #self.coin_chart(self.coin_search_1.text())
+            self.table_coin.setRowCount(0)
 
         except Exception as e:
             logger.debug(e)
@@ -389,7 +390,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
     def login(self):
         global main_upbit
         if not os.path.exists(api_data_path):
-            self.real_log_prt("[error] 로그인 정보 없음 API.txt 작성 후 로그인")
+            self.real_log.addItem("[error] 로그인 정보 없음 API.txt 작성 후 로그인")
             main_upbit = False
             return False
         else:
@@ -398,10 +399,10 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     line = f.readlines()
                     access_key = line[0].strip()
                     secret_key = line[1].strip()
-                    self.real_log_prt("[system] 로그인 정보 있음 로그인 시도")
+                    self.real_log.addItem("[system] 로그인 정보 있음 로그인 시도")
                     main_upbit = pyupbit.Upbit(access_key, secret_key)
                     if self.update_balance():
-                        self.real_log_prt("[system] 로그인 성공")
+                        self.real_log.addItem("[system] 로그인 성공")
                         self.after_login_initial()
                     else:
                         main_upbit = False
@@ -410,7 +411,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             except Exception as e:
                 logger.debug("예외가 발생했습니다. %s", e)
                 logger.debug(traceback.format_exc())
-                self.real_log_prt("[error] 로그인 실패")
+                self.real_log.addItem("[error] 로그인 실패")
                 main_upbit = False
                 return False
 
@@ -800,21 +801,26 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug(traceback.format_exc())
 
     def bun_to_min(self):
-        nbun = self.chart_bun.currentText()
-        if nbun == '5분':
-            return 'minute5'
-        elif nbun == '15분':
-            return 'minute15'
-        elif nbun == '30분':
-            return 'minute30'
-        elif nbun == '1시간':
-            return 'minute60'
-        elif nbun == '4시간':
-            return 'minute240'
-        elif nbun == '1일':
-            return 'day'
-        else:
-            return False
+        try:
+            nbun = self.chart_bun.currentText()
+            if nbun == '5분':
+                return 'minute5'
+            elif nbun == '15분':
+                return 'minute15'
+            elif nbun == '30분':
+                return 'minute30'
+            elif nbun == '1시간':
+                return 'minute60'
+            elif nbun == '4시간':
+                return 'minute240'
+            elif nbun == '1일':
+                return 'day'
+            else:
+                return False
+
+        except Exception as e:
+            logger.debug("예외가 발생했습니다. %s", e)
+            logger.debug(traceback.format_exc())
 
     def handleButtonClicked(self,is_activate):
         try:
@@ -834,34 +840,38 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
 
     def change_state_button(self,is_activate, row, col):
+        try:
+            button = self.table_coin.cellWidget(row, col)
+            item = self.table_coin.item(row, 0)
+            value = item.text()
 
-        button = self.table_coin.cellWidget(row, col)
-        item = self.table_coin.item(row, 0)
-        value = item.text()
+            if is_activate:
+                txt = "매수 활성화"
 
-        if is_activate:
-            txt = "매수 활성화"
+                # button.setEnabled(False) #진짜 개 얼탱이가 없네 진짜
+                button.setStyleSheet("color:gray;background-color:#FFCCCC")
+                coin_list[self.get_coin_symbol(value)]["activate"] = True
 
-            # button.setEnabled(False) #진짜 개 얼탱이가 없네 진짜
-            button.setStyleSheet("color:gray;background-color:#FFCCCC")
-            coin_list[self.get_coin_symbol(value)]["activate"] = True
+                other_button = self.table_coin.cellWidget(row, col - 1)
+                other_button.setEnabled(True)
+                other_button.setStyleSheet("color:white;background-color:blue")
 
-            other_button = self.table_coin.cellWidget(row, col - 1)
-            other_button.setEnabled(True)
-            other_button.setStyleSheet("color:white;background-color:blue")
+            else:
+                txt = "매수 중지"
+                # button.setEnabled(False)
+                button.setStyleSheet("color:gray;background-color:#333300")
+                coin_list[self.get_coin_symbol(value)]["activate"] = False
 
-        else:
-            txt = "매수 중지"
-            # button.setEnabled(False)
-            button.setStyleSheet("color:gray;background-color:#333300")
-            coin_list[self.get_coin_symbol(value)]["activate"] = False
+                other_button = self.table_coin.cellWidget(row, col + 1)
+                other_button.setEnabled(True)
+                other_button.setStyleSheet("color:white;background-color:red")
 
-            other_button = self.table_coin.cellWidget(row, col + 1)
-            other_button.setEnabled(True)
-            other_button.setStyleSheet("color:white;background-color:red")
+            label_string = txt + ' Clicked , Value: ' + str(value)
+            logger.debug(label_string)
 
-        label_string = txt + ' Clicked , Value: ' + str(value)
-        logger.debug(label_string)
+        except Exception as e:
+            logger.debug("예외가 발생했습니다. %s", e)
+            logger.debug(traceback.format_exc())
 
     def state_func(self, state):
         global auto_flag
@@ -967,7 +977,10 @@ def update_coin_dic():
             if coin_dic.keys() == current_price_dic.keys():
                 #logger.debug('coin dic update 시작')
                 for coin in coin_dic:
-                    coin_dic[coin].append(current_price_dic[coin])
+                    if coin in ncoin_dic and coin in current_price_dic:
+                        coin_dic[coin].append(current_price_dic[coin])
+                    else:
+                        logger.debug('coin dic 맞지 않음')
                     if len(coin_dic[coin]) > 500:
                         del coin_dic[coin][0]
                     #logger.debug(coin_dic[coin])
@@ -1098,14 +1111,10 @@ def update_coin_list():
             else:
                 tmp_list[symbol]["activate"] = None
 
-        #main.money_label_2.setText(format(round(total_buy), ','))
-        #main.money_label_3.setText(format(round(total_now_buy), ','))
-
         if total_buy != 0:
             total_rate = ((float(total_now_buy) - float(total_buy)) / float(total_buy)) * 100
         else:
             total_rate = 0
-        #main.money_label_4.setText(str(round(total_rate,2)))
         tmp_jango_list["total_buy"] = total_buy
         tmp_jango_list["total_now_buy"] = total_now_buy
         tmp_jango_list["total_rate"] = total_rate
@@ -1151,6 +1160,7 @@ class socket_server_thread(QThread):
 
     def run(self):
         try:
+            time.sleep(2)
             global SERVER_PORT, main
             while self.con == False:
                 self.socket_try += 1
