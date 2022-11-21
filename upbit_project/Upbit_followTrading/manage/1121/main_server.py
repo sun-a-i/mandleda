@@ -974,7 +974,7 @@ def update_coin_dic():
             if coin_dic.keys() == current_price_dic.keys():
                 #logger.debug('coin dic update 시작')
                 for coin in coin_dic:
-                    if coin in ncoin_dic and coin in current_price_dic:
+                    if coin in coin_dic and coin in current_price_dic:
                         coin_dic[coin].append(current_price_dic[coin])
                     else:
                         logger.debug('coin dic 맞지 않음')
