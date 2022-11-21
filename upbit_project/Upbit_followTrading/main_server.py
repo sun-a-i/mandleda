@@ -13,7 +13,7 @@ from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtCore import QThread
 import traceback
 from PyQt5 import QtCore, QtGui, QtWidgets
-
+from PyQt5.QtGui import *
 
 import datetime as dt
 from datetime import datetime
@@ -264,9 +264,15 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                             border: none;
                             border-right: 0px ;
                             background-color:white;
+                            
+                        }
+                        QHeaderView { 
+                            font-size: 15pt; 
+                
                         }
                     ''')
             self.table_coin.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+
 
 
             self.table_coin.setShowGrid(False)
@@ -737,6 +743,8 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     self.table_coin.setItem(idx, 6, QTableWidgetItem(
                         format(round(float(coin_list[coin_name]["total_now_price"])), ',')))  #
 
+
+                    #self.table_coin.item(idx, 0).setFont(QFont( 25))
                     self.table_coin.item(idx, 0).setTextAlignment(Qt.AlignVCenter | Qt.AlignCenter)
                     self.table_coin.item(idx, 1).setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
                     self.table_coin.item(idx, 2).setTextAlignment(Qt.AlignVCenter | Qt.AlignCenter)
@@ -762,6 +770,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             for coin_name in coin_list:
                 #logger.debug(coin_name)
                 self.table_coin.setItem(idx, 0, QTableWidgetItem(coin_list[coin_name]["currency"]))
+
                 if float(coin_list[coin_name]["current_price"]) < 10 :
                     self.table_coin.setItem(idx, 1, QTableWidgetItem(format(round(float(coin_list[coin_name]["current_price"]),2),',')))#
                 elif float(coin_list[coin_name]["current_price"]) < 100 :
