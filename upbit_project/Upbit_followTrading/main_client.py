@@ -41,14 +41,14 @@ import logging
 from datetime import datetime
 import traceback
 
-if not os.path.exists('logFile'):
-    os.makedirs('logFile')
+if not os.path.exists('../../logFile'):
+    os.makedirs('../../logFile')
 nowDate = datetime.now()
 filename = str("./logFile./" + nowDate.strftime("%Y-%m-%d_%H-%M") + "1.txt")
 logger = logging.getLogger(__name__)
 
 fileMaxByte = 10.24 * 1024 * 100
-fileHandler = logging.handlers.TimedRotatingFileHandler(filename='./logFile/main.log', when='midnight', interval=1,
+fileHandler = logging.handlers.TimedRotatingFileHandler(filename='../../logFile/main.log', when='midnight', interval=1,
                                                         backupCount=10)
 
 logger.addHandler(fileHandler)
@@ -64,8 +64,8 @@ logger.addHandler(streamHandler)
 logger.setLevel(level=10)
 # ====================logger=========================
 
-if not os.path.exists('DATA'):
-    os.makedirs('DATA')
+if not os.path.exists('../../DATA'):
+    os.makedirs('../../DATA')
 
 setting_data_path = './DATA/settings.pickle'
 api_data_path = './DATA/API.txt'
@@ -245,9 +245,12 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     self.real_log_prt("[system] 로그인 정보 있음 로그인 시도")
                     main_upbit = pyupbit.Upbit(access_key, secret_key)
                     balance = main_upbit.get_balance(ticker="KRW")
-                    self.real_log_prt("[system] 로그인 성공")
-                    self.after_login_initial()
-                    login_flag = True
+                    if float(balance) > 0:
+                        self.real_log_prt("[system] 로그인 성공")
+                        self.after_login_initial()
+                        login_flag = True
+                    else:
+                        self.real_log_prt("잔고 없음. 로그인 실패 간주")
 
             except:
                 self.real_log_prt("[error] 로그인 실패")
@@ -357,8 +360,9 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
         try:
             balance = main_upbit.get_balance(ticker="KRW")
             self.money_label.setText(str(int(balance)))
-        except:
-            self.real_log_prt("[error] 잔고 update 실패")
+        except Exception as e:
+            logger.debug(e)
+            logger.debug(traceback.format_exc())
 
     def real_log_prt(self, txt):
         self.real_log.addItem(txt)
@@ -366,47 +370,57 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
     @pyqtSlot(str)
     def msg_by_server(self, data):
-        self.real_log_prt("[msg] 데이터 수신 : " + str(data))
-        global coin_list
-        tmp = data.split(';')
-        #BUY;KRW-BTC;per;0.1
-        #SEL;KRW-BTC;
-        if tmp[0] == "BUY" and len(tmp) == 4:
-            if tmp[2] == 'per':
-                amt = int(float(tmp[3]) * int(self.money_label.text().replace(',','')))
-                if amt < 5000 :
-                    amt = 5000
-                    txt = "최소주문금액보다 낮은 비율 금액, 최소주문금액 매수 " + str(round(float(tmp[3]) * 100)) + '% : ' + str(amt) + "원"
+        try:
+            logger.debug("[msg] 데이터 수신 : " + str(data))
+            global coin_list
+            tmp = data.split(';')
+            #BUY;KRW-BTC;per;0.1
+            #SEL;KRW-BTC;
+            if tmp[0] == "BUY" and len(tmp) == 4:
+                if tmp[2] == 'per':
+                    amt = int(float(tmp[3]) * int(self.money_label.text().replace(',','')))
+                    if amt < 5000 :
+                        amt = 5000
+                        logger.debug("최소주문금액보다 낮은 비율 금액, 최소주문금액 매수 " + str(round(float(tmp[3]) * 100)))
+                        txt = str(round(float(tmp[3]) * 100)) + '% : ' + str(amt) + "원"
+                    else:
+                        logger.debug("비율 금액 매수 소지금액의 " + str(round(float(tmp[3]) * 100)))
+                        txt = str(round(float(tmp[3]) * 100)) + '% : ' + str(amt) + "원"
+                elif tmp[2] == 'pri':
+                    amt = int(tmp[3])
+                    if int(self.money_label.text().replace(',','')) < amt :
+                        amt = int(self.money_label.text().replace(',',''))
+                        logger.debug("소지금액보다 많은 지정금액, 소지금액 전부 매수")
+                        txt = tmp[1] + ", " + str(amt) + "원"
+                    elif int(self.money_label.text().replace(',','')) < 5000:
+                        self.real_log_prt("[매수] 소지금액 오류 : ")
+                        return False
+                    else:
+                        txt = tmp[1] + ", " + str(amt) + "원"
                 else:
-                    txt = "비율 금액 매수 소지금액의 " + str(round(float(tmp[3]) * 100)) + '% : ' + str(amt) + "원"
-            elif tmp[2] == 'pri':
-                amt = int(tmp[3])
-                if int(self.money_label.text().replace(',','')) < amt :
-                    amt = int(self.money_label.text().replace(',',''))
-                    txt = "소지금액보다 많은 지정금액, 소지금액 전부 매수 " + str(amt) + "원"
-                elif int(self.money_label.text().replace(',','')) < 5000:
-                    self.real_log_prt("[매수] 소지금액 오류 : ")
+                    self.real_log_prt("[msg] 데이터 형식 맞지 않음 : " + str(data))
                     return False
+
+                if self.order(1, tmp[1],amt):
+                    self.real_log_prt("[매수] : " + txt)
                 else:
-                    txt = "지정 금액 매수  " + str(amt) + "원"
+                    self.real_log_prt("[매수] 오류 : ")
+
+            elif tmp[0] == "SEL":
+                symbol = self.get_coin_symbol(tmp[1])
+                if symbol in coin_list:
+                    amt = coin_list[symbol]["balance"]
+                    if self.order(0, symbol,amt):
+                        self.real_log_prt("[매도]  : " + symbol + ' 수량 : ' + str(amt))
+                    else:
+                        self.real_log_prt("[매도] 오류 : 보유수량이 없거나, 매도 불가능 종목(예약 수량 확인 요망)")
+                else:
+                    logger.debug('보유하지 않은 코인 매도 주문 ' + str(tmp[1]))
             else:
                 self.real_log_prt("[msg] 데이터 형식 맞지 않음 : " + str(data))
-                return False
-
-            if self.order(1, tmp[1],amt):
-                self.real_log_prt("[매수] : " + txt)
-            else:
-                self.real_log_prt("[매수] 오류 : ")
-
-        elif tmp[0] == "SEL":
-            symbol = self.get_coin_symbol(tmp[1])
-            amt = coin_list[symbol]["balance"]
-            if self.order(0, symbol,amt):
-                self.real_log_prt("[매도]  : " + symbol + ' 수량 : ' + str(amt))
-            else:
-                self.real_log_prt("[매도] 오류 : ")
-        else:
-            self.real_log_prt("[msg] 데이터 형식 맞지 않음 : " + str(data))
+        except Exception as e:
+            logger.debug(e)
+            logger.debug(traceback.format_exc())
 
     @pyqtSlot(dict, dict)
     def update_table(self, coin_dict, jango_dict):
