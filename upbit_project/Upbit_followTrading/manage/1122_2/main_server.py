@@ -695,12 +695,11 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
     def auto_order(self, coin):
         try:
             """
-            labels = ['coin_name', 'fir_invest_money', 'fir_price', 'avr_price', 'balance', 'quintuple_batting',
-                      'invest_cash','tot_invest_cash', 'set_stage', 'cur_stage', 'div_per', 'in_per', 'out_per',
-                      'next_buy_price', 'next_income_price', 'next_out_price', 'outcome_state', 'rebuy_chkbox',
-                      'state', 'gubun','high','gamsi_per','gamsi_price','trailing_per','trailing_income_price','last_trade_time']
-            """
-
+                            labels = ['coin_name', 'fir_invest_money', 'fir_price', 'avr_price', 'balance', 'quintuple_batting',
+                                      'invest_cash','tot_invest_cash', 'set_stage', 'cur_stage', 'div_per', 'in_per', 'out_per',
+                                      'next_buy_price', 'next_income_price', 'next_out_price', 'outcome_state', 'rebuy_chkbox',
+                                      'state', 'gubun','high','gamsi_per','gamsi_price','trailing_per','trailing_income_price','last_trade_time']
+                            """
             self.listView.addItem(coin_Kname[coin] + ' 자동 매수 - 시작 : ' + str(datetime.datetime.now()))
             logger.debug("자동매매 조건 부합 = %s", coin_Kname[coin])
 
