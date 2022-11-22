@@ -123,6 +123,9 @@ OFFENSIVE_MODE = 0
 DEFENSIVE_MODE = 1
 search_mode = OFFENSIVE_MODE
 
+final_price = 999999999.9
+final_price_chk = 888888888.8
+
 MyCash = 0
 def all_modify_csv():
     try:
@@ -694,6 +697,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
     #@pyqtSlot()#list,list,list? or dict oly? or for문? str, str, str?#todo : thread
     def auto_order(self, coin):
         try:
+            global coin_data_list
             """
             labels = ['coin_name', 'fir_invest_money', 'fir_price', 'avr_price', 'balance', 'quintuple_batting',
                       'invest_cash','tot_invest_cash', 'set_stage', 'cur_stage', 'div_per', 'in_per', 'out_per',
@@ -701,8 +705,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                       'state', 'gubun','high','gamsi_per','gamsi_price','trailing_per','trailing_income_price','last_trade_time']
             """
 
-            self.listView.addItem(coin_Kname[coin] + ' 자동 매수 - 시작 : ' + str(datetime.datetime.now()))
-            logger.debug("자동매매 조건 부합 = %s", coin_Kname[coin])
+            logger.debug(coin_Kname[coin] + ' 자동 매수 - 시작 : ' + str(datetime.datetime.now()))
 
             devided_random_list1 = ['-2.2', '-2.7', '-3.1', '-3.5', '-4.1']
             devided_random_list2 = ['-3', '-4.3', '-4.9', '-5.3', '-6.9']
@@ -743,7 +746,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 else:
                     invest = 10000
             """
-            if auto_flag == 'auto': #todo : auto_flag 는 True인데 ? a타입 b타입 ?
+            if auto_flag: #todo : auto_flag 는 True인데 ? a타입 b타입 ?
                 for i in range(7):
                     list_up.append(int(invest))
                     invest = invest * 1.03
@@ -805,8 +808,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
                 if int(coin_data_list[coin_name]['cur_stage']) >= int(coin_data_list[coin_name]['set_stage']):
                     logger.debug("마지막 단계 돌입 %s", coin_data_list[coin_name]['set_stage'] + "단계")
-                    coin_data_list[coin_name]['next_buy_price'] = KEY.final_price
-
+                    coin_data_list[coin_name]['next_buy_price'] = final_price
                 else:
                     coin_data_list[coin_name]['next_buy_price'] = str(
                         calc_next_price(float(coin_data_list[coin_name]['fir_price']), (
@@ -819,6 +821,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     coin_data_list[coin_name]['gamsi_per'] = random.choice(gamsi_per_list1)
                 else:
                     coin_data_list[coin_name]['gamsi_per'] = random.choice(gamsi_per_list2)
+
                 coin_data_list[coin_name]['gamsi_price'] = str(
                     calc_next_price(float(coin_data_list[coin_name]['avr_price']),
                                     float(coin_data_list[coin_name]['gamsi_per'])))
@@ -837,16 +840,13 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
                 all_modify_csv()
                 logger.debug(coin_data_list[coin_name])
-                check_drawing = True
-                self.listView.addItem(coin_Kname[coin_name] + " BUY")
+                self.real_log.addItem(coin_Kname[coin_name] + " BUY")
 
                 # last_trade_time[coin_name]['buy'].append(datetime.now())
                 # last_trade_time[coin_name]['sell'] = datetime.now()
                 # last_trade_time[coin_name]['state'] = 'none'
             else:
-                if buy_stop_flag == True:
-                    logger.debug("매수 중단 상태")
-
+                logger.debug("매수 중단 상태")
         except Exception as e:
             logger.debug("예외가 발생했습니다. %s", e)
             logger.debug(traceback.format_exc())
@@ -1211,13 +1211,16 @@ def calc_income_rate(close, current):
 #상위 거래량부터 출력할 개수
 MAX_VALUE_COUNT = 8
 
-yesterday_price = {}
+level = 0
+
+day_data = {}
 #데이터 수집 함수
 def get_ohlcv(wanted):
     try:
-        global yesterday_price
+        global day_data, level
 
         if wanted == "value":
+            #거래량 순위 MAX_VALUE_COUNT 만큼 가져옴
             value_dict = {}
             idx = 0
             for i in tickers:
@@ -1241,25 +1244,56 @@ def get_ohlcv(wanted):
             return sort_list
 
         elif wanted == "day_open_price":
+            #당일 시초가 가져옴
+            plus = 0
+            minus = 0
+            ohlcv_data = {}
+
             for ticker in tickers:
-                yesterday_price[ticker] = pyupbit.get_ohlcv(ticker, 'day', 3)
+                ohlcv_data[ticker] = pyupbit.get_ohlcv(ticker, 'day', 3)
                 time.sleep(0.4)
 
-                if (len(yesterday_price[ticker]['open']) >= 3) & (len(yesterday_price[ticker]['close']) >= 3):
+                if (len(ohlcv_data[ticker]['open']) >= 3) & (len(ohlcv_data[ticker]['close']) >= 3):
                     yesterday_updown = float(
-                        calc_income_rate(yesterday_price[ticker]['open'][-2], yesterday_price[ticker]['close'][-1]))
+                        calc_income_rate(ohlcv_data[ticker]['open'][-2], ohlcv_data[ticker]['close'][-1]))
 
-                    yesterday_price[ticker] = {'today': yesterday_price[ticker]['open'][-1],
+                    day_data[ticker] = {'today': ohlcv_data[ticker]['open'][-1],
                                                'yesterday': yesterday_updown,
-                                               'high': yesterday_price[ticker]['high'][-1]}
+                                               'high': ohlcv_data[ticker]['high'][-1]}
 
                 else:
                     yesterday_updown = float(
-                        calc_income_rate(yesterday_price[ticker]['open'][0], yesterday_price[ticker]['close'][0]))
+                        calc_income_rate(ohlcv_data[ticker]['open'][0], ohlcv_data[ticker]['close'][0]))
 
-                    yesterday_price[ticker] = {'today': yesterday_price[ticker]['open'][-1],
+                    day_data[ticker] = {'today': ohlcv_data[ticker]['open'][-1],
                                                'yesterday': yesterday_updown,
-                                               'high': yesterday_price[ticker]['high'][-1]}
+                                               'high': ohlcv_data[ticker]['high'][-1]}
+
+                if len(ohlcv_data[ticker]) > 2:
+                    #당일 상승, 하락 개수 카운트
+                    res = float(calc_income_rate(day_data[ticker]['today'], ohlcv_data[ticker]['close'][-1]))
+                    if res > 0:
+                        plus += 1
+                    else:
+                        minus += 1
+
+            if (minus > (0)) & (minus <= len(tickers) * 0.1):
+                level = 1
+            elif (minus > len(coin_Kname) * 0.1) & (minus <= len(coin_Kname) * 0.2):
+                level = 2
+            elif (minus > len(coin_Kname) * 0.2) & (minus <= len(coin_Kname) * 0.4):
+                level = 3
+            elif (minus > len(coin_Kname) * 0.4) & (minus <= len(coin_Kname) * 0.6):
+                level = 4
+            elif (minus > len(coin_Kname) * 0.6) & (minus <= len(coin_Kname) * 0.8):
+                level = 5
+            elif (minus > len(coin_Kname) * 0.8) & (minus <= len(coin_Kname)):
+                level = 6
+            else:
+                level = 2
+
+            logger.debug(f"level = {level}")
+
             return None
     except Exception as e:
         logger.debug(e)
@@ -1310,8 +1344,8 @@ class condition_search_thread(QThread):
                         if score >= 3:
                             logger.debug(f"success coin : {i}")
                             comp_yesterday = float(
-                                calc_income_rate(yesterday_price[i]['today'], coin_dic[i]))
-                            logger.debug("%s %s %s", i, yesterday_price[i]['today'], coin_dic[i])
+                                calc_income_rate(day_data[i]['today'], coin_dic[i]))
+                            logger.debug("%s %s %s", i, day_data[i]['today'], coin_dic[i])
                             if comp_yesterday < 5:
                                 self.condition_func_signal.emit(i)
 
@@ -1530,7 +1564,7 @@ class socket_server_thread(QThread):
             global test
             if test:
                 # 내 아이피
-                self.SERVER_HOST = DH_IP
+                self.SERVER_HOST = TY_IP
             else:
                 # 고객사 아이피
                 self.SERVER_HOST = CUSTOM_IP
