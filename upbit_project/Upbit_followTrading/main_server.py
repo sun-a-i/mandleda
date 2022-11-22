@@ -482,11 +482,14 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug(traceback.format_exc())
             self.real_log_prt("[error] 잔고 update 실패")
 
-    def order(self,is_buy, coin, amt):
+    def order(self,is_buy, coin, amt, is_auto = 0):
         try:
             global main_upbit
-            send_to_clients(is_buy, coin) #일단 날림 !
+            if is_auto : #todo : 퍼센트로 날림 !
+                send_to_clients(is_buy, coin) #일단 날림 !
 
+            else:
+                send_to_clients(is_buy, coin)  # 일단 날림 !
             if is_buy:
                 ret = main_upbit.buy_market_order(coin, price = amt)
 
@@ -1013,33 +1016,32 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     바로 쓸 수 있도록
                      """
 
-
             if auto_flag:
                 for coin in coin_list:
                     if coin in coin_data_list:
-                        if coin_data_list['state'] == '2' :
-                            if coin_data_list[coin]['cur_stage'] < coin_data_list[coin]['set_stage']:
-                                if coin['current_price'] < coin_data_list[coin]['next_buy_price'] :
+                        if coin_data_list['state'] == '2' : #프로그램 매수
+                            if coin_data_list[coin]['cur_stage'] < coin_data_list[coin]['set_stage']: #set_stage 안에서만
+                                if coin['current_price'] < coin_data_list[coin]['next_buy_price'] :# 현재가가 다음 가격보다 작으면
                                     amt = coin_data_list[coin]['fir_invest_money'] * (2 ^ coin_data_list[coin]['cur_stage'])
                                     if self.order(1, coin, amt ):
-                                        coin_data_list[coin]['next_buy_price'] -= coin_data_list[coin]['fir_invest_money'] * 0.1
-                                        coin_data_list[coin]['cur_stage'] += 1
-
+                                        coin_data_list[coin]['next_buy_price'] -= coin_data_list[coin]['fir_price'] * 0.1
+                                        coin_data_list[coin]['cur_stage'] += 1 #추가매수
+                                        coin_data_list[coin]['gamsi_price'] = coin['avg_buy_price'] * (100 + coin_data_list[coin]['gamsi_per'] ) / 100
+                                        #todo : 위험한데 .. avg_buy_price 받아오고 update 해야함
                                         pass#추가매수 cur_stage , set_stage = 8
 
-                            if 'gamsi' not in coin: # 매도 감시
-                                coin['gamsi'] = None
-                            else:
-                                if coin[earing_rate] >= 5:
-                                    coin['gamsi'] = True
-                                    coin['high'] = coin[earing_rate]
+                            if coin['current_price'] > coin_data_list[coin]['gamsi_price'] : #감시가보다 현재가가 높으면, todo -> 감시가가 첫매수때 update 되어야함
+                                coin_data_list[coin]['trailing_state'] = 1 #감시중
 
-                                if coin['gamsi'] :
-                                    if coin['high'] < coin[earing_rate]:
-                                        coin['high'] = coin[earing_rate]
+                            if coin_data_list[coin]['trailing_state']: #감시중이면
+                                if coin_data_list[coin]['high'] < coin['current_price'] :
+                                    coin_data_list[coin]['high'] = coin['current_price']
+                                    coin_data_list[coin]['trailing_income_price'] = coin_data_list[coin]['high'] * (100 - coin_data_list[coin]['trailing_per']) / 100
 
-                                    if coin['high'] - coin[earing_rate] >= 3 :
-                                        pass # 매도
+                                if coin_data_list[coin]['trailing_income_price'] < coin['current_price'] :
+                                    amt = 0
+                                    #if self.order(0,coin,amt = amt)
+                                    #clear
 
 
 
@@ -1427,7 +1429,7 @@ def init_coin_dic():
                                      'next_income_price': 0, 'next_out_price': 0,
                                      'outcome_state': 0, 'rebuy_chkbox': False, 'state': 0, 'gubun': 0, 'high': 0,
                                      'gamsi_per': 0, 'gamsi_price': 0,
-                                     'trailing_per': 0, 'trailing_income_price': 0, 'trailing_state': 0,
+                                     'trailing_per': 0, 'trailing_income_price': 100000000, 'trailing_state': 0,
                                      'last_trade_time': 0}
             all_modify_csv()
 
@@ -1667,7 +1669,7 @@ class socket_server_thread(QThread):
             logger.debug(traceback.format_exc())
 
 
-def send_to_clients(is_buy, coin): #
+def send_to_clients(is_buy, coin, is_auto = 0): #
     try:
         logger.debug(str(is_buy)+str(coin))
         if main.per_radio.isChecked():
