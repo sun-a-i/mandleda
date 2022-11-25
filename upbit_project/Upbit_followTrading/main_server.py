@@ -303,10 +303,15 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
     def test_func4(self):  # apply
         logger.debug("apply clicked")
+        global coin_data_list
         try:
             for i in range(self.table_dic.rowCount()):
                 dic_type = type(coin_data_list['KRW-BTC'][self.table_dic.item(i, 0).text()])
                 coin_data_list['KRW-BTC'][self.table_dic.item(i, 0).text()] = dic_type(self.table_dic.item(i, 1).text())
+
+            for i in range(self.table_dic_2.rowCount()):
+                dic_type = type(coin_list['KRW-BTC'][self.table_dic_2.item(i, 0).text()])
+                coin_list['KRW-BTC'][self.table_dic_2.item(i, 0).text()] = dic_type(self.table_dic_2.item(i, 1).text())
 
             self.test_func2()
             # logger.debug(self.table_dic.item(i, 0).text())
@@ -1060,15 +1065,15 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 coin_data_list[coin_name]['high'] = coin_list[coin_name]['avg_buy_price']
                 if (level > 0) & (level < 3):
                     coin_data_list[coin_name]['gamsi_per'] = random.choice(gamsi_per_list1)
+                    coin_data_list[coin_name]['trailing_per'] = random.choice(trailing_per_list1)
                 else:
                     coin_data_list[coin_name]['gamsi_per'] = random.choice(gamsi_per_list2)
+                    coin_data_list[coin_name]['trailing_per'] = random.choice(trailing_per_list2)
 
                 coin_data_list[coin_name]['gamsi_price'] = calc_next_price(
                     float(coin_data_list[coin_name]['avr_price']),
                     float(coin_data_list[coin_name]['gamsi_per']))
                 logger.debug("감시 시작 가격 = %s", coin_data_list[coin_name]['gamsi_price'])
-
-                coin_data_list[coin_name]['trailing_per'] = float(coin_data_list[coin_name]['gamsi_per']) * -1
 
                 logger.debug("트레일링 퍼세트 = %s", coin_data_list[coin_name]['trailing_per'])
 
@@ -1196,9 +1201,9 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     self.table_coin.setCellWidget(idx, 8, start_btn)
                     if coin_data_list[coin_name]['activate'] != None:
                         if coin_data_list[coin_name]['activate']:
-                            self.change_state_button(1, idx, 8)
+                            self.change_state_button(1, idx, 8, is_update=1)
                         else:
-                            self.change_state_button(0, idx, 7)
+                            self.change_state_button(0, idx, 7, is_update=1)
                     idx += 1
 
             idx = 0
@@ -1266,35 +1271,44 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 for coin in coin_list:
                     if coin in coin_data_list:
                         if coin_data_list[coin]['activate']:
-                            if coin_data_list[coin]['state'] == '2':  # 프로그램 매수
+                            # logger.debug('activate')
+                            if coin_data_list[coin]['state'] == 2:  # 프로그램 매수
+                                # logger.debug('state')
                                 if coin_data_list[coin]['cur_stage'] < coin_data_list[coin][
                                     'set_stage']:  # set_stage 안에서만
                                     if datetime.datetime.strptime(coin_data_list[coin]['last_trade_time'],
                                                                   "%Y_%m_%d_%H_%M") + datetime.timedelta(
                                         minutes=30) < datetime.datetime.now():  # 마지막 매수 후 30분이 지났으면
-                                        if coin['current_price'] < coin_data_list[coin][
+
+                                        # logger.debug(type(coin_list[coin]['current_price']))
+                                        # logger.debug(type(coin_data_list[coin]['next_standard_price']))
+
+                                        if int(coin_list[coin]['current_price']) < coin_data_list[coin][
                                             'next_standard_price']:  # 현재가가 다음 기준 가격보다 작으면
                                             coin_data_list[coin]['buy_state'] = 1
-                                            logger.debug('매수 대기 !')
+                                            # logger.debug('매수 대기 !')
 
                                         if coin_data_list[coin]['buy_state']:
-                                            logger.debug('매수 대기중 !')
-                                            if coin_data_list[coin]['low'] > coin['current_price']:
-                                                coin_data_list[coin]['low'] = coin['current_price']
+                                            # logger.debug('매수 대기중 !')
+                                            if int(coin_data_list[coin]['low']) > int(coin_list[coin]['current_price']):
+                                                coin_data_list[coin]['low'] = int(coin_list[coin]['current_price'])
                                                 coin_data_list[coin]['next_buy_price'] = \
-                                                    calc_next_price(coin_list[coin]["avg_buy_price"],
-                                                                    (100 - coin_data_list[coin][
-                                                                        'next_buy_per']) * float(
+                                                    calc_next_price(float(coin_list[coin]["avg_buy_price"]),
+                                                                    (1 - coin_data_list[coin][
+                                                                        'next_buy_per'] / 100) * float(
                                                                         coin_list[coin]['earing_rate']))
                                                 logger.debug(
                                                     '최저가 갱신 !' + str(coin_data_list[coin]['low']) + '다음 매수 가격 : ' + str(
                                                         coin_data_list[coin]['next_buy_price']))
 
-                                            if coin_data_list[coin]['next_buy_price'] < coin['current_price']:
+                                            if coin_data_list[coin]['next_buy_price'] < int(
+                                                    coin_list[coin]['current_price']):
                                                 amt = coin_data_list[coin]['fir_invest_money'] * (
                                                             2 ** coin_data_list[coin]['cur_stage'])
                                                 if self.order(1, coin, amt, is_auto=1):
                                                     update_coin_list()
+                                                    coin_data_list[coin]['low'] = float(
+                                                        coin_list[coin]['avg_buy_price'])
                                                     coin_data_list[coin]['cur_stage'] += 1  # 추가매수
                                                     coin_data_list[coin]['next_standard_price'] = calc_next_price(
                                                         float(coin_data_list[coin]['fir_price']), (
@@ -1304,7 +1318,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                                                     coin_data_list[coin]['next_buy_price'] = 100000000
 
                                                     coin_data_list[coin]['gamsi_price'] = calc_next_price(
-                                                        coin_list[coin]['avg_buy_price'],
+                                                        float(coin_list[coin]['avg_buy_price']),
                                                         float(coin_data_list[coin]['gamsi_per']))
                                                     coin_data_list[coin]['last_trade_time'] = str(
                                                         datetime.datetime.now().strftime("%Y_%m_%d_%H_%M"))
@@ -1313,18 +1327,20 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                                                     logger.debug(coin_data_list[coin])
                                                     self.real_log.addItem(coin_Kname[coin] + " BUY")
 
-                                if coin['current_price'] > coin_data_list[coin]['gamsi_price']:  # 감시가보다 현재가가 높으면
+                                if int(coin_list[coin]['current_price']) > coin_data_list[coin][
+                                    'gamsi_price']:  # 감시가보다 현재가가 높으면
                                     coin_data_list[coin]['trailing_state'] = 1  # 감시중
-                                    logger.debug('감시가 도달 !')
+                                    # logger.debug('감시가 도달 !')
 
                                 if coin_data_list[coin]['trailing_state']:  # 감시중이면
-                                    logger.debug('감시중 !')
-                                    if coin_data_list[coin]['high'] < coin['current_price']:
-                                        coin_data_list[coin]['high'] = coin['current_price']
+                                    # logger.debug('감시중 !')
+                                    if int(coin_data_list[coin]['high']) < int(coin_list[coin]['current_price']):
+                                        coin_data_list[coin]['high'] = int(coin_list[coin]['current_price'])
                                         coin_data_list[coin]['trailing_income_price'] = calc_next_price(
                                             coin_data_list[coin]['high'], coin_data_list[coin]['trailing_per'])
                                         logger.debug('최고가 갱신 !' + str(coin_data_list[coin]['high']))
-                                    if coin_data_list[coin]['trailing_income_price'] > coin['current_price']:
+                                    if coin_data_list[coin]['trailing_income_price'] > int(
+                                            coin_list[coin]['current_price']):
                                         if self.order(0, coin, is_auto=1):
                                             logger.debug('익절 !')
                                             coin_init(coin)
@@ -1373,7 +1389,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug("예외가 발생했습니다. %s", e)
             logger.debug(traceback.format_exc())
 
-    def change_state_button(self, is_activate, row, col):
+    def change_state_button(self, is_activate, row, col, is_update=0):
         try:
             button = self.table_coin.cellWidget(row, col)
             item = self.table_coin.item(row, 0)
@@ -1402,8 +1418,9 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 other_button.setEnabled(True)
                 other_button.setStyleSheet("color:white;background-color:red")
 
-            label_string = txt + ' Clicked , Value: ' + str(value)
-            logger.debug(label_string)
+            if not is_update:
+                label_string = txt + ' Clicked , Value: ' + str(value)
+                self.real_log_prt(label_string)
 
         except Exception as e:
             logger.debug("예외가 발생했습니다. %s", e)
@@ -1755,7 +1772,7 @@ def init_coin_dic():
                                      'div_per': 0, 'in_per': 0, 'out_per': 0, 'next_buy_price': 0,
                                      'next_income_price': 0, 'next_out_price': 0,
                                      'outcome_state': 0, 'rebuy_chkbox': False, 'state': 0, 'gubun': 0, 'high': 0,
-                                     'gamsi_per': 0, 'gamsi_price': 0,
+                                     'gamsi_per': 0, 'gamsi_price': 100000000,
                                      'trailing_per': 0, 'trailing_income_price': 0, 'trailing_state': 0,
                                      'last_trade_time': 0, 'activate': True}
             all_modify_csv()
@@ -1877,7 +1894,11 @@ def update_coin_list():
         total_now_buy = 0
 
         for symbol in tmp_list:
-            tmp_list[symbol]["current_price"] = str(current_list[symbol])
+
+            if symbol in coin_list:
+                tmp_list[symbol]["current_price"] = coin_list[symbol]['current_price']
+            else:
+                tmp_list[symbol]["current_price"] = str(current_list[symbol])  # todo : 원본소스
 
             tmp_list[symbol]["total_now_price"] = str(
                 float(tmp_list[symbol]['current_price']) * float(tmp_list[symbol]['balance']))
@@ -1890,16 +1911,7 @@ def update_coin_list():
 
             # logger.debug(tmp_list)
             # logger.debug(coin_list)
-            if coin_list != {}:
-                if symbol in coin_list:
-                    if "activate" in coin_list[symbol]:
-                        tmp_list[symbol]["activate"] = coin_list[symbol]["activate"]
-                    else:
-                        tmp_list[symbol]["activate"] = None
-                else:
-                    tmp_list[symbol]["activate"] = None
-            else:
-                tmp_list[symbol]["activate"] = None
+
 
         if total_buy != 0:
             total_rate = ((float(total_now_buy) - float(total_buy)) / float(total_buy)) * 100
