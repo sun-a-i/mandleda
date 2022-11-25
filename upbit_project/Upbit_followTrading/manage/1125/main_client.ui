@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1292</width>
-    <height>898</height>
+    <width>1301</width>
+    <height>900</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -63,60 +63,6 @@ background-color:white;
     </property>
     <property name="frameShape">
      <enum>QFrame::NoFrame</enum>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="stop_btn">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>40</y>
-      <width>121</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>맑은 고딕</family>
-      <pointsize>14</pointsize>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">color:white;
-
-background-color:blue;
-</string>
-    </property>
-    <property name="text">
-     <string>중  지</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="start_btn">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>0</y>
-      <width>121</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>맑은 고딕</family>
-      <pointsize>14</pointsize>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">color:white;
-
-background-color:red;
-</string>
-    </property>
-    <property name="text">
-     <string>시  작</string>
     </property>
    </widget>
    <widget class="QTableWidget" name="table_coin">
@@ -239,9 +185,9 @@ background-color:red;
    <widget class="QLabel" name="money_label">
     <property name="geometry">
      <rect>
-      <x>1110</x>
-      <y>40</y>
-      <width>101</width>
+      <x>45</x>
+      <y>39</y>
+      <width>121</width>
       <height>31</height>
      </rect>
     </property>
@@ -269,8 +215,8 @@ background-color:red;
    <widget class="QLabel" name="label_21">
     <property name="geometry">
      <rect>
-      <x>1155</x>
-      <y>7</y>
+      <x>110</x>
+      <y>6</y>
       <width>91</width>
       <height>31</height>
      </rect>
@@ -299,8 +245,8 @@ background-color:red;
    <widget class="QLabel" name="label_4">
     <property name="geometry">
      <rect>
-      <x>1223</x>
-      <y>43</y>
+      <x>178</x>
+      <y>42</y>
       <width>21</width>
       <height>31</height>
      </rect>
@@ -833,8 +779,8 @@ background-color:red;
    <widget class="Line" name="line_3">
     <property name="geometry">
      <rect>
-      <x>1140</x>
-      <y>30</y>
+      <x>95</x>
+      <y>29</y>
       <width>121</width>
       <height>16</height>
      </rect>
@@ -851,13 +797,65 @@ background-color:red;
      <enum>Qt::Horizontal</enum>
     </property>
    </widget>
+   <widget class="QPushButton" name="stop_btn">
+    <property name="geometry">
+     <rect>
+      <x>1120</x>
+      <y>20</y>
+      <width>121</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>14</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color:white;
+
+background-color:blue;
+</string>
+    </property>
+    <property name="text">
+     <string>중  지</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="start_btn">
+    <property name="geometry">
+     <rect>
+      <x>980</x>
+      <y>20</y>
+      <width>121</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>14</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color:white;
+
+background-color:red;
+</string>
+    </property>
+    <property name="text">
+     <string>시  작</string>
+    </property>
+   </widget>
    <zorder>line</zorder>
-   <zorder>label_3</zorder>
    <zorder>label_5</zorder>
+   <zorder>label_3</zorder>
    <zorder>label_14</zorder>
    <zorder>real_log</zorder>
-   <zorder>stop_btn</zorder>
-   <zorder>start_btn</zorder>
    <zorder>table_coin</zorder>
    <zorder>money_label</zorder>
    <zorder>label_21</zorder>
@@ -882,13 +880,15 @@ background-color:red;
    <zorder>label_22</zorder>
    <zorder>label_23</zorder>
    <zorder>line_3</zorder>
+   <zorder>stop_btn</zorder>
+   <zorder>start_btn</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1292</width>
+     <width>1301</width>
      <height>21</height>
     </rect>
    </property>
