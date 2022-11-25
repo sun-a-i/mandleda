@@ -336,6 +336,8 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             table.setColumnWidth(6, 110)
             table.setColumnWidth(7, 90)
             table.setColumnWidth(8, 90)
+            
+            self.client_list.setStyleSheet('background-color:#123;')
 
             # table.setAlignment(QtCore.Qt.AlignCenter)
             self.real_log.setFont(QtGui.QFont('맑은 고딕', 9))
@@ -1431,7 +1433,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
     def state_func(self, state):
         global auto_flag, search_mode
         try:
-            if self.rdo_mode_offensive.isChecked():
+            if self.rdo_mode_defensive.isChecked():
                 search_mode = DEFENSIVE_MODE
                 mode = 'A타입'
             else:
@@ -1443,10 +1445,13 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 auto_flag = True
                 self.start_btn.setEnabled(False)
                 self.start_btn.setStyleSheet("color:gray")
+
                 self.stop_btn.setEnabled(True)
                 self.stop_btn.setStyleSheet("color:white")
                 self.stop_btn.setStyleSheet("background:blue")
 
+                self.buy_btn.setEnabled(False)
+                self.sell_btn.setEnabled(False)
                 # 자동매매 시작 버튼 클릭시 옵션값 변경 못하도록 변경
 
                 self.real_log_prt("[system] " + mode + " 자동매매 시작")
@@ -1457,6 +1462,9 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 self.start_btn.setStyleSheet("background:red")
                 self.stop_btn.setEnabled(False)
                 self.stop_btn.setStyleSheet("color:gray")
+
+                self.buy_btn.setEnabled(True)
+                self.sell_btn.setEnabled(True)
 
                 # 자동매매 중지 버튼 클릭시 옵션값 변경 가능하도록 변경
 
