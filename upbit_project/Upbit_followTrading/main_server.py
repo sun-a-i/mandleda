@@ -19,14 +19,14 @@ from PyQt5.QtGui import *
 import datetime as dt
 from datetime import datetime
 
-#import telegram
+# import telegram
 import pyupbit
 import time
 
 import socket
 import select
 import requests
-#import request
+# import request
 
 import finplot as fplt
 from qroundprogressbar import QRoundProgressBar
@@ -36,14 +36,12 @@ from datetime import datetime
 import pandas as pd
 import SupportFinanceIdicator as SFI
 
-#====================logger=========================
+# ====================logger=========================
 import os
 from logging.handlers import TimedRotatingFileHandler
 import logging
 from datetime import datetime
 import traceback
-
-
 
 if not os.path.exists('logFile'):
     os.makedirs('logFile')
@@ -66,9 +64,7 @@ streamHandler.setFormatter(formatter)
 logger.addHandler(streamHandler)
 
 logger.setLevel(level=10)
-#====================logger=========================
-
-
+# ====================logger=========================
 
 
 if not os.path.exists('DATA'):
@@ -78,38 +74,29 @@ setting_data_path = './DATA/settings.pickle'
 api_data_path = './DATA/API.txt'
 telegram_data_path = './DATA/telegram.txt'
 coin_data_path = './DATA/save_data.pickle'
+checked_coin_list_pickle = './DATA/checked_coin.pickle'
 
 main_class = uic.loadUiType('./ui_data/main_server.ui')[0]
-
 
 auto_flag = False
 
 coin_Kname = {}
 coin_Ename = {}
 coin_list = {}
-# coin_list = {'KRW-BTC' : {'currency': 'BTC',
-#                           'balance': '0.00024634',
-#                           'locked': '0',
-#                           'avg_buy_price': '22619000',
-#                           'avg_buy_price_modified': False,
-#                           'unit_currency': 'KRW',
-#                           'total_price': '5571.96446',
-#                           'current_price': '22561000',
-#                           'total_now_price': '5557.67674',
-#                           'earing_rate': '-0.2564215924665104',
-#                           'activate': 1}}
-
 jango_list = {}
 tickers = []
 
 ax = object
-coin_dic = {} #모든 코인
-coin_dic_available = False #모든 코인 로딩 완료
-current_price_dic = {} #모든 현재가 코인
+coin_dic = {}  # 모든 코인
+coin_dic_available = False  # 모든 코인 로딩 완료
+current_price_dic = {}  # 모든 현재가 코인
 import datetime
 
-
-
+trade_list = {}
+if os.path.exists(checked_coin_list_pickle):
+    with open(checked_coin_list_pickle, 'rb') as f:
+        trade_list = pickle.load(f)
+    logger.debug("trade_list = %s", trade_list)
 
 '''
 coin_list = {'KRW-ETH': 
@@ -141,6 +128,8 @@ final_price = 999999999.9
 final_price_chk = 888888888.8
 
 MyCash = 0
+
+
 def all_modify_csv():
     try:
         global coin_data_list
@@ -149,6 +138,7 @@ def all_modify_csv():
     except Exception as e:  # 모든 예외의 에러 메시지를 출력할 때는 Exception을 사용
         logger.debug("예외가 발생했습니다. %s", e)
         logger.debug(traceback.format_exc())
+
 
 def calc_next_price(cp, per):
     try:
@@ -181,7 +171,6 @@ def calc_next_price(cp, per):
         logger.debug(traceback.format_exc())
 
 
-
 class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui path
     def __init__(self):
         try:
@@ -201,10 +190,10 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             self.initial()
             self.login()
             self.get_tickers()
-            #한글, 영어 코인명 가져오기
+            # 한글, 영어 코인명 가져오기
             self.get_eng_workd()
             self.get_korean_workd()
-            #자동완성 검색
+            # 자동완성 검색
             self.init_nameList()
 
             self.start_btn.clicked.connect(lambda: self.state_func('start'))
@@ -214,13 +203,23 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             self.buy_btn.clicked.connect(self.buy_btn_func)
             self.sell_btn.clicked.connect(self.sell_btn_func)
 
+            self.trade_list_add.clicked.connect(self.add_list_func)
+            self.trade_list_remove.clicked.connect(self.remove_list_func)
+
+            self.all_trade_list_add.clicked.connect(self.add_list_func_all)
+            self.all_trade_list_remove.clicked.connect(self.remove_list_func_all)
+
+            self.add_listview.itemClicked.connect(self.add_select_item_func)
+            self.remove_listview.itemClicked.connect(self.remove_select_item_func)
+
+            self.coin_chk()
+
 
             init_coin_dic()
 
-            #=========소켓 서버 스레드
+            # =========소켓 서버 스레드
             self.socket_server = socket_server_thread()
             self.socket_server.start()
-
 
             self.state_func('stop')
             run_program = True
@@ -230,18 +229,34 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug(e)
             logger.debug(traceback.format_exc())
 
+    def caution_coin_classification(self):
+        try:
+            global trade_list
+            logger.debug("caution_coin_classification")
+            url = "https://api.upbit.com/v1/market/all?isDetails=true"
+            headers = {"accept": "application/json"}
+            response = requests.get(url, headers=headers)
+            for i in response.json():
+                if i['market_warning'] != 'NONE':
+                    if i['market'][:3] == 'KRW':
+                        logger.debug(f"유의종목 거래 제외 추가 = {i['market']}")
+                        trade_list[coin_Kname[i['market']]] = i['market']
+
+        except Exception as e:
+            logger.debug(e)
+            logger.debug(traceback.format_exc())
     def test_func(self):
         logger.debug("testbtn clicked")
         try:
-            #logger.debug(coin_list)
-            #self.auto_order('KRW-BTC')
-            #logger.debug(gradient(5,'BTC'))
-            #logger.debug(gradient(30,'BTC'))
-            #coin = self.get_coin_symbol('BTC')
-            #logger.debug(coin_data_list[coin])
-            #logger.debug(datetime.datetime.strptime(coin_data_list[coin]['last_trade_time'],"%Y_%m_%d_%H_%M"))
-            #logger.debug(datetime.datetime.strptime(coin_data_list[coin]['last_trade_time'],"%Y_%m_%d_%H_%M") + datetime.timedelta(minutes=30) < datetime.datetime.now())
-            #logger.debug()
+            # logger.debug(coin_list)
+            # self.auto_order('KRW-BTC')
+            # logger.debug(gradient(5,'BTC'))
+            # logger.debug(gradient(30,'BTC'))
+            # coin = self.get_coin_symbol('BTC')
+            # logger.debug(coin_data_list[coin])
+            # logger.debug(datetime.datetime.strptime(coin_data_list[coin]['last_trade_time'],"%Y_%m_%d_%H_%M"))
+            # logger.debug(datetime.datetime.strptime(coin_data_list[coin]['last_trade_time'],"%Y_%m_%d_%H_%M") + datetime.timedelta(minutes=30) < datetime.datetime.now())
+            # logger.debug()
             pass
 
 
@@ -249,7 +264,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug(e)
             logger.debug(traceback.format_exc())
 
-    def test_func2(self):# refresh
+    def test_func2(self):  # refresh
         logger.debug("refresh clicked")
         try:
             data_len = len(coin_data_list['KRW-BTC'])
@@ -264,7 +279,6 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 self.table_dic.setItem(idx, 1, QTableWidgetItem(str(coin_data_list['KRW-BTC'][i])))
                 idx += 1
 
-
             data_len = len(coin_list['KRW-BTC'])
             self.table_dic_2.setRowCount(data_len)
             idx = 0
@@ -272,23 +286,22 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 self.table_dic_2.setItem(idx, 0, QTableWidgetItem(i))
                 self.table_dic_2.setItem(idx, 1, QTableWidgetItem(str(coin_list['KRW-BTC'][i])))
                 idx += 1
-            logger.debug(coin_list['KRW-BTC'])
 
         except Exception as e:
-                logger.debug(e)
-                logger.debug(traceback.format_exc())
+            logger.debug(e)
+            logger.debug(traceback.format_exc())
 
-    def test_func3(self): #auto order
+    def test_func3(self):  # auto order
         logger.debug("auto order clicked")
         try:
-            #logger.debug(self.socket_server.clients)
+            # logger.debug(self.socket_server.clients)
             self.auto_order('KRW-BTC')
 
         except Exception as e:
             logger.debug(e)
             logger.debug(traceback.format_exc())
 
-    def test_func4(self): #apply
+    def test_func4(self):  # apply
         logger.debug("apply clicked")
         global coin_data_list
         try:
@@ -301,14 +314,13 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 coin_list['KRW-BTC'][self.table_dic_2.item(i, 0).text()] = dic_type(self.table_dic_2.item(i, 1).text())
 
             self.test_func2()
-                #logger.debug(self.table_dic.item(i, 0).text())
-                #logger.debug(self.table_dic.item(i, 1).text())
+            # logger.debug(self.table_dic.item(i, 0).text())
+            # logger.debug(self.table_dic.item(i, 1).text())
 
 
         except Exception as e:
             logger.debug(e)
             logger.debug(traceback.format_exc())
-
 
     def initial(self):
         try:
@@ -325,14 +337,13 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             table.setColumnWidth(7, 90)
             table.setColumnWidth(8, 90)
 
-
-            #table.setAlignment(QtCore.Qt.AlignCenter)
+            # table.setAlignment(QtCore.Qt.AlignCenter)
             self.real_log.setFont(QtGui.QFont('맑은 고딕', 9))
             self.rpb = QRoundProgressBar()
             # self.rpb.setStyleSheet('QRoundProgressBar{background-color:#123;}')
             # self.rpb.setValue(15)
             self.gridLayout_2.addWidget(self.rpb)
-            #global ax, axs, axo
+            # global ax, axs, axo
 
             fplt.candle_bull_color = "#FF0000"
             fplt.candle_bull_body_color = "#FF0000"
@@ -342,8 +353,8 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
             global ax, df, plot
             ax = fplt.create_plot(init_zoom_periods=0)  # pygtgraph.graphicsItems.PlotItem
-            #axo = ax.overlay()  # pygtgraph.graphicsItems.PlotItem
-            #axs = [ax]  # finplot requres this property
+            # axo = ax.overlay()  # pygtgraph.graphicsItems.PlotItem
+            # axs = [ax]  # finplot requres this property
             self.gridLayout.addWidget(ax.vb.win, 0, 0)  # ax.vb     (finplot.FinViewBox)
 
             self.table_coin.setFocusPolicy(QtCore.Qt.NoFocus)
@@ -385,10 +396,8 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     ''')
             self.table_coin.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
 
-
-
             self.table_coin.setShowGrid(False)
-            #self.table_coin.setStyleSheet('background-color : red;')
+            # self.table_coin.setStyleSheet('background-color : red;')
             self.start_btn.setStyleSheet("""
                     QPushButton {
                         color: white ; 
@@ -417,11 +426,176 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                             background-color: gray
                         }
                     """)
-            #self.coin_chart(self.coin_search_1.text())
+            # self.coin_chart(self.coin_search_1.text())
             self.table_coin.setRowCount(0)
 
         except Exception as e:
             logger.debug(e)
+            logger.debug(traceback.format_exc())
+
+    def add_list_func(self):
+        try:
+            global coin_Kname, coin_Ename, trade_list
+            logger.debug("add_list_func clicked")
+
+            coin = ""
+            if str(self.use_trade_coin_search.text()).encode().isalpha() == False:
+                # value 로 key 값 찾기
+                list_of_key = list(coin_Kname.keys())
+                list_of_value = list(coin_Kname.values())
+                position = list_of_value.index(self.use_trade_coin_search.text())
+                coin = list_of_key[position]
+            else:
+                if self.use_trade_coin_search.text() in coin_Ename:
+                    coin = coin_Ename[self.use_trade_coin_search.text()]
+
+            name = coin_Kname[coin]
+
+            logger.debug("search = %s %s", coin, name)
+
+            if name in trade_list:
+                QMessageBox.information(self, '확인', '이미 제외 리스트에 있습니다.')
+            else:
+                self.add_listview.clear()
+                self.remove_listview.clear()
+                trade_list[name] = coin
+                for i in coin_Kname.values():
+                    if i in trade_list:
+                        self.remove_listview.addItem(i)
+                    else:
+                        self.add_listview.addItem(i)
+
+            with open(checked_coin_list_pickle, 'wb') as f:
+                pickle.dump(trade_list, f)
+
+            logger.debug("trade_list = %s", trade_list)
+        except Exception as e:  # 모든 예외의 에러 메시지를 출력할 때는 Exception을 사용
+            logger.debug("예외가 발생했습니다. %s", e)
+            logger.debug(traceback.format_exc())
+
+    def add_list_func_all(self):
+        try:
+            global coin_Kname, coin_Ename, trade_list
+            logger.debug("add_list_func_all clicked")
+
+            self.add_listview.clear()
+            self.remove_listview.clear()
+            trade_list = {v: k for k, v in coin_Kname.items()}
+            for i in trade_list:
+                self.remove_listview.addItem(i)
+
+            with open(checked_coin_list_pickle, 'wb') as f:
+                pickle.dump(trade_list, f)
+
+            logger.debug("trade_list = %s", trade_list)
+
+        except Exception as e:  # 모든 예외의 에러 메시지를 출력할 때는 Exception을 사용
+            logger.debug("예외가 발생했습니다. %s", e)
+            logger.debug(traceback.format_exc())
+
+    def remove_list_func(self):
+        try:
+            global coin_Kname, coin_Ename, trade_list
+            logger.debug("remove_list_func clicked")
+
+            coin = ""
+            if str(self.use_trade_coin_search.text()).encode().isalpha() == False:
+                # value 로 key 값 찾기
+                list_of_key = list(coin_Kname.keys())
+                list_of_value = list(coin_Kname.values())
+                position = list_of_value.index(self.use_trade_coin_search.text())
+                coin = list_of_key[position]
+            else:
+                if self.use_trade_coin_search.text() in coin_Ename:
+                    coin = coin_Ename[self.use_trade_coin_search.text()]
+
+            name = coin_Kname[coin]
+
+            logger.debug("search = %s %s", coin, name)
+
+            if name not in trade_list:
+                QMessageBox.information(self, '확인', '제외 리스트에 없는 종목입니다.')
+            else:
+                self.add_listview.clear()
+                self.remove_listview.clear()
+                trade_list.pop(name)
+                for i in coin_Kname.values():
+                    if i in trade_list:
+                        self.remove_listview.addItem(i)
+                    else:
+                        self.add_listview.addItem(i)
+
+            with open(checked_coin_list_pickle, 'wb') as f:
+                pickle.dump(trade_list, f)
+
+            logger.debug("trade_list = %s", trade_list)
+
+        except Exception as e:  # 모든 예외의 에러 메시지를 출력할 때는 Exception을 사용
+            logger.debug("예외가 발생했습니다. %s", e)
+            logger.debug(traceback.format_exc())
+
+    def remove_list_func_all(self):
+        try:
+            global coin_Kname, coin_Ename, trade_list
+            logger.debug("remove_list_func_all clicked")
+
+            self.add_listview.clear()
+            self.remove_listview.clear()
+            trade_list = {}
+            for i in coin_Kname.values():
+                self.add_listview.addItem(i)
+
+            with open(checked_coin_list_pickle, 'wb') as f:
+                pickle.dump(trade_list, f)
+
+            logger.debug("trade_list = %s", trade_list)
+
+        except Exception as e:  # 모든 예외의 에러 메시지를 출력할 때는 Exception을 사용
+            logger.debug("예외가 발생했습니다. %s", e)
+            logger.debug(traceback.format_exc())
+
+    def add_select_item_func(self):
+        coin = self.add_listview.currentItem().text()
+        logger.debug(f"add_select_item_func = {coin}")
+        self.use_trade_coin_search.setText(coin)
+
+    def remove_select_item_func(self):
+        coin = self.remove_listview.currentItem().text()
+        logger.debug(f"add_select_item_func = {coin}")
+        self.use_trade_coin_search.setText(coin)
+
+    def coin_chk(self):
+        global coin_name_list, trade_list, coin_Kname
+        try:
+            #유의종목 거래 제외에 추가
+            self.caution_coin_classification()
+
+            a = pyupbit.get_current_price(tickers)
+            for i in tickers:
+                if float(a[i]) < 1:
+                    trade_list[coin_Kname[i]] = i
+
+            with open(checked_coin_list_pickle, 'wb') as f:
+                pickle.dump(trade_list, f)
+
+            logger.debug(trade_list)
+
+            self.add_listview.clear()
+            self.remove_listview.clear()
+
+            if os.path.exists(checked_coin_list_pickle):
+                with open(checked_coin_list_pickle, 'rb') as f:
+                    trade_list = pickle.load(f)
+
+            for i in coin_Kname.values():
+                if i in trade_list:
+                    self.remove_listview.addItem(i)
+                else:
+                    self.add_listview.addItem(i)
+
+            logger.debug("trade_list = %s", trade_list)
+        except Exception as e:  # 모든 예외의 에러 메시지를 출력할 때는 Exception을 사용
+            logger.debug("예외가 발생했습니다. %s", e)
             logger.debug(traceback.format_exc())
 
     def get_tickers(self):
@@ -483,7 +657,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
             completer = QCompleter(total_name)
             self.coin_search.setCompleter(completer)
-
+            self.use_trade_coin_search.setCompleter(completer)
         except Exception as e:
             logger.debug("예외가 발생했습니다. %s", e)
             logger.debug(traceback.format_exc())
@@ -537,17 +711,17 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             global main_upbit, MyCash
             MyCash = main_upbit.get_balance(ticker="KRW")
             self.money_label.setText(format(round(MyCash), ','))
-            #self.money_label.setText(str(int(balance)))
+            # self.money_label.setText(str(int(balance)))
             return True
         except Exception as e:
             logger.debug("예외가 발생했습니다. %s", e)
             logger.debug(traceback.format_exc())
             self.real_log_prt("[error] 잔고 update 실패")
 
-    def order(self, order_type, coin, amt = 0 , is_auto = False, is_first = False):
+    def order(self, order_type, coin, amt=0, is_auto=False, is_first=False):
         try:
             global main_upbit
-              # 일단 날림 !
+            # 일단 날림 !
 
             # order_type == 1 : buy,  0 : sell
             # order_type; coin; per ; amt; is_auto; is_first
@@ -571,7 +745,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 is_auto_txt = '0;'
                 if main.per_radio.isChecked():
                     per_pri_txt = "per;"
-                    amt_txt = str(float(main.price_per.text()) / 100) +';'
+                    amt_txt = str(float(main.price_per.text()) / 100) + ';'
                 else:
                     per_pri_txt = "pri;"
                     amt_txt = main.price_pri.text() + ';'
@@ -581,15 +755,14 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             else:
                 is_first_txt = '0'
 
-
             txt = order_type_txt + coin_txt + per_pri_txt + amt_txt + is_auto_txt + is_first_txt
             send_to_clients(txt)
 
             if order_type:
-                ret = main_upbit.buy_market_order(coin, price = amt)
+                ret = main_upbit.buy_market_order(coin, price=amt)
             else:
                 amt = coin_list[coin]['balance']
-                ret = main_upbit.sell_market_order(coin, volume = amt)
+                ret = main_upbit.sell_market_order(coin, volume=amt)
                 logger.debug(ret)
 
             return self.check_order_state(ret)
@@ -598,8 +771,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug(e)
             logger.debug(traceback.format_exc())
 
-
-    def check_order_state(self,ret):
+    def check_order_state(self, ret):
         try:
             if ret == None:
                 logger.debug("주문 : None 에러")
@@ -636,53 +808,53 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug(data)
             symbol = self.get_coin_symbol(data)
             if symbol:
-               if self.per_radio.isChecked(): #퍼센트 구매
-                   tmp = float(self.price_per.text())
-                   if self.price_per.text().isdigit():#숫자인지
-                       if tmp > 0 and tmp <= 100 : #100%보다 적게
-                           amt = float(MyCash) * tmp / 100
-                           if amt >= 5000:
-                               txt = str(symbol) + " : " + str(amt)
-                               reply = QMessageBox.question(self, '확인', txt + '원 매수 하시겠습니까?')
-                               if reply == QMessageBox.Yes:
-                                   if self.order(1,symbol,amt):
-                                       self.real_log_prt("비율 금액 매수 " + str(symbol) + " : " + str(amt))
-                                   else:
-                                       txt = "[error] 매수 에러"
-                                       self.floating_msg(txt)
-                           else:
-                               txt = "[error] 구매 금액 에러 : 최소주문 5000원 이상"
-                               self.floating_msg(txt)
-                       else:
-                           txt = "[error] 구매 금액 에러 : 0~100 사이의 값"
-                           self.floating_msg(txt)
-                   else:
-                       txt = "[error] 구매 비율 에러 : 자연수를 입력해야합니다."
-                       self.floating_msg(txt)
+                if self.per_radio.isChecked():  # 퍼센트 구매
+                    tmp = float(self.price_per.text())
+                    if self.price_per.text().isdigit():  # 숫자인지
+                        if tmp > 0 and tmp <= 100:  # 100%보다 적게
+                            amt = float(MyCash) * tmp / 100
+                            if amt >= 5000:
+                                txt = str(symbol) + " : " + str(amt)
+                                reply = QMessageBox.question(self, '확인', txt + '원 매수 하시겠습니까?')
+                                if reply == QMessageBox.Yes:
+                                    if self.order(1, symbol, amt):
+                                        self.real_log_prt("비율 금액 매수 " + str(symbol) + " : " + str(amt))
+                                    else:
+                                        txt = "[error] 매수 에러"
+                                        self.floating_msg(txt)
+                            else:
+                                txt = "[error] 구매 금액 에러 : 최소주문 5000원 이상"
+                                self.floating_msg(txt)
+                        else:
+                            txt = "[error] 구매 금액 에러 : 0~100 사이의 값"
+                            self.floating_msg(txt)
+                    else:
+                        txt = "[error] 구매 비율 에러 : 자연수를 입력해야합니다."
+                        self.floating_msg(txt)
 
-               else:#지정가 구매
-                   if self.price_pri.text().isdigit():
-                       tmp = int(self.price_pri.text())
-                       if tmp > 0 and tmp <= float(MyCash) : #가진돈보다 적게
-                           amt = tmp
-                           if amt >= 5000:
-                               txt = str(symbol) + " : " + str(amt)
-                               reply = QMessageBox.question(self, '확인', txt + '원 매수 하시겠습니까?')
-                               if reply == QMessageBox.Yes:
-                                   if self.order(1,symbol,amt):
-                                       self.real_log_prt("지정 금액 매수 " + str(symbol) + " : " + str(amt))
-                                   else:
-                                       txt = "[error] 구매 에러"
-                                       self.floating_msg(txt)
-                           else:
-                               txt = "[error] 구매 금액 에러 : 최소주문 5000원 이상"
-                               self.floating_msg(txt)
-                       else:
-                           txt = "[error] 구매 금액 에러 : 소지금액 이하의 값"
-                           self.floating_msg(txt)
-                   else:
-                       txt = "[error] 구매 금액 에러 : 숫자를 입력해야합니다."
-                       self.floating_msg(txt)
+                else:  # 지정가 구매
+                    if self.price_pri.text().isdigit():
+                        tmp = int(self.price_pri.text())
+                        if tmp > 0 and tmp <= float(MyCash):  # 가진돈보다 적게
+                            amt = tmp
+                            if amt >= 5000:
+                                txt = str(symbol) + " : " + str(amt)
+                                reply = QMessageBox.question(self, '확인', txt + '원 매수 하시겠습니까?')
+                                if reply == QMessageBox.Yes:
+                                    if self.order(1, symbol, amt):
+                                        self.real_log_prt("지정 금액 매수 " + str(symbol) + " : " + str(amt))
+                                    else:
+                                        txt = "[error] 구매 에러"
+                                        self.floating_msg(txt)
+                            else:
+                                txt = "[error] 구매 금액 에러 : 최소주문 5000원 이상"
+                                self.floating_msg(txt)
+                        else:
+                            txt = "[error] 구매 금액 에러 : 소지금액 이하의 값"
+                            self.floating_msg(txt)
+                    else:
+                        txt = "[error] 구매 금액 에러 : 숫자를 입력해야합니다."
+                        self.floating_msg(txt)
             else:
                 txt = "[error] 코인 이름 에러 : 정확하지 않은 코인명."
                 self.floating_msg(txt)
@@ -691,7 +863,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug("예외가 발생했습니다. %s", e)
             logger.debug(traceback.format_exc())
 
-    def floating_msg(self,txt):
+    def floating_msg(self, txt):
         try:
             QMessageBox.information(self, '확인', txt)
             logger.debug(txt)
@@ -711,7 +883,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     txt = str(symbol) + " : " + str(amt)
                     reply = QMessageBox.question(self, '확인', txt + '개 매도 하시겠습니까?')
                     if reply == QMessageBox.Yes:
-                        if self.order(0,symbol,amt):
+                        if self.order(0, symbol, amt):
                             self.real_log_prt("전량 매도 " + str(symbol) + " : " + str(amt))
                         else:
                             txt = "[error] 매도 에러"
@@ -730,9 +902,9 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
     def get_coin_symbol(self, data):
         global coin_Kname, tickers, coin_Ename
         try:
-            #logger.debug("get_coin_symbol 호출 data : " + data)
-            if data in tickers: #무조건 여기에서 걸려야함 ! 재귀로 구현하엿음
-                #logger.debug("get_coin_symbol 성공 data : " + data)
+            # logger.debug("get_coin_symbol 호출 data : " + data)
+            if data in tickers:  # 무조건 여기에서 걸려야함 ! 재귀로 구현하엿음
+                # logger.debug("get_coin_symbol 성공 data : " + data)
                 return data
             elif data in coin_Ename:
                 return self.get_coin_symbol(coin_Ename[data])
@@ -740,8 +912,8 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 for symbol, k_name in coin_Kname.items():
                     if data == k_name:
                         return self.get_coin_symbol(symbol)
-                #logger.debug("get_coin_symbol 실패 data : " + data)
-                #self.real_log_prt("[system] 코인명 에러")
+                # logger.debug("get_coin_symbol 실패 data : " + data)
+                # self.real_log_prt("[system] 코인명 에러")
                 return False
 
         except Exception as e:
@@ -755,7 +927,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             value = item.text()
             label_string = 'Cell Clicked Row: ' + str(row + 1) + ', Column: ' + str(column + 1) + ', Value: ' + str(
                 value)
-            symbol =  self.get_coin_symbol(value)
+            symbol = self.get_coin_symbol(value)
             self.focus_coin_update(symbol)
             self.coin_search.setText(symbol)
             logger.debug(label_string)
@@ -769,7 +941,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             symbol = self.get_coin_symbol(symbol)
             if symbol:
                 if symbol in coin_list:
-                    #self.coin_search.setText(symbol)
+                    # self.coin_search.setText(symbol)
                     self.coin_search_1.setText(symbol)
                     self.coin_search_2.setText(format(round(float(coin_list[symbol]["current_price"])), ','))
 
@@ -822,7 +994,6 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             if invest < 5000:
                 invest = 5100
 
-
             if auto_flag or test:
                 for i in range(7):
                     list_up.append(int(invest))
@@ -835,7 +1006,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
                 if mycash > invest:
                     if not coin in coin_list:
-                        list_val = self.order(1,coin,invest,1,1)
+                        list_val = self.order(1, coin, invest, 1, 1)
 
                     else:
                         logger.debug(f'{coin} 보유코인으로 매수 금지')
@@ -857,12 +1028,12 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 for _ in range(20):
                     if coin in coin_list:
                         pass_flag = False
-                        if float(coin_list[coin]['balance']) > 0 :
+                        if float(coin_list[coin]['balance']) > 0:
                             pass_flag = True
                             break
                     time.sleep(0.5)
 
-                if pass_flag :
+                if pass_flag:
                     logger.debug('구매한 코인 탐색 성공')
                 else:
                     logger.debug('구매한 코인 탐색 실패')
@@ -885,7 +1056,8 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 else:
                     coin_data_list[coin_name]['div_per'] = random.choice(devided_random_list3)
 
-                coin_data_list[coin_name]['next_standard_price'] =calc_next_price(float(coin_data_list[coin_name]['fir_price']), (
+                coin_data_list[coin_name]['next_standard_price'] = calc_next_price(
+                    float(coin_data_list[coin_name]['fir_price']), (
                             float(coin_data_list[coin_name]['div_per']) * float(
                         coin_data_list[coin_name]['cur_stage'])))
                 logger.debug("next_standard_price = %s", coin_data_list[coin_name]['next_standard_price'])
@@ -898,11 +1070,10 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     coin_data_list[coin_name]['gamsi_per'] = random.choice(gamsi_per_list2)
                     coin_data_list[coin_name]['trailing_per'] = random.choice(trailing_per_list2)
 
-
-                coin_data_list[coin_name]['gamsi_price'] =calc_next_price(float(coin_data_list[coin_name]['avr_price']),
-                                    float(coin_data_list[coin_name]['gamsi_per']))
+                coin_data_list[coin_name]['gamsi_price'] = calc_next_price(
+                    float(coin_data_list[coin_name]['avr_price']),
+                    float(coin_data_list[coin_name]['gamsi_per']))
                 logger.debug("감시 시작 가격 = %s", coin_data_list[coin_name]['gamsi_price'])
-
 
                 logger.debug("트레일링 퍼세트 = %s", coin_data_list[coin_name]['trailing_per'])
 
@@ -939,7 +1110,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             if symbol:
                 if self.bun_to_min():
                     global ax, df, plot
-                    self.gridLayout.removeWidget(self.gridLayout.itemAtPosition(0,0).widget())
+                    self.gridLayout.removeWidget(self.gridLayout.itemAtPosition(0, 0).widget())
                     ax.clear()
                     fplt.close()
                     ax = fplt.create_plot()
@@ -947,7 +1118,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     df = pyupbit.get_ohlcv(symbol, self.bun_to_min(), 200)
                     plot = fplt.candlestick_ochl(df[['open', 'close', 'high', 'low']])
 
-                    #fplt.set_x_pos(0, 200, ax) #시작위치 줌
+                    # fplt.set_x_pos(0, 200, ax) #시작위치 줌
                     fplt.refresh()
                     self.gridLayout.addWidget(ax.vb.win, 0, 0)  # ax.vb     (finplot.FinViewBox)
 
@@ -959,18 +1130,17 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
     @pyqtSlot()
     def update_table(self):
         try:
-            global jango_list,coin_list
-            #logger.debug(jango_list)
-            self.money_label.setText(format(round(float(MyCash)),','))  # update krw balance
+            # global jango_list,coin_list
+            # logger.debug(jango_list)
+            self.money_label.setText(format(round(float(MyCash)), ','))  # update krw balance
             self.money_label_2.setText(format(round(jango_list["total_buy"]), ','))
             self.money_label_3.setText(format(round(jango_list["total_now_buy"]), ','))
-            self.money_label_4.setText(str(round(jango_list["total_rate"],2)))
+            self.money_label_4.setText(str(round(jango_list["total_rate"], 2)))
             self.rpb.setValue(
                 (jango_list["total_buy"] / (float(jango_list["balance"]) + float(jango_list["total_buy"]))) * 100)
 
-            #self.table_coin.setRowCount(len(coin_list))
+            # self.table_coin.setRowCount(len(coin_list))
             self.focus_coin_update(self.coin_search_1.text())
-
 
             if len(coin_list) != self.table_coin.rowCount():
                 self.table_coin.setRowCount(len(coin_list))
@@ -979,11 +1149,10 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     stop_btn = QPushButton("중지")
                     start_btn = QPushButton("활성화")
 
-
                     start_btn.setStyleSheet("color:white;background-color:red")
                     stop_btn.setStyleSheet("color:white;background-color:blue")
 
-                    #button.setStyleSheet("color:(33,33,00)")
+                    # button.setStyleSheet("color:(33,33,00)")
 
                     self.table_coin.setItem(idx, 0, QTableWidgetItem(coin_list[coin_name]["currency"]))
                     if coin_data_list[coin_name]['state'] != 2:
@@ -1017,8 +1186,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     self.table_coin.setItem(idx, 6, QTableWidgetItem(
                         format(round(float(coin_list[coin_name]["total_now_price"])), ',')))  #
 
-
-                    #self.table_coin.item(idx, 0).setFont(QFont( 25))
+                    # self.table_coin.item(idx, 0).setFont(QFont( 25))
                     self.table_coin.item(idx, 0).setTextAlignment(Qt.AlignVCenter | Qt.AlignCenter)
                     self.table_coin.item(idx, 1).setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
                     self.table_coin.item(idx, 2).setTextAlignment(Qt.AlignVCenter | Qt.AlignCenter)
@@ -1033,30 +1201,31 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     self.table_coin.setCellWidget(idx, 8, start_btn)
                     if coin_data_list[coin_name]['activate'] != None:
                         if coin_data_list[coin_name]['activate']:
-                            self.change_state_button(1, idx, 8, is_update= 1)
+                            self.change_state_button(1, idx, 8, is_update=1)
                         else:
-                            self.change_state_button(0, idx, 7, is_update= 1)
+                            self.change_state_button(0, idx, 7, is_update=1)
                     idx += 1
-
 
             idx = 0
 
             for coin_name in coin_list:
-                #logger.debug(coin_name)
+                # logger.debug(coin_name)
 
                 self.table_coin.setItem(idx, 0, QTableWidgetItem(coin_list[coin_name]["currency"]))
                 if coin_data_list[coin_name]['state'] != 2:
                     self.table_coin.item(idx, 0).setForeground(QtGui.QColor(0, 255, 0))
 
-
-                if float(coin_list[coin_name]["current_price"]) < 10 :
-                    self.table_coin.setItem(idx, 1, QTableWidgetItem(format(round(float(coin_list[coin_name]["current_price"]),2),',')))#
-                elif float(coin_list[coin_name]["current_price"]) < 100 :
-                    self.table_coin.setItem(idx, 1, QTableWidgetItem(format(round(float(coin_list[coin_name]["current_price"]),1),',')))#
+                if float(coin_list[coin_name]["current_price"]) < 10:
+                    self.table_coin.setItem(idx, 1, QTableWidgetItem(
+                        format(round(float(coin_list[coin_name]["current_price"]), 2), ',')))  #
+                elif float(coin_list[coin_name]["current_price"]) < 100:
+                    self.table_coin.setItem(idx, 1, QTableWidgetItem(
+                        format(round(float(coin_list[coin_name]["current_price"]), 1), ',')))  #
                 else:
-                    self.table_coin.setItem(idx, 1, QTableWidgetItem(format(round(float(coin_list[coin_name]["current_price"])),',')))#
+                    self.table_coin.setItem(idx, 1, QTableWidgetItem(
+                        format(round(float(coin_list[coin_name]["current_price"])), ',')))  #
 
-                txt = str(round(float(coin_list[coin_name]["earing_rate"]),2))
+                txt = str(round(float(coin_list[coin_name]["earing_rate"]), 2))
                 if coin_list[coin_name]["earing_rate"][0] != '-':
                     txt = "▲" + str(txt)
                     self.table_coin.setItem(idx, 2, QTableWidgetItem(txt))
@@ -1066,10 +1235,13 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     self.table_coin.setItem(idx, 2, QTableWidgetItem(txt))
                     self.table_coin.item(idx, 2).setForeground(QtGui.QColor(0, 0, 255))
 
-                self.table_coin.setItem(idx, 3, QTableWidgetItem(format(round(float(coin_list[coin_name]["avg_buy_price"])),',')))#
+                self.table_coin.setItem(idx, 3, QTableWidgetItem(
+                    format(round(float(coin_list[coin_name]["avg_buy_price"])), ',')))  #
                 self.table_coin.setItem(idx, 4, QTableWidgetItem(coin_list[coin_name]["balance"]))
-                self.table_coin.setItem(idx, 5, QTableWidgetItem(format(round(float(coin_list[coin_name]["total_price"])),',')))#
-                self.table_coin.setItem(idx, 6, QTableWidgetItem(format(round(float(coin_list[coin_name]["total_now_price"])),',')))#
+                self.table_coin.setItem(idx, 5, QTableWidgetItem(
+                    format(round(float(coin_list[coin_name]["total_price"])), ',')))  #
+                self.table_coin.setItem(idx, 6, QTableWidgetItem(
+                    format(round(float(coin_list[coin_name]["total_now_price"])), ',')))  #
 
                 self.table_coin.item(idx, 0).setTextAlignment(Qt.AlignVCenter | Qt.AlignCenter)
                 self.table_coin.item(idx, 1).setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
@@ -1079,7 +1251,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 self.table_coin.item(idx, 5).setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
                 self.table_coin.item(idx, 6).setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
                 self.table_coin.setRowHeight(idx, 60)
-                #logger.debug(coin_name)
+                # logger.debug(coin_name)
 
                 idx += 1
                 """
@@ -1096,40 +1268,47 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                      """
 
             if auto_flag:
-                #logger.debug('auto_flag')
                 for coin in coin_list:
-                    #logger.debug(coin)
                     if coin in coin_data_list:
-                        #logger.debug('coin_data_list')
-                        if coin_data_list[coin]['activate'] :
-                            #logger.debug('activate')
-                            if coin_data_list[coin]['state'] == 2 : #프로그램 매수
-                                #logger.debug('state')
-                                if coin_data_list[coin]['cur_stage'] < coin_data_list[coin]['set_stage']: #set_stage 안에서만
+                        if coin_data_list[coin]['activate']:
+                            # logger.debug('activate')
+                            if coin_data_list[coin]['state'] == 2:  # 프로그램 매수
+                                # logger.debug('state')
+                                if coin_data_list[coin]['cur_stage'] < coin_data_list[coin][
+                                    'set_stage']:  # set_stage 안에서만
                                     if datetime.datetime.strptime(coin_data_list[coin]['last_trade_time'],
-                                                                  "%Y_%m_%d_%H_%M") + datetime.timedelta(minutes=30) < datetime.datetime.now() : #마지막 매수 후 30분이 지났으면
+                                                                  "%Y_%m_%d_%H_%M") + datetime.timedelta(
+                                        minutes=30) < datetime.datetime.now():  # 마지막 매수 후 30분이 지났으면
 
-                                        #logger.debug(type(coin_list[coin]['current_price']))
-                                        #logger.debug(type(coin_data_list[coin]['next_standard_price']))
+                                        # logger.debug(type(coin_list[coin]['current_price']))
+                                        # logger.debug(type(coin_data_list[coin]['next_standard_price']))
 
-                                        if int(coin_list[coin]['current_price']) < coin_data_list[coin]['next_standard_price'] :# 현재가가 다음 기준 가격보다 작으면
+                                        if int(coin_list[coin]['current_price']) < coin_data_list[coin][
+                                            'next_standard_price']:  # 현재가가 다음 기준 가격보다 작으면
                                             coin_data_list[coin]['buy_state'] = 1
-                                            #logger.debug('매수 대기 !')
+                                            # logger.debug('매수 대기 !')
 
                                         if coin_data_list[coin]['buy_state']:
-                                            #logger.debug('매수 대기중 !')
+                                            # logger.debug('매수 대기중 !')
                                             if int(coin_data_list[coin]['low']) > int(coin_list[coin]['current_price']):
                                                 coin_data_list[coin]['low'] = int(coin_list[coin]['current_price'])
                                                 coin_data_list[coin]['next_buy_price'] = \
                                                     calc_next_price(float(coin_list[coin]["avg_buy_price"]),
-                                                                    (1 - coin_data_list[coin]['next_buy_per']/100) * float(coin_list[coin]['earing_rate']))
-                                                logger.debug('최저가 갱신 !' + str(coin_data_list[coin]['low']) + '다음 매수 가격 : ' + str(coin_data_list[coin]['next_buy_price']))
+                                                                    (1 - coin_data_list[coin][
+                                                                        'next_buy_per'] / 100) * float(
+                                                                        coin_list[coin]['earing_rate']))
+                                                logger.debug(
+                                                    '최저가 갱신 !' + str(coin_data_list[coin]['low']) + '다음 매수 가격 : ' + str(
+                                                        coin_data_list[coin]['next_buy_price']))
 
-                                            if coin_data_list[coin]['next_buy_price'] < int(coin_list[coin]['current_price']):
-                                                amt = coin_data_list[coin]['fir_invest_money'] * (2 ** coin_data_list[coin]['cur_stage'])
-                                                if self.order(1, coin, amt ,is_auto= 1):
+                                            if coin_data_list[coin]['next_buy_price'] < int(
+                                                    coin_list[coin]['current_price']):
+                                                amt = coin_data_list[coin]['fir_invest_money'] * (
+                                                            2 ** coin_data_list[coin]['cur_stage'])
+                                                if self.order(1, coin, amt, is_auto=1):
                                                     update_coin_list()
-                                                    coin_data_list[coin]['low'] = float(coin_list[coin]['avg_buy_price'])
+                                                    coin_data_list[coin]['low'] = float(
+                                                        coin_list[coin]['avg_buy_price'])
                                                     coin_data_list[coin]['cur_stage'] += 1  # 추가매수
                                                     coin_data_list[coin]['next_standard_price'] = calc_next_price(
                                                         float(coin_data_list[coin]['fir_price']), (
@@ -1138,7 +1317,9 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                                                     coin_data_list[coin]['buy_state'] = 0
                                                     coin_data_list[coin]['next_buy_price'] = 100000000
 
-                                                    coin_data_list[coin]['gamsi_price'] = calc_next_price(float(coin_list[coin]['avg_buy_price']), float(coin_data_list[coin]['gamsi_per']))
+                                                    coin_data_list[coin]['gamsi_price'] = calc_next_price(
+                                                        float(coin_list[coin]['avg_buy_price']),
+                                                        float(coin_data_list[coin]['gamsi_per']))
                                                     coin_data_list[coin]['last_trade_time'] = str(
                                                         datetime.datetime.now().strftime("%Y_%m_%d_%H_%M"))
                                                     coin_data_list[coin]['trailing_state'] = 0
@@ -1146,19 +1327,21 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                                                     logger.debug(coin_data_list[coin])
                                                     self.real_log.addItem(coin_Kname[coin] + " BUY")
 
+                                if int(coin_list[coin]['current_price']) > coin_data_list[coin][
+                                    'gamsi_price']:  # 감시가보다 현재가가 높으면
+                                    coin_data_list[coin]['trailing_state'] = 1  # 감시중
+                                    # logger.debug('감시가 도달 !')
 
-                                if int(coin_list[coin]['current_price']) > coin_data_list[coin]['gamsi_price'] : #감시가보다 현재가가 높으면
-                                    coin_data_list[coin]['trailing_state'] = 1 #감시중
-                                    #logger.debug('감시가 도달 !')
-
-                                if coin_data_list[coin]['trailing_state']: #감시중이면
-                                    #logger.debug('감시중 !')
-                                    if int(coin_data_list[coin]['high']) < int(coin_list[coin]['current_price']) :
+                                if coin_data_list[coin]['trailing_state']:  # 감시중이면
+                                    # logger.debug('감시중 !')
+                                    if int(coin_data_list[coin]['high']) < int(coin_list[coin]['current_price']):
                                         coin_data_list[coin]['high'] = int(coin_list[coin]['current_price'])
-                                        coin_data_list[coin]['trailing_income_price'] = calc_next_price(coin_data_list[coin]['high'],coin_data_list[coin]['trailing_per'])
-                                        logger.debug('최고가 갱신 !' +  str(coin_data_list[coin]['high']))
-                                    if coin_data_list[coin]['trailing_income_price'] > int(coin_list[coin]['current_price']):
-                                        if self.order( 0, coin, is_auto = 1):
+                                        coin_data_list[coin]['trailing_income_price'] = calc_next_price(
+                                            coin_data_list[coin]['high'], coin_data_list[coin]['trailing_per'])
+                                        logger.debug('최고가 갱신 !' + str(coin_data_list[coin]['high']))
+                                    if coin_data_list[coin]['trailing_income_price'] > int(
+                                            coin_list[coin]['current_price']):
+                                        if self.order(0, coin, is_auto=1):
                                             logger.debug('익절 !')
                                             coin_init(coin)
 
@@ -1190,14 +1373,14 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug("예외가 발생했습니다. %s", e)
             logger.debug(traceback.format_exc())
 
-    def handleButtonClicked(self,is_activate):
+    def handleButtonClicked(self, is_activate):
         try:
             global coin_list
-            #button = QtGui.qApp.focusWidget()
+            # button = QtGui.qApp.focusWidget()
             button = self.sender()
             index = self.table_coin.indexAt(button.pos())
             if index.isValid():
-                #print(index.row(), index.column())
+                # print(index.row(), index.column())
 
                 self.change_state_button(is_activate, index.row(), index.column())
 
@@ -1206,8 +1389,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug("예외가 발생했습니다. %s", e)
             logger.debug(traceback.format_exc())
 
-
-    def change_state_button(self,is_activate, row, col, is_update = 0):
+    def change_state_button(self, is_activate, row, col, is_update=0):
         try:
             button = self.table_coin.cellWidget(row, col)
             item = self.table_coin.item(row, 0)
@@ -1216,8 +1398,8 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             if is_activate:
                 txt = "매수 활성화"
 
-                #button.setEnabled(False) #진짜 개 얼탱이가 없네 진짜
-                #button.setStyleSheet("color:gray;background-color:#FFCCCC")
+                # button.setEnabled(False) #진짜 개 얼탱이가 없네 진짜
+                # button.setStyleSheet("color:gray;background-color:#FFCCCC")
                 button.setStyleSheet("color:white;background-color:gray")
                 coin_data_list[self.get_coin_symbol(value)]["activate"] = True
 
@@ -1227,8 +1409,8 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
             else:
                 txt = "매수 중지"
-                #button.setEnabled(False)
-                #button.setStyleSheet("color:gray;background-color:#333300")
+                # button.setEnabled(False)
+                # button.setStyleSheet("color:gray;background-color:#333300")
                 button.setStyleSheet("color:white;background-color:gray")
                 coin_data_list[self.get_coin_symbol(value)]["activate"] = False
 
@@ -1236,7 +1418,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 other_button.setEnabled(True)
                 other_button.setStyleSheet("color:white;background-color:red")
 
-            if not is_update :
+            if not is_update:
                 label_string = txt + ' Clicked , Value: ' + str(value)
                 self.real_log_prt(label_string)
 
@@ -1282,10 +1464,10 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             logger.debug(traceback.format_exc())
 
 
-
 class Mythread(QThread):
     update_table_signal = pyqtSignal()
     update_coin_chart_signal = pyqtSignal()
+
     def __init__(self):
         super().__init__()
 
@@ -1305,8 +1487,7 @@ class Mythread(QThread):
 
                         time.sleep(5)
 
-
-                time.sleep(1)
+                time.sleep(5)
 
             except Exception as e:
                 logger.debug(e)
@@ -1332,19 +1513,22 @@ def calc_income_rate(close, current):
         logger.debug("예외가 발생했습니다. %s", e)
         logger.debug(traceback.format_exc())
 
-#상위 거래량부터 출력할 개수
+
+# 상위 거래량부터 출력할 개수
 MAX_VALUE_COUNT = 8
 
 level = 0
 
 day_data = {}
-#데이터 수집 함수
+
+
+# 데이터 수집 함수
 def get_ohlcv(wanted):
     try:
         global day_data, level
 
         if wanted == "value":
-            #거래량 순위 MAX_VALUE_COUNT 만큼 가져옴
+            # 거래량 순위 MAX_VALUE_COUNT 만큼 가져옴
             value_dict = {}
             idx = 0
             for i in tickers:
@@ -1355,7 +1539,6 @@ def get_ohlcv(wanted):
                 idx += 1
                 if idx > 5:
                     break
-
 
             value_list = sorted(value_dict.items(), key=lambda x: x[1], reverse=True)
 
@@ -1368,7 +1551,7 @@ def get_ohlcv(wanted):
             return sort_list
 
         elif wanted == "day_open_price":
-            #당일 시초가 가져옴
+            # 당일 시초가 가져옴
             plus = 0
             minus = 0
             ohlcv_data = {}
@@ -1382,19 +1565,19 @@ def get_ohlcv(wanted):
                         calc_income_rate(ohlcv_data[ticker]['open'][-2], ohlcv_data[ticker]['close'][-1]))
 
                     day_data[ticker] = {'today': ohlcv_data[ticker]['open'][-1],
-                                               'yesterday': yesterday_updown,
-                                               'high': ohlcv_data[ticker]['high'][-1]}
+                                        'yesterday': yesterday_updown,
+                                        'high': ohlcv_data[ticker]['high'][-1]}
 
                 else:
                     yesterday_updown = float(
                         calc_income_rate(ohlcv_data[ticker]['open'][0], ohlcv_data[ticker]['close'][0]))
 
                     day_data[ticker] = {'today': ohlcv_data[ticker]['open'][-1],
-                                               'yesterday': yesterday_updown,
-                                               'high': ohlcv_data[ticker]['high'][-1]}
+                                        'yesterday': yesterday_updown,
+                                        'high': ohlcv_data[ticker]['high'][-1]}
 
                 if len(ohlcv_data[ticker]) > 2:
-                    #당일 상승, 하락 개수 카운트
+                    # 당일 상승, 하락 개수 카운트
                     res = float(calc_income_rate(day_data[ticker]['today'], ohlcv_data[ticker]['close'][-1]))
                     if res > 0:
                         plus += 1
@@ -1433,7 +1616,7 @@ def gradient(min, coin):
     if coin:
         if coin in coin_data_list:
             if coin in coin_dic:
-                return (float(coin_dic[coin][-1]) - float(coin_dic[coin][-(min//5)]))/(min//5) # 분봉 기준 ! 6으로 나누
+                return (float(coin_dic[coin][-1]) - float(coin_dic[coin][-(min // 5)])) / (min // 5)  # 분봉 기준 ! 6으로 나누
             else:
                 logger.debug(coin + ' 이 coin_dic에 존재하지 않음')
         else:
@@ -1441,12 +1624,13 @@ def gradient(min, coin):
     else:
         logger.debug(coin + ' 이 get_coin_symbol에 존재하지 않음')
 
+
 def gradient_5(coin):
     coin = main.get_coin_symbol(coin)
     if coin:
         if coin in coin_data_list:
             if coin in coin_dic:
-                return (float(pyupbit.get_current_price(coin)) - float(coin_dic[coin][-1]))/5
+                return (float(pyupbit.get_current_price(coin)) - float(coin_dic[coin][-1])) / 5
             else:
                 logger.debug(coin + ' 이 coin_dic에 존재하지 않음')
         else:
@@ -1456,6 +1640,8 @@ def gradient_5(coin):
 
 
 value_list = {}
+
+
 class condition_search_thread(QThread):
     condition_func_signal = pyqtSignal(str)
 
@@ -1471,13 +1657,14 @@ class condition_search_thread(QThread):
                 time.sleep(1)
                 if auto_flag:
                     if ((datetime.datetime.now().hour == 1) and (datetime.datetime.now().minute == 1)) | \
-                        ((datetime.datetime.now().hour == 9) and (datetime.datetime.now().minute == 1)) | \
-                        ((datetime.datetime.now().hour == 13) and (datetime.datetime.now().minute == 1)) :
+                            ((datetime.datetime.now().hour == 9) and (datetime.datetime.now().minute == 1)) | \
+                            ((datetime.datetime.now().hour == 13) and (datetime.datetime.now().minute == 1)):
                         value_list = get_ohlcv('value')
                         time.sleep(60)
 
                     for i in value_list:
-                        if (i == 'KRW-BTT') | (i == 'KRW-XEC'):
+                        #거래 제외 종목 제외
+                        if i in trade_list:
                             continue
 
                         score = 0
@@ -1513,13 +1700,14 @@ class condition_search_thread(QThread):
                 logger.debug(e)
                 logger.debug(traceback.format_exc())
 
+
 def update_coin_dic():
     try:
         global coin_dic
         now_time = dt.datetime.now()
         if now_time.minute % 5 == 0 and now_time.second < 5:
             if coin_dic.keys() == current_price_dic.keys():
-                #logger.debug('coin dic update 시작')
+                # logger.debug('coin dic update 시작')
                 for coin in coin_dic:
                     if coin in coin_dic and coin in current_price_dic:
                         coin_dic[coin].append(current_price_dic[coin])
@@ -1527,7 +1715,7 @@ def update_coin_dic():
                         logger.debug('coin dic 맞지 않음')
                     if len(coin_dic[coin]) > 500:
                         del coin_dic[coin][0]
-                    #logger.debug(coin_dic[coin])
+                    # logger.debug(coin_dic[coin])
                 logger.debug('coin dic update 완료됨')
                 return True
             else:
@@ -1549,28 +1737,28 @@ def init_coin_dic():
         idx = 0
         for coin in tickers:
             df = pyupbit.get_ohlcv(coin, 'minute5', 200)
-            price_list = df['close'].to_list() #제일 뒤에가 최근
-            #logger.debug(df['close'])
-            #logger.debug(price_list)
+            price_list = df['close'].to_list()  # 제일 뒤에가 최근
+            # logger.debug(df['close'])
+            # logger.debug(price_list)
             tmp_dic[coin] = price_list
             time.sleep(0.5)
             idx += 1
-            logger.debug("init_coin_dic : " + str(idx)+'/' +str(len(tickers)))
+            logger.debug("init_coin_dic : " + str(idx) + '/' + str(len(tickers)))
             if idx > 5:
                 break
 
         coin_dic = tmp_dic
 
-        #logger.debug(coin_dic)
+        # logger.debug(coin_dic)
         logger.debug(len(coin_dic))
 
-        #거래량 순위 체크
+        # 거래량 순위 체크
         value_list = get_ohlcv('value')
 
-        #당일 시초가 데이터 체크
+        # 당일 시초가 데이터 체크
         get_ohlcv('day_open_price')
 
-        #코인 저장 딕셔너리 저장
+        # 코인 저장 딕셔너리 저장
         if os.path.exists(coin_data_path):
             with open(coin_data_path, 'rb') as f:
                 coin_data_list = pickle.load(f)
@@ -1586,12 +1774,13 @@ def init_coin_dic():
                                      'outcome_state': 0, 'rebuy_chkbox': False, 'state': 0, 'gubun': 0, 'high': 0,
                                      'gamsi_per': 0, 'gamsi_price': 100000000,
                                      'trailing_per': 0, 'trailing_income_price': 0, 'trailing_state': 0,
-                                     'last_trade_time': 0, 'activate' : True }
+                                     'last_trade_time': 0, 'activate': True}
             all_modify_csv()
 
     except Exception as e:
         logger.debug(e)
         logger.debug(traceback.format_exc())
+
 
 def update_coin_chart():
     try:
@@ -1618,29 +1807,30 @@ def update_coin_chart():
         logger.debug(e)
         logger.debug(traceback.format_exc())
 
+
 def coin_init(name):
     try:
         global coin_data_list
 
         logger.debug("%s 종목 초기화", name)
         coin_data_list[name]['coin_name'] = name
-        coin_data_list[name]['fir_price'] = 0 #
-        coin_data_list[name]['fir_invest_money'] = 0 #
+        coin_data_list[name]['fir_price'] = 0  #
+        coin_data_list[name]['fir_invest_money'] = 0  #
         coin_data_list[name]['avr_price'] = 0
         coin_data_list[name]['balance'] = 0
         coin_data_list[name]['rebuy_chkbox'] = 'True'
-        #coin_data_list[name]['quintuple_batting'] = 'FALSE'
-        #coin_data_list[name]['invest_cash'] = 0
-        #coin_data_list[name]['tot_invest_cash'] = 0
-        coin_data_list[name]['set_stage'] = 0 #
-        coin_data_list[name]['cur_stage'] = 0 #
+        # coin_data_list[name]['quintuple_batting'] = 'FALSE'
+        # coin_data_list[name]['invest_cash'] = 0
+        # coin_data_list[name]['tot_invest_cash'] = 0
+        coin_data_list[name]['set_stage'] = 0  #
+        coin_data_list[name]['cur_stage'] = 0  #
         coin_data_list[name]['div_per'] = 0
-        #coin_data_list[name]['in_per'] = 0
-        #coin_data_list[name]['out_per'] = -20
+        # coin_data_list[name]['in_per'] = 0
+        # coin_data_list[name]['out_per'] = -20
         coin_data_list[name]['next_buy_price'] = 0
-        #coin_data_list[name]['next_income_price'] = 0
-        #coin_data_list[name]['next_out_price'] = 0
-        #coin_data_list[name]['outcome_state'] = 'FALSE'
+        # coin_data_list[name]['next_income_price'] = 0
+        # coin_data_list[name]['next_out_price'] = 0
+        # coin_data_list[name]['outcome_state'] = 'FALSE'
         coin_data_list[name]['state'] = 0  # state - 0:미진입, 1:손매수, 2:프로그램매수
         coin_data_list[name]['gubun'] = 0  # gubun - 0:init, 2:트레일링
         coin_data_list[name]['high'] = 0
@@ -1659,18 +1849,18 @@ def coin_init(name):
 
         coin_data_list[name]['next_standard_price'] = 0
 
-
         all_modify_csv()
     except Exception as e:  # 모든 예외의 에러 메시지를 출력할 때는 Exception을 사용
         logger.debug("예외가 발생했습니다. %s", e)
         logger.debug(traceback.format_exc())
 
+
 # coin list update func
 def update_coin_list():
     try:
-        global main_upbit, tickers, current_price_dic, coin_list, MyCash,jango_list
+        global main_upbit, tickers, current_price_dic, coin_list, MyCash, jango_list
         tmp = main_upbit.get_balances()
-        #logger.debug(tmp)
+        # logger.debug(tmp)
         tmp_list = {}
         tmp_jango_list = {}
         for i in tmp:
@@ -1678,7 +1868,7 @@ def update_coin_list():
             for j, k in i.items():
                 tmp[j] = k
             if tmp["currency"] == 'KRW':
-                #main.money_label.setText(format(round(float(tmp["balance"])),','))  # update krw balance
+                # main.money_label.setText(format(round(float(tmp["balance"])),','))  # update krw balance
                 tmp_jango_list["balance"] = tmp["balance"]
 
                 pass
@@ -1689,32 +1879,29 @@ def update_coin_list():
                     tmp_list[symbol] = tmp
                     tmp_list[symbol]["total_price"] = str(
                         float(tmp_list[symbol]['avg_buy_price']) * float(tmp_list[symbol]['balance']))
-        #logger.debug(tmp_list)
+        # logger.debug(tmp_list)
         current_list = {}
 
         current_price_dic = pyupbit.get_current_price(tickers)
 
-        for coin in tmp_list.keys() :
+        for coin in tmp_list.keys():
             current_list[coin] = current_price_dic[coin]
 
-        #logger.debug(tmp_list.keys())
-        #logger.debug(current_list)
+        # logger.debug(tmp_list.keys())
+        # logger.debug(current_list)
 
         total_buy = 0
         total_now_buy = 0
 
         for symbol in tmp_list:
 
-
-            if symbol in coin_list :
+            if symbol in coin_list:
                 tmp_list[symbol]["current_price"] = coin_list[symbol]['current_price']
             else:
-                tmp_list[symbol]["current_price"] = str(current_list[symbol])#todo : 원본소스
-
+                tmp_list[symbol]["current_price"] = str(current_list[symbol])  # todo : 원본소스
 
             tmp_list[symbol]["total_now_price"] = str(
                 float(tmp_list[symbol]['current_price']) * float(tmp_list[symbol]['balance']))
-
 
             tmp_list[symbol]["earing_rate"] = str(((float(tmp_list[symbol]["current_price"]) - float(
                 tmp_list[symbol]['avg_buy_price'])) / float(tmp_list[symbol]['avg_buy_price'])) * 100)
@@ -1722,8 +1909,9 @@ def update_coin_list():
             total_buy += float(tmp_list[symbol]["total_price"])
             total_now_buy += float(tmp_list[symbol]["total_now_price"])
 
-            #logger.debug(tmp_list)
-            #logger.debug(coin_list)
+            # logger.debug(tmp_list)
+            # logger.debug(coin_list)
+
 
         if total_buy != 0:
             total_rate = ((float(total_now_buy) - float(total_buy)) / float(total_buy)) * 100
@@ -1733,13 +1921,11 @@ def update_coin_list():
         tmp_jango_list["total_now_buy"] = total_now_buy
         tmp_jango_list["total_rate"] = total_rate
 
-
-
         # update_table 에서 해도 될듯 ?
         # 업비트 서버랑 동기화
         program_list = []
-        upbit_list = tmp_list.keys()# 업비트에서 가지고있는 전부
-        #logger.debug(coin_data_list)
+        upbit_list = tmp_list.keys()  # 업비트에서 가지고있는 전부
+        # logger.debug(coin_data_list)
         for j in coin_data_list:
             if (coin_data_list[j]['state'] == 2) | (coin_data_list[j]['state'] == 1):
                 program_list.append(j)  # 프로그램이 가지고있는 전부
@@ -1749,20 +1935,19 @@ def update_coin_list():
             coin_init(k)  # 1,2 -> 0
 
         for l in list(set(upbit_list) - set(program_list)):
-            #logger.debug(upbit_list)
-            #logger.debug(program_list)
+            # logger.debug(upbit_list)
+            # logger.debug(program_list)
             logger.debug(' %s 손매수한 코인 발견. 손매수 처리', l)
-            #if l in coin_data_list:
+            # if l in coin_data_list:
             coin_data_list[l]['state'] = 1
             logger.debug(l)
 
         all_modify_csv()
 
-
         coin_list = tmp_list
         jango_list = tmp_jango_list
         MyCash = jango_list["balance"]
-        #main.update_thread.update_table_signal.emit()
+        # main.update_thread.update_table_signal.emit()
 
 
 
@@ -1772,11 +1957,12 @@ def update_coin_list():
 
 
 SERVER_PORT = 5000
-#외부아이피
+# 외부아이피
 TY_IP = '192.168.123.100'
 DH_IP = '192.168.0.7'
 DH_OFFICE_IP = '175.212.249.4'
 CUSTOM_IP = '1.242.216.122'
+
 
 class socket_server_thread(QThread):
 
@@ -1787,7 +1973,7 @@ class socket_server_thread(QThread):
             self.con = False
             self.socket_try = 0
             self.clients = {}
-            #logger.debug("socker_server_start")
+            # logger.debug("socker_server_start")
 
             global test
             if test:
@@ -1824,13 +2010,14 @@ class socket_server_thread(QThread):
 
                     while True:
                         try:
-                            self.readables, self.writeables, self.excpetions = select.select(self.socks, [], []) # 이벤트 대기 ex)클라이언트 접속, 리시브
+                            self.readables, self.writeables, self.excpetions = select.select(self.socks, [],
+                                                                                             [])  # 이벤트 대기 ex)클라이언트 접속, 리시브
                             for sock in self.readables:
                                 if sock == self.s:  # 신규 클라이언트 접속
                                     newsock, addr = self.s.accept()
                                     self.socks.append(newsock)
-                                    logger.debug("새로운 클라이언트 접속" +str(addr))
-                                    #main.real_log_widget.addItem("새로운 클라이언트 접속")
+                                    logger.debug("새로운 클라이언트 접속" + str(addr))
+                                    # main.real_log_widget.addItem("새로운 클라이언트 접속")
 
                                 else:  # 이미 접속한 클라이언트의 요청
                                     try:
@@ -1838,28 +2025,28 @@ class socket_server_thread(QThread):
                                         data = conn.recv(1024).decode('utf-8')
                                         if len(data) > 1:
                                             logger.debug(f'데이터 수신 : {data}')
-                                            if data[:2] =="02":
+                                            if data[:2] == "02":
                                                 data = data[2:]
                                                 self.clients[conn.getpeername()[0]] = data
                                                 main.client_list.addItem("클라이언트 접속 : " + str(conn.getpeername()[0]))
                                                 logger.debug("클라이언트 : " + data)
 
                                     except ConnectionResetError:
-                                        client_ip  = sock.getpeername()[0]
+                                        client_ip = sock.getpeername()[0]
                                         name = self.clients[client_ip]
                                         sock.close()
                                         self.socks.remove(sock)
                                         del self.clients[client_ip]
                                         logger.debug("클라이언트 접속 해제 : " + name)
                                         main.client_list.addItem("클라이언트 접속 해제 : " + str(client_ip))
-                                        #main.real_log_widget.addItem("클라이언트 접속 해제 : " + name)
+                                        # main.real_log_widget.addItem("클라이언트 접속 해제 : " + name)
 
 
                                     except Exception as e:
                                         logger.debug(traceback.format_exc())
                                         logger.debug(e)
                                         pass
-                                        #중요정보 로그 !!
+                                        # 중요정보 로그 !!
                         except Exception as e:
                             logger.debug(e)
                             logger.debug(traceback.format_exc())
@@ -1868,14 +2055,13 @@ class socket_server_thread(QThread):
             logger.debug(e)
             logger.debug(traceback.format_exc())
 
-
     def send_all(self, data):
         try:
             global main
             if self.con:
                 logger.debug("메세지 송신 : " + data)
                 for i in self.socks:
-                    if i != self.s:#본인을 제외한 모든 소켓에 송신
+                    if i != self.s:  # 본인을 제외한 모든 소켓에 송신
                         try:
                             name = self.clients[i.getpeername()[0]]
                         except:
@@ -1884,7 +2070,7 @@ class socket_server_thread(QThread):
 
                         logger.debug(i)
                         logger.debug("수신자 : " + name + ", 메세지 : " + data)
-                        #main.real_log_widget.addItem("수신자 : " + name + ", 메세지 : " + data + "전송 완료")
+                        # main.real_log_widget.addItem("수신자 : " + name + ", 메세지 : " + data + "전송 완료")
                         res = i.sendall(data.encode('utf-8'))
                         logger.debug(res)
             else:
@@ -1895,7 +2081,7 @@ class socket_server_thread(QThread):
             logger.debug(traceback.format_exc())
 
 
-def send_to_clients(txt) : #
+def send_to_clients(txt):  #
     try:
         main.socket_server.send_all(txt)
         main.real_log_prt("[msg] 메세지 전송됨 '" + txt + "'")
@@ -1916,7 +2102,6 @@ stylesheet = """
     }
 
 """
-
 
 if __name__ == "__main__":
     try:
