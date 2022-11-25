@@ -203,6 +203,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                 background-color:white;
             }
         ''')
+        self.table_coin.horizontalHeader().setStyleSheet('background-color:#;')
         self.table_coin.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
 
         self.table_coin.setShowGrid(False)
@@ -390,7 +391,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             server_amt = tmp[3]
             is_auto = int(tmp[4])
             is_first = int(tmp[5])
-            type = tmp[6] # 1 : A, 0: B
+            type = int(tmp[6]) # 1 : A, 0: B
 
             logger.debug(tmp)
             symbol = self.get_coin_symbol(coin)
@@ -414,7 +415,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                             if mycash > invest:
                                 if not coin in coin_list:
                                     amt = invest
-                                    txt = symbol + ': 첫 매수 참여 , ' + str(amt)
+                                    txt = symbol + ': 1차 매수, ' + str(amt) +'원'
                                 else:
                                     logger.debug(f'{coin} 보유코인으로 매수 금지')
                                     return False
@@ -424,7 +425,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                         else:
                             if symbol in coin_list: #코인 리스트에 있으면
                                 amt = coin_data_list[symbol]['last_money'] * 2
-                                txt = symbol + ': 다음 매수 참여 , ' + str(amt)
+                                txt = symbol + ': 분할 매수, ' + str(amt) + '원'
                                 pass
                             else:
                                 self.real_log_prt("[매수] 매수 단계 맞지 않음 : ")
