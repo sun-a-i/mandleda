@@ -1533,15 +1533,11 @@ def update_coin_list():
         tmp_jango_list["total_now_buy"] = total_now_buy
         tmp_jango_list["total_rate"] = total_rate
 
-
-
         return tmp_list,tmp_jango_list
-
 
     except Exception as e:
         logger.debug(e)
         logger.debug(traceback.format_exc())
-
 
 SERVER_PORT = 5000
 #외부아이피

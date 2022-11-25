@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>2322</width>
-    <height>953</height>
+    <width>2040</width>
+    <height>977</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,9 +23,9 @@ background-color:white;
     <property name="geometry">
      <rect>
       <x>1080</x>
-      <y>340</y>
+      <y>620</y>
       <width>301</width>
-      <height>221</height>
+      <height>291</height>
      </rect>
     </property>
     <property name="frameShape">
@@ -180,19 +180,19 @@ background-color:white;
    <widget class="QListWidget" name="client_list">
     <property name="geometry">
      <rect>
-      <x>1080</x>
-      <y>620</y>
-      <width>301</width>
-      <height>291</height>
+      <x>5</x>
+      <y>444</y>
+      <width>111</width>
+      <height>481</height>
      </rect>
     </property>
    </widget>
    <widget class="QLabel" name="label_15">
     <property name="geometry">
      <rect>
-      <x>1080</x>
-      <y>570</y>
-      <width>131</width>
+      <x>6</x>
+      <y>411</y>
+      <width>111</width>
       <height>31</height>
      </rect>
     </property>
@@ -204,8 +204,15 @@ background-color:white;
       <bold>true</bold>
      </font>
     </property>
+    <property name="styleSheet">
+     <string notr="true">background-color:#123;
+color:white;</string>
+    </property>
     <property name="text">
      <string>접속자 목록</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
     </property>
    </widget>
    <widget class="QGroupBox" name="groupBox">
@@ -548,7 +555,7 @@ background-color:blue;
     <property name="geometry">
      <rect>
       <x>1080</x>
-      <y>290</y>
+      <y>580</y>
       <width>41</width>
       <height>31</height>
      </rect>
@@ -1195,6 +1202,187 @@ background-color:blue;
      </property>
     </column>
    </widget>
+   <widget class="QGroupBox" name="groupBox_3">
+    <property name="geometry">
+     <rect>
+      <x>1080</x>
+      <y>310</y>
+      <width>300</width>
+      <height>261</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>거래 종목 설정</string>
+    </property>
+    <widget class="QPushButton" name="all_trade_list_remove">
+     <property name="geometry">
+      <rect>
+       <x>201</x>
+       <y>38</y>
+       <width>75</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>맑은 고딕</family>
+      </font>
+     </property>
+     <property name="text">
+      <string>전체 포함</string>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="remove_listview">
+     <property name="geometry">
+      <rect>
+       <x>190</x>
+       <y>90</y>
+       <width>100</width>
+       <height>160</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>맑은 고딕</family>
+      </font>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="add_listview">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>90</y>
+       <width>100</width>
+       <height>160</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>맑은 고딕</family>
+      </font>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="use_trade_coin_search">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>43</y>
+       <width>101</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>맑은 고딕</family>
+      </font>
+     </property>
+     <property name="text">
+      <string>코인명</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_13">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>68</y>
+       <width>281</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>맑은 고딕</family>
+      </font>
+     </property>
+     <property name="text">
+      <string>[거래 종목]                             [제외 종목]</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_12">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>20</y>
+       <width>71</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>맑은 고딕</family>
+      </font>
+     </property>
+     <property name="text">
+      <string>[코인 선택]</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="all_trade_list_add">
+     <property name="geometry">
+      <rect>
+       <x>201</x>
+       <y>12</y>
+       <width>75</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>맑은 고딕</family>
+      </font>
+     </property>
+     <property name="text">
+      <string>전체 제외</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="trade_list_add">
+     <property name="geometry">
+      <rect>
+       <x>125</x>
+       <y>126</y>
+       <width>50</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>맑은 고딕</family>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-color:gray;</string>
+     </property>
+     <property name="text">
+      <string>☞</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="trade_list_remove">
+     <property name="geometry">
+      <rect>
+       <x>125</x>
+       <y>166</y>
+       <width>50</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>맑은 고딕</family>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-color:gray;</string>
+     </property>
+     <property name="text">
+      <string>☜</string>
+     </property>
+    </widget>
+   </widget>
    <zorder>label_10</zorder>
    <zorder>label_9</zorder>
    <zorder>groupBox</zorder>
@@ -1235,13 +1423,14 @@ background-color:blue;
    <zorder>auto_order_btn</zorder>
    <zorder>refresh_btn</zorder>
    <zorder>table_dic_2</zorder>
+   <zorder>groupBox_3</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>2322</width>
+     <width>2040</width>
      <height>21</height>
     </rect>
    </property>
