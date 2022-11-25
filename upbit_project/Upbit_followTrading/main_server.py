@@ -122,7 +122,7 @@ coin_list = {'KRW-ETH':
 coin_data_list = {}
 OFFENSIVE_MODE = 0
 DEFENSIVE_MODE = 1
-search_mode = OFFENSIVE_MODE
+search_mode = DEFENSIVE_MODE
 
 final_price = 999999999.9
 final_price_chk = 888888888.8
@@ -1004,7 +1004,8 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
 
                 logger.debug("진입가격 결정 : %s, level = %s, my_cash = %s", invest, level, mycash)
                 list_val = False
-
+                if not search_mode:  # defensive 모드가 아니면
+                    invest *= 2
                 if mycash > invest:
                     if not coin in coin_list:
                         list_val = self.order(1, coin, invest, 1, 1)
@@ -1431,10 +1432,10 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
         global auto_flag, search_mode
         try:
             if self.rdo_mode_offensive.isChecked():
-                search_mode = OFFENSIVE_MODE
+                search_mode = DEFENSIVE_MODE
                 mode = 'A타입'
             else:
-                search_mode = DEFENSIVE_MODE
+                search_mode = OFFENSIVE_MODE
                 mode = 'B타입'
 
             if state == 'start':

@@ -390,7 +390,7 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
             server_amt = tmp[3]
             is_auto = int(tmp[4])
             is_first = int(tmp[5])
-            type = tmp[6]
+            type = tmp[6] # 1 : A, 0: B
 
             logger.debug(tmp)
             symbol = self.get_coin_symbol(coin)
@@ -408,6 +408,8 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                                 list_up.append(int(invest))
                                 invest = invest * 1.03
                             invest = int(random.choice(list_up))
+                            if not type: #defensive 모드가 아니면
+                                invest *= 2
                             logger.debug("진입가격 결정 : %s, my_cash = %s", invest, mycash)
                             if mycash > invest:
                                 if not coin in coin_list:
