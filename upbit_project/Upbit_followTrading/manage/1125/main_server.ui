@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>2040</width>
-    <height>977</height>
+    <height>979</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -186,42 +186,20 @@ background-color:white;
       <height>481</height>
      </rect>
     </property>
-   </widget>
-   <widget class="QLabel" name="label_15">
-    <property name="geometry">
-     <rect>
-      <x>6</x>
-      <y>411</y>
-      <width>111</width>
-      <height>31</height>
-     </rect>
+    <property name="frameShape">
+     <enum>QFrame::NoFrame</enum>
     </property>
-    <property name="font">
-     <font>
-      <family>Agency FB</family>
-      <pointsize>14</pointsize>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color:#123;
-color:white;</string>
-    </property>
-    <property name="text">
-     <string>접속자 목록</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
+    <property name="frameShadow">
+     <enum>QFrame::Plain</enum>
     </property>
    </widget>
    <widget class="QGroupBox" name="groupBox">
     <property name="geometry">
      <rect>
       <x>1080</x>
-      <y>130</y>
+      <y>180</y>
       <width>301</width>
-      <height>151</height>
+      <height>121</height>
      </rect>
     </property>
     <property name="title">
@@ -234,7 +212,7 @@ color:white;</string>
      <property name="geometry">
       <rect>
        <x>13</x>
-       <y>90</y>
+       <y>50</y>
        <width>90</width>
        <height>25</height>
       </rect>
@@ -250,7 +228,7 @@ color:white;</string>
      <property name="geometry">
       <rect>
        <x>14</x>
-       <y>120</y>
+       <y>80</y>
        <width>90</width>
        <height>25</height>
       </rect>
@@ -266,7 +244,7 @@ color:white;</string>
      <property name="geometry">
       <rect>
        <x>93</x>
-       <y>120</y>
+       <y>80</y>
        <width>91</width>
        <height>25</height>
       </rect>
@@ -279,7 +257,7 @@ color:white;</string>
      <property name="geometry">
       <rect>
        <x>190</x>
-       <y>120</y>
+       <y>80</y>
        <width>31</width>
        <height>25</height>
       </rect>
@@ -292,7 +270,7 @@ color:white;</string>
      <property name="geometry">
       <rect>
        <x>191</x>
-       <y>90</y>
+       <y>50</y>
        <width>31</width>
        <height>25</height>
       </rect>
@@ -305,7 +283,7 @@ color:white;</string>
      <property name="geometry">
       <rect>
        <x>93</x>
-       <y>90</y>
+       <y>50</y>
        <width>91</width>
        <height>25</height>
       </rect>
@@ -317,9 +295,9 @@ color:white;</string>
     <widget class="QLineEdit" name="coin_search">
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>50</y>
-       <width>101</width>
+       <x>170</x>
+       <y>20</y>
+       <width>121</width>
        <height>25</height>
       </rect>
      </property>
@@ -330,7 +308,7 @@ color:white;</string>
     <widget class="QLabel" name="label_16">
      <property name="geometry">
       <rect>
-       <x>10</x>
+       <x>60</x>
        <y>20</y>
        <width>51</width>
        <height>25</height>
@@ -352,7 +330,7 @@ color:white;</string>
      <property name="geometry">
       <rect>
        <x>220</x>
-       <y>90</y>
+       <y>50</y>
        <width>75</width>
        <height>25</height>
       </rect>
@@ -365,7 +343,7 @@ color:white;</string>
      <property name="geometry">
       <rect>
        <x>220</x>
-       <y>120</y>
+       <y>80</y>
        <width>75</width>
        <height>25</height>
       </rect>
@@ -373,48 +351,6 @@ color:white;</string>
      <property name="text">
       <string>전량매도</string>
      </property>
-    </widget>
-    <widget class="QGroupBox" name="groupBox_2">
-     <property name="geometry">
-      <rect>
-       <x>130</x>
-       <y>20</y>
-       <width>161</width>
-       <height>61</height>
-      </rect>
-     </property>
-     <property name="title">
-      <string>타입 선택</string>
-     </property>
-     <widget class="QRadioButton" name="rdo_mode_offensive">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>30</y>
-        <width>70</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>A타입</string>
-      </property>
-      <property name="checked">
-       <bool>true</bool>
-      </property>
-     </widget>
-     <widget class="QRadioButton" name="rdo_mode_defensive">
-      <property name="geometry">
-       <rect>
-        <x>80</x>
-        <y>30</y>
-        <width>70</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>B타입</string>
-      </property>
-     </widget>
     </widget>
    </widget>
    <widget class="QPushButton" name="start_btn">
@@ -1100,8 +1036,8 @@ background-color:blue;
    <widget class="QPushButton" name="t1">
     <property name="geometry">
      <rect>
-      <x>950</x>
-      <y>40</y>
+      <x>1220</x>
+      <y>90</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -1383,13 +1319,84 @@ background-color:blue;
      </property>
     </widget>
    </widget>
+   <widget class="QGroupBox" name="groupBox_2">
+    <property name="geometry">
+     <rect>
+      <x>1080</x>
+      <y>120</y>
+      <width>301</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>타입 선택</string>
+    </property>
+    <widget class="QRadioButton" name="rdo_mode_offensive">
+     <property name="geometry">
+      <rect>
+       <x>150</x>
+       <y>20</y>
+       <width>101</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>B타입-공격적</string>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QRadioButton" name="rdo_mode_defensive">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>20</y>
+       <width>101</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>A타입-방어적</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QLabel" name="label_27">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>400</y>
+      <width>120</width>
+      <height>40</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Agency FB</family>
+      <pointsize>10</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color:white; background-color:#111;</string>
+    </property>
+    <property name="text">
+     <string>접속자목록</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
    <zorder>label_10</zorder>
    <zorder>label_9</zorder>
    <zorder>groupBox</zorder>
    <zorder>real_log</zorder>
    <zorder>table_coin</zorder>
    <zorder>client_list</zorder>
-   <zorder>label_15</zorder>
    <zorder>start_btn</zorder>
    <zorder>stop_btn</zorder>
    <zorder>label_17</zorder>
@@ -1424,6 +1431,8 @@ background-color:blue;
    <zorder>refresh_btn</zorder>
    <zorder>table_dic_2</zorder>
    <zorder>groupBox_3</zorder>
+   <zorder>groupBox_2</zorder>
+   <zorder>label_27</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
