@@ -185,11 +185,7 @@ background-color:white;
    <widget class="QLabel" name="money_label">
     <property name="geometry">
      <rect>
-<<<<<<< HEAD
       <x>15</x>
-=======
-      <x>45</x>
->>>>>>> e62f97ee74573edd26ee1c1221722bc956817ae7
       <y>39</y>
       <width>121</width>
       <height>31</height>
@@ -219,11 +215,7 @@ background-color:white;
    <widget class="QLabel" name="label_21">
     <property name="geometry">
      <rect>
-<<<<<<< HEAD
       <x>80</x>
-=======
-      <x>110</x>
->>>>>>> e62f97ee74573edd26ee1c1221722bc956817ae7
       <y>6</y>
       <width>91</width>
       <height>31</height>
@@ -253,11 +245,7 @@ background-color:white;
    <widget class="QLabel" name="label_4">
     <property name="geometry">
      <rect>
-<<<<<<< HEAD
       <x>148</x>
-=======
-      <x>178</x>
->>>>>>> e62f97ee74573edd26ee1c1221722bc956817ae7
       <y>42</y>
       <width>21</width>
       <height>31</height>
@@ -791,11 +779,7 @@ background-color:white;
    <widget class="Line" name="line_3">
     <property name="geometry">
      <rect>
-<<<<<<< HEAD
       <x>65</x>
-=======
-      <x>95</x>
->>>>>>> e62f97ee74573edd26ee1c1221722bc956817ae7
       <y>29</y>
       <width>121</width>
       <height>16</height>
