@@ -6,3 +6,8 @@ upbit_project/Upbit_followTrading/DATA/API.txt
 upbit_project/Upbit_followTrading/DATA/API_ㅠ.txt
 logFile/main.log
 upbit_project/Upbit_followTrading/main_server.py
+upbit_project/Upbit_followTrading/DATA/checked_coin.pickle
+logFile/client.log
+upbit_project/Upbit_followTrading/DATA/checked_coin.pickle
+upbit_project/Upbit_followTrading/DATA/save_data.pickle
+*.pickle

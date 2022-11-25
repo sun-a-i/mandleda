@@ -751,11 +751,12 @@ class Main(QMainWindow, main_class):  # param1 = windows : 창,  param2 = ui pat
                     amt_txt = main.price_pri.text() + ';'
 
             if is_first:
-                is_first_txt = '1'
+                is_first_txt = '1;'
             else:
-                is_first_txt = '0'
+                is_first_txt = '0;'
 
-            txt = order_type_txt + coin_txt + per_pri_txt + amt_txt + is_auto_txt + is_first_txt
+
+            txt = order_type_txt + coin_txt + per_pri_txt + amt_txt + is_auto_txt + is_first_txt + str(search_mode)
             send_to_clients(txt)
 
             if order_type:
@@ -1978,7 +1979,7 @@ class socket_server_thread(QThread):
             global test
             if test:
                 # 내 아이피
-                self.SERVER_HOST = TY_IP
+                self.SERVER_HOST = DH_IP
             else:
                 # 고객사 아이피
                 self.SERVER_HOST = CUSTOM_IP
