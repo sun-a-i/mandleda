@@ -1,0 +1,95 @@
+[2022-11-25 22:39:52,333][DEBUG|main_client.py:599] >> [system] 로그인 정보 있음 로그인 시도
+[2022-11-25 22:39:52,426][DEBUG|main_client.py:599] >> [system] 로그인 성공
+[2022-11-25 22:39:52,521][DEBUG|main_client.py:301] >> 한글 name 불러들이기 성공, 총 = 114
+[2022-11-25 22:39:52,522][DEBUG|main_client.py:808] >> init_coin_data_list start
+[2022-11-25 22:39:52,522][DEBUG|main_client.py:911] >> socket_client_thread start
+[2022-11-25 22:39:52,581][DEBUG|main_client.py:933] >> 소켓 서버 접속 완료
+[2022-11-25 22:39:52,581][DEBUG|main_client.py:936] >> 입장로그 : 02김도훈
+[2022-11-25 22:39:59,053][DEBUG|main_client.py:941] >> 수신된 데이터 :BUY;KRW-XRP;pri;5500;0;0;1
+[2022-11-25 22:39:59,053][DEBUG|main_client.py:379] >> [msg] 데이터 수신 : BUY;KRW-XRP;pri;5500;0;0;1
+[2022-11-25 22:39:59,055][DEBUG|main_client.py:395] >> ['BUY', 'KRW-XRP', 'pri', '5500', '0', '0', '1']
+[2022-11-25 22:39:59,154][DEBUG|main_client.py:353] >> 주문 : 성공
+[2022-11-25 22:39:59,155][DEBUG|main_client.py:599] >> [매수] : KRW-XRP, 5500원
+[2022-11-25 22:40:00,102][DEBUG|main_client.py:857] >> 차트 업데이트
+[2022-11-25 22:40:02,433][DEBUG|main_client.py:941] >> 수신된 데이터 :BUY;KRW-BTC;pri;5500;0;0;1
+[2022-11-25 22:40:02,434][DEBUG|main_client.py:379] >> [msg] 데이터 수신 : BUY;KRW-BTC;pri;5500;0;0;1
+[2022-11-25 22:40:02,434][DEBUG|main_client.py:395] >> ['BUY', 'KRW-BTC', 'pri', '5500', '0', '0', '1']
+[2022-11-25 22:40:02,539][DEBUG|main_client.py:353] >> 주문 : 성공
+[2022-11-25 22:40:02,539][DEBUG|main_client.py:599] >> [매수] : KRW-BTC, 5500원
+[2022-11-25 22:40:55,232][DEBUG|main_client.py:941] >> 수신된 데이터 :BUY;KRW-BTC;pri;5500;0;0;1
+[2022-11-25 22:40:55,235][DEBUG|main_client.py:379] >> [msg] 데이터 수신 : BUY;KRW-BTC;pri;5500;0;0;1
+[2022-11-25 22:40:55,237][DEBUG|main_client.py:395] >> ['BUY', 'KRW-BTC', 'pri', '5500', '0', '0', '1']
+[2022-11-25 22:40:55,358][DEBUG|main_client.py:353] >> 주문 : 성공
+[2022-11-25 22:40:55,359][DEBUG|main_client.py:599] >> [매수] : KRW-BTC, 5500원
+[2022-11-25 22:42:28,886][DEBUG|main_client.py:941] >> 수신된 데이터 :SEL;KRW-BTC;pri;5500;0;0;1
+[2022-11-25 22:42:28,887][DEBUG|main_client.py:379] >> [msg] 데이터 수신 : SEL;KRW-BTC;pri;5500;0;0;1
+[2022-11-25 22:42:28,888][DEBUG|main_client.py:395] >> ['SEL', 'KRW-BTC', 'pri', '5500', '0', '0', '1']
+[2022-11-25 22:42:28,993][DEBUG|main_client.py:335] >> {'uuid': 'c51d6471-1161-46ab-9b8f-c81e97e61f9d', 'side': 'ask', 'ord_type': 'market', 'state': 'wait', 'market': 'KRW-BTC', 'created_at': '2022-11-25T22:42:28.644252+09:00', 'volume': '0.00074029', 'remaining_volume': '0.00074029', 'reserved_fee': '0', 'remaining_fee': '0', 'paid_fee': '0', 'locked': '0.00074029', 'executed_volume': '0', 'trades_count': 0}
+[2022-11-25 22:42:28,994][DEBUG|main_client.py:353] >> 주문 : 성공
+[2022-11-25 22:42:28,994][DEBUG|main_client.py:599] >> [매도]  : KRW-BTC 수량 : 0.00074029
+[2022-11-25 22:42:31,022][DEBUG|main_client.py:770] >>  KRW-BTC 프로그램 매수한 코인이 서버에 존재하지 않음. 초기화진행
+[2022-11-25 22:42:31,023][DEBUG|main_client.py:794] >> KRW-BTC 종목 초기화
+[2022-11-25 22:42:37,667][DEBUG|main_client.py:941] >> 수신된 데이터 :BUY;KRW-BTC;0;5100;1;1;1
+[2022-11-25 22:42:37,668][DEBUG|main_client.py:379] >> [msg] 데이터 수신 : BUY;KRW-BTC;0;5100;1;1;1
+[2022-11-25 22:42:37,668][DEBUG|main_client.py:395] >> ['BUY', 'KRW-BTC', '0', '5100', '1', '1', '1']
+[2022-11-25 22:42:37,669][DEBUG|main_client.py:413] >> 진입가격 결정 : 5410, my_cash = 196203
+[2022-11-25 22:42:37,763][DEBUG|main_client.py:353] >> 주문 : 성공
+[2022-11-25 22:42:37,764][DEBUG|main_client.py:599] >> [매수] : KRW-BTC: 첫 매수 참여 , 5410
+[2022-11-25 22:45:00,791][DEBUG|main_client.py:857] >> 차트 업데이트
+[2022-11-25 22:50:00,866][DEBUG|main_client.py:857] >> 차트 업데이트
+[2022-11-25 22:50:28,493][DEBUG|main_client.py:946] >> [WinError 10054] 현재 연결은 원격 호스트에 의해 강제로 끊겼습니다
+[2022-11-25 22:50:28,495][DEBUG|main_client.py:949] >> 소켓 서버 접속 불가 재접속중 ...
+[2022-11-25 22:50:44,557][DEBUG|main_client.py:933] >> 소켓 서버 접속 완료
+[2022-11-25 22:50:44,558][DEBUG|main_client.py:936] >> 입장로그 : 02김도훈
+[2022-11-25 22:51:34,574][DEBUG|main_client.py:946] >> [WinError 10054] 현재 연결은 원격 호스트에 의해 강제로 끊겼습니다
+[2022-11-25 22:51:34,576][DEBUG|main_client.py:949] >> 소켓 서버 접속 불가 재접속중 ...
+[2022-11-25 22:51:50,632][DEBUG|main_client.py:933] >> 소켓 서버 접속 완료
+[2022-11-25 22:51:50,634][DEBUG|main_client.py:936] >> 입장로그 : 02김도훈
+[2022-11-25 22:52:39,023][DEBUG|main_client.py:941] >> 수신된 데이터 :SEL;KRW-BTC;pri;5500;0;0;0
+[2022-11-25 22:52:39,025][DEBUG|main_client.py:379] >> [msg] 데이터 수신 : SEL;KRW-BTC;pri;5500;0;0;0
+[2022-11-25 22:52:39,027][DEBUG|main_client.py:395] >> ['SEL', 'KRW-BTC', 'pri', '5500', '0', '0', '0']
+[2022-11-25 22:52:39,134][DEBUG|main_client.py:335] >> {'uuid': '4ddf5098-d072-4204-ac18-4566cae63fd4', 'side': 'ask', 'ord_type': 'market', 'state': 'wait', 'market': 'KRW-BTC', 'created_at': '2022-11-25T22:52:38.781878+09:00', 'volume': '0.00023897', 'remaining_volume': '0.00023897', 'reserved_fee': '0', 'remaining_fee': '0', 'paid_fee': '0', 'locked': '0.00023897', 'executed_volume': '0', 'trades_count': 0}
+[2022-11-25 22:52:39,135][DEBUG|main_client.py:353] >> 주문 : 성공
+[2022-11-25 22:52:39,136][DEBUG|main_client.py:599] >> [매도]  : KRW-BTC 수량 : 0.00023897
+[2022-11-25 22:52:39,805][DEBUG|main_client.py:770] >>  KRW-BTC 프로그램 매수한 코인이 서버에 존재하지 않음. 초기화진행
+[2022-11-25 22:52:39,805][DEBUG|main_client.py:794] >> KRW-BTC 종목 초기화
+[2022-11-25 22:52:51,896][DEBUG|main_client.py:941] >> 수신된 데이터 :BUY;KRW-BTC;0;5572;1;1;1
+[2022-11-25 22:52:51,898][DEBUG|main_client.py:379] >> [msg] 데이터 수신 : BUY;KRW-BTC;0;5572;1;1;1
+[2022-11-25 22:52:51,899][DEBUG|main_client.py:395] >> ['BUY', 'KRW-BTC', '0', '5572', '1', '1', '1']
+[2022-11-25 22:52:51,900][DEBUG|main_client.py:413] >> 진입가격 결정 : 5253, my_cash = 196201
+[2022-11-25 22:52:51,988][DEBUG|main_client.py:353] >> 주문 : 성공
+[2022-11-25 22:52:51,989][DEBUG|main_client.py:599] >> [매수] : KRW-BTC: 첫 매수 참여 , 5253
+[2022-11-25 22:54:17,252][DEBUG|main_client.py:946] >> [WinError 10054] 현재 연결은 원격 호스트에 의해 강제로 끊겼습니다
+[2022-11-25 22:54:17,254][DEBUG|main_client.py:949] >> 소켓 서버 접속 불가 재접속중 ...
+[2022-11-25 22:54:33,302][DEBUG|main_client.py:933] >> 소켓 서버 접속 완료
+[2022-11-25 22:54:33,304][DEBUG|main_client.py:936] >> 입장로그 : 02김도훈
+[2022-11-25 22:54:36,329][DEBUG|main_client.py:613] >> Cell Clicked Row: 2, Column: 2, Value: XRP
+[2022-11-25 22:54:37,613][DEBUG|main_client.py:613] >> Cell Clicked Row: 1, Column: 2, Value: BTC
+[2022-11-25 22:54:39,520][DEBUG|main_client.py:613] >> Cell Clicked Row: 2, Column: 2, Value: XRP
+[2022-11-25 22:55:00,687][DEBUG|main_client.py:857] >> 차트 업데이트
+[2022-11-25 22:55:17,208][DEBUG|main_client.py:941] >> 수신된 데이터 :SEL;KRW-BTC;pri;5500;0;0;1
+[2022-11-25 22:55:17,210][DEBUG|main_client.py:379] >> [msg] 데이터 수신 : SEL;KRW-BTC;pri;5500;0;0;1
+[2022-11-25 22:55:17,212][DEBUG|main_client.py:395] >> ['SEL', 'KRW-BTC', 'pri', '5500', '0', '0', '1']
+[2022-11-25 22:55:17,319][DEBUG|main_client.py:335] >> {'uuid': '077f7328-ded6-468d-ace0-244ed0f6137c', 'side': 'ask', 'ord_type': 'market', 'state': 'wait', 'market': 'KRW-BTC', 'created_at': '2022-11-25T22:55:16.961043+09:00', 'volume': '0.00023176', 'remaining_volume': '0.00023176', 'reserved_fee': '0', 'remaining_fee': '0', 'paid_fee': '0', 'locked': '0.00023176', 'executed_volume': '0', 'trades_count': 0}
+[2022-11-25 22:55:17,320][DEBUG|main_client.py:353] >> 주문 : 성공
+[2022-11-25 22:55:17,320][DEBUG|main_client.py:599] >> [매도]  : KRW-BTC 수량 : 0.00023176
+[2022-11-25 22:55:18,548][DEBUG|main_client.py:770] >>  KRW-BTC 프로그램 매수한 코인이 서버에 존재하지 않음. 초기화진행
+[2022-11-25 22:55:18,549][DEBUG|main_client.py:794] >> KRW-BTC 종목 초기화
+[2022-11-25 22:55:30,561][DEBUG|main_client.py:946] >> [WinError 10054] 현재 연결은 원격 호스트에 의해 강제로 끊겼습니다
+[2022-11-25 22:55:30,562][DEBUG|main_client.py:949] >> 소켓 서버 접속 불가 재접속중 ...
+[2022-11-25 22:55:46,614][DEBUG|main_client.py:933] >> 소켓 서버 접속 완료
+[2022-11-25 22:55:46,616][DEBUG|main_client.py:936] >> 입장로그 : 02김도훈
+[2022-11-25 22:55:51,975][DEBUG|main_client.py:941] >> 수신된 데이터 :BUY;KRW-BTC;0;10506;1;1;0
+[2022-11-25 22:55:51,976][DEBUG|main_client.py:379] >> [msg] 데이터 수신 : BUY;KRW-BTC;0;10506;1;1;0
+[2022-11-25 22:55:51,977][DEBUG|main_client.py:395] >> ['BUY', 'KRW-BTC', '0', '10506', '1', '1', '0']
+[2022-11-25 22:55:51,978][DEBUG|main_client.py:413] >> 진입가격 결정 : 6089, my_cash = 196192
+[2022-11-25 22:55:52,079][DEBUG|main_client.py:353] >> 주문 : 성공
+[2022-11-25 22:55:52,080][DEBUG|main_client.py:599] >> [매수] : KRW-BTC: 첫 매수 참여 , 6089
+[2022-11-25 23:00:01,112][DEBUG|main_client.py:857] >> 차트 업데이트
+[2022-11-25 23:56:53,909][DEBUG|main_client.py:1218] >> login init_process close...
+[2022-11-25 23:56:53,911][DEBUG|main_client.py:1253] >> 예외가 발생했습니다. 'MyWindow' object has no attribute 'login_fromt_gif'
+[2022-11-25 23:56:53,912][DEBUG|main_client.py:1254] >> Traceback (most recent call last):
+  File "C:\Users\taeya\PycharmProjects\mandleda\upbit_project\Upbit_followTrading\main_client.py", line 1226, in __init__
+    self.login_fromt_gif.setMovie(self.movie)
+AttributeError: 'MyWindow' object has no attribute 'login_fromt_gif'
+

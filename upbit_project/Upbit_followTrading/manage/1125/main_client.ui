@@ -185,7 +185,7 @@ background-color:white;
    <widget class="QLabel" name="money_label">
     <property name="geometry">
      <rect>
-      <x>45</x>
+      <x>15</x>
       <y>39</y>
       <width>121</width>
       <height>31</height>
@@ -215,7 +215,7 @@ background-color:white;
    <widget class="QLabel" name="label_21">
     <property name="geometry">
      <rect>
-      <x>110</x>
+      <x>80</x>
       <y>6</y>
       <width>91</width>
       <height>31</height>
@@ -245,7 +245,7 @@ background-color:white;
    <widget class="QLabel" name="label_4">
     <property name="geometry">
      <rect>
-      <x>178</x>
+      <x>148</x>
       <y>42</y>
       <width>21</width>
       <height>31</height>
@@ -779,7 +779,7 @@ background-color:white;
    <widget class="Line" name="line_3">
     <property name="geometry">
      <rect>
-      <x>95</x>
+      <x>65</x>
       <y>29</y>
       <width>121</width>
       <height>16</height>
