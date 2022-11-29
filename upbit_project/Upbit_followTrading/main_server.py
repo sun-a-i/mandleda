@@ -83,6 +83,9 @@ main_class = uic.loadUiType('./ui_data/main_server.ui')[0]
 start_class = uic.loadUiType('./ui_data/login.ui')[0]
 register_class = uic.loadUiType('./ui_data/register.ui')[0]
 
+
+#pd.set_option('plotting.backend', 'finplot.pdplot')
+
 auto_flag = False
 
 coin_Kname = {}
@@ -2136,7 +2139,9 @@ def check_socket_connect(user_data):
                         ver = 200
                         for i in file_list:
                             if i[-3:] == 'exe':
+
                                 i = i[:-4]
+                                logger.debug(i)
                                 read_ver = int(re.sub(r'[^0-9]', '', i))
                                 if int(read_ver) > int(ver):
                                     ver = read_ver
@@ -2571,13 +2576,18 @@ class MyWindow(QMainWindow, start_class):
 if __name__ == "__main__":
     try:
         global test
-        test = True
+        test = 0
         app = QApplication(sys.argv)
         app.setStyleSheet(stylesheet)
         app.setStyleSheet('QTableView::item {border-top: 1px solid #d6d9dc;}')
-        myWindow = MyWindow()
-        myWindow.show()
-        app.exec_()
+        if test:
+            main = Main()
+            main.show()
+            app.exec_()
+        else:
+            myWindow = MyWindow()
+            myWindow.show()
+            app.exec_()
     except Exception as e:
         logger.debug(e)
         logger.debug(traceback.format_exc())

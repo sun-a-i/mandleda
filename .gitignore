@@ -11,3 +11,4 @@ logFile/client.log
 upbit_project/Upbit_followTrading/DATA/checked_coin.pickle
 upbit_project/Upbit_followTrading/DATA/save_data.pickle
 *.pickle
+*.exe
